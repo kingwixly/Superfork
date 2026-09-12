@@ -31,6 +31,8 @@
  *   Col 14: Cargo Jet (6×5)            — superfork
  *   Col 15: Airliner (5×6)             — superfork
  *   Col 16: Interceptor (5×6)          — superfork
+ *   Col 17: Corvette (7×7)             — superfork
+ *   Col 18: Carrier (13×13)            — superfork
  *
  * Data flow:
  *   FrameSnapshot.units → filter by typeToAtlasIdx → instance VBO → GPU
@@ -47,6 +49,8 @@ import {
   UT_AIRLINER,
   UT_ATOM_BOMB,
   UT_CARGO_JET,
+  UT_CARRIER,
+  UT_CORVETTE,
   UT_FIGHTER_JET,
   UT_HYDROGEN_BOMB,
   UT_INTERCEPTOR,
@@ -104,6 +108,11 @@ const UNIT_ORDER = [
   UT_CARGO_JET,
   UT_AIRLINER,
   UT_INTERCEPTOR,
+  // Ships render below structures with the rest of the fleet, so they are
+  // NOT added to MISSILE_TYPES. Destroyer is absent on purpose - it reuses
+  // the vanilla Warship column.
+  UT_CORVETTE,
+  UT_CARRIER,
 ] as const;
 
 const ATLAS_COLS = UNIT_ORDER.length;

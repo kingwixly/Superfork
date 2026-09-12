@@ -89,18 +89,30 @@ const UNIT_COLUMNS = [
   "cargo_jet",
   "airliner",
   "interceptor",
+  "corvette",
+  "carrier",
 ];
 
 const UNIT_CELL = 13;
 const UNIT_SRC_DIR = join(ROOT, "resources/icons/units");
+/**
+ * The pristine upstream 12-column atlas. Committed because its individual
+ * sprite sources were never shipped, so this file is the only copy of that
+ * art we have — and because compositing onto it, rather than onto the last
+ * output, is what makes this script safe to run twice.
+ */
+const UNIT_BASE = join(ROOT, "resources/icons/units/_base-unit-atlas.png");
 const UNIT_OUT = join(ROOT, "resources/atlases/unit-atlas.png");
 
 async function buildUnitAtlas() {
-  const existing = await sharp(UNIT_OUT).metadata();
-  const baseCols = Math.round(existing.width / UNIT_CELL);
+  // Composite onto the pinned BASE, never onto the previous output. Reading
+  // UNIT_OUT here made the script non-idempotent: a second run appended the
+  // superfork columns to an atlas that already had them.
+  const base = await sharp(UNIT_BASE).metadata();
+  const baseCols = Math.round(base.width / UNIT_CELL);
   const width = UNIT_CELL * (baseCols + UNIT_COLUMNS.length);
 
-  const composites = [{ input: UNIT_OUT, left: 0, top: 0 }];
+  const composites = [{ input: UNIT_BASE, left: 0, top: 0 }];
   for (let i = 0; i < UNIT_COLUMNS.length; i++) {
     const file = join(UNIT_SRC_DIR, `${UNIT_COLUMNS[i]}.png`);
     if (!existsSync(file)) throw new Error(`missing unit sprite: ${file}`);

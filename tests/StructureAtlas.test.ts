@@ -114,3 +114,18 @@ describe("unit atlas contract", () => {
     }
   });
 });
+
+describe("unit atlas generator is idempotent", () => {
+  test("running the generator twice does not duplicate columns", () => {
+    // It composites onto a pinned base rather than its own output. An earlier
+    // version read the previous atlas and appended to it, so a second run
+    // silently produced 24 columns instead of 19.
+    const before = readFileSync(UNIT_ATLAS);
+    execFileSync("node", [GENERATOR], { cwd: ROOT });
+    const once = readFileSync(UNIT_ATLAS);
+    execFileSync("node", [GENERATOR], { cwd: ROOT });
+    const twice = readFileSync(UNIT_ATLAS);
+    expect(once.equals(twice)).toBe(true);
+    expect(before.readUInt32BE(16)).toBe(twice.readUInt32BE(16));
+  });
+});
