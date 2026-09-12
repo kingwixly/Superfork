@@ -21,6 +21,7 @@ const BUILDING_ORDER = {
   silo: 5,
   saml: 6,
   bank: 7,
+  capt: 8,
 } as const satisfies Record<
   Exclude<(typeof otherUnits)[number], "wshp">,
   number
@@ -37,6 +38,7 @@ const buildingUnits = (
 // compilation if a new stat unit lands without a label.
 const UNIT_LABEL_KEYS = {
   bank: "unit_type.bank",
+  capt: "unit_type.capital",
   city: "unit_type.city",
   defp: "unit_type.defense_post",
   fact: "unit_type.factory",

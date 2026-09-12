@@ -276,6 +276,7 @@ export const Structures = unitTypeGroup([
   // Superfork. Types are added here as their feature phase lands; everything
   // still listed only in SuperforkStructures below is not yet buildable.
   UnitType.Bank, // Phase 2
+  UnitType.Capital, // Phase 2
 ] as const);
 
 export const BuildMenus = unitTypeGroup([

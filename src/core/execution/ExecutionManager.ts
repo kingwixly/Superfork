@@ -8,6 +8,10 @@ import { AllianceRequestExecution } from "./alliance/AllianceRequestExecution";
 import { BreakAllianceExecution } from "./alliance/BreakAllianceExecution";
 import { AttackExecution } from "./AttackExecution";
 import { BoatRetreatExecution } from "./BoatRetreatExecution";
+import {
+  DemoteCapitalExecution,
+  PromoteCapitalExecution,
+} from "./CapitalExecution";
 import { ConstructionExecution } from "./ConstructionExecution";
 import { DeleteUnitExecution } from "./DeleteUnitExecution";
 import { DonateGoldExecution } from "./DonateGoldExecution";
@@ -136,6 +140,11 @@ export class Executor {
       case "toggle_pause":
         return new PauseExecution(player, intent.paused);
 
+      case "promote_capital":
+        return new PromoteCapitalExecution(player, intent.unitId);
+      case "demote_capital":
+        return new DemoteCapitalExecution(player, intent.unitId);
+
       // ------------------------- Superfork -------------------------
       // Declared but not yet implemented. These are explicit no-ops rather
       // than falling through to the `default` throw below: the sim runs in
@@ -145,8 +154,6 @@ export class Executor {
       // Nothing emits these yet — the UI for them does not exist — so they
       // are unreachable in practice. Each arm is replaced by its real
       // execution in the phase named beside it.
-      case "promote_capital": // Phase 2
-      case "demote_capital": // Phase 2
       case "move_aircraft": // Phase 3
       case "embassy_request": // Phase 5
       case "embassy_response": // Phase 5

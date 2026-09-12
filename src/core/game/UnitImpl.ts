@@ -1,5 +1,8 @@
 import { simpleHash, toInt, withinInt } from "../Util";
-import { BANK_RESERVE_CAP } from "../configuration/SuperforkUnits";
+import {
+  BANK_RESERVE_CAP,
+  CAPITAL_CAPTURE_TROOP_LOSS,
+} from "../configuration/SuperforkUnits";
 import {
   AllUnitParams,
   MessageType,
@@ -119,6 +122,7 @@ export class UnitImpl implements Unit {
       case UnitType.City:
       case UnitType.Factory:
       case UnitType.Bank:
+      case UnitType.Capital:
         this.mg.stats().unitBuild(_owner, this._type);
     }
   }
@@ -272,6 +276,7 @@ export class UnitImpl implements Unit {
       case UnitType.City:
       case UnitType.Factory:
       case UnitType.Bank:
+      case UnitType.Capital:
         this.mg.stats().unitCapture(newOwner, this._type);
         this.mg.stats().unitLose(this._owner, this._type);
         break;
@@ -300,6 +305,18 @@ export class UnitImpl implements Unit {
       const seized = this.drainBankReserve();
       if (seized > 0n) {
         newOwner.addGold(seized, this._tile);
+      }
+    }
+
+    // Losing your capital costs a flat share of your standing army — the
+    // decapitation penalty. Charged to the previous owner, not the captor,
+    // and only when it actually changes hands between different players.
+    if (this._type === UnitType.Capital && this._lastOwner !== newOwner) {
+      const lost = Math.floor(
+        this._lastOwner.troops() * CAPITAL_CAPTURE_TROOP_LOSS,
+      );
+      if (lost > 0) {
+        this._lastOwner.removeTroops(lost);
       }
     }
 

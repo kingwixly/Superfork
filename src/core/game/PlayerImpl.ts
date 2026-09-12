@@ -1,3 +1,4 @@
+import { canStack } from "../configuration/SuperforkUnits";
 import { PseudoRandom } from "../PseudoRandom";
 import { ClientID } from "../Schemas";
 import {
@@ -45,17 +46,17 @@ import {
 import { GameImpl } from "./GameImpl";
 import { andFN, manhattanDistFN, TileRef } from "./GameMap";
 import {
-  ATTACK_DELTA_INCOMING,
-  ATTACK_DELTA_OUTGOING,
-  diffPlayerUpdate,
-  packAttackTroopDeltas,
-} from "./GameUpdateUtils";
-import {
   AllianceView,
   AttackUpdate,
   GameUpdateType,
   PlayerUpdate,
 } from "./GameUpdates";
+import {
+  ATTACK_DELTA_INCOMING,
+  ATTACK_DELTA_OUTGOING,
+  diffPlayerUpdate,
+  packAttackTroopDeltas,
+} from "./GameUpdateUtils";
 import { ReadonlyTileSet, TileSet } from "./TileSet";
 import {
   bumpTraversalGeneration,
@@ -1592,7 +1593,7 @@ export class PlayerImpl implements Player {
       case UnitType.SAMLauncher:
       case UnitType.City:
       case UnitType.Factory:
-        return this.landBasedStructureSpawn(targetTile, validTiles);
+        return this.landBasedStructureSpawn(targetTile, validTiles, unitType);
 
       // ------------------------- Superfork -------------------------
       // Placement only. Buildability is gated separately: none of these are
@@ -1609,7 +1610,7 @@ export class PlayerImpl implements Player {
       case UnitType.Airstrip:
       case UnitType.Airfield:
       case UnitType.InternationalAirport:
-        return this.landBasedStructureSpawn(targetTile, validTiles);
+        return this.landBasedStructureSpawn(targetTile, validTiles, unitType);
 
       // Surface combatants use the same water-placement rules as vanilla
       // warships.
@@ -1711,7 +1712,7 @@ export class PlayerImpl implements Player {
           this.mg.manhattanDist(a, tile) - this.mg.manhattanDist(b, tile),
       );
     const validTileSet = new Set(
-      validTiles ?? this.validStructureSpawnTiles(tile),
+      validTiles ?? this.validStructureSpawnTiles(tile, UnitType.Port),
     );
     for (const t of spawns) {
       if (validTileSet.has(t)) {
@@ -1747,15 +1748,19 @@ export class PlayerImpl implements Player {
   landBasedStructureSpawn(
     tile: TileRef,
     validTiles: TileRef[] | null = null,
+    placing?: UnitType,
   ): TileRef | false {
-    const tiles = validTiles ?? this.validStructureSpawnTiles(tile);
+    const tiles = validTiles ?? this.validStructureSpawnTiles(tile, placing);
     if (tiles.length === 0) {
       return false;
     }
     return tiles[0];
   }
 
-  private validStructureSpawnTiles(tile: TileRef): TileRef[] {
+  private validStructureSpawnTiles(
+    tile: TileRef,
+    placing?: UnitType,
+  ): TileRef[] {
     if (this.mg.owner(tile) !== this) {
       return [];
     }
@@ -1813,6 +1818,11 @@ export class PlayerImpl implements Player {
     for (const t of nearbyTiles) {
       let blocked = false;
       for (const { unit } of nearbyUnits) {
+        // Stackable pairs are exempt from the minimum-distance rule: that
+        // exemption is the whole mechanism behind structure stacking.
+        if (placing !== undefined && canStack(placing, unit.type())) {
+          continue;
+        }
         if (this.mg.euclideanDistSquared(unit.tile(), t) < minDistSquared) {
           blocked = true;
           break;

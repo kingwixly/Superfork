@@ -23,7 +23,7 @@ import { UserSettings } from "../game/UserSettings";
 import { GameConfig, TeamCountConfig } from "../Schemas";
 import { NukeType } from "../StatsSchemas";
 import { assertNever, sigmoid, toInt, within } from "../Util";
-import { superforkUnitSpec } from "./SuperforkUnits";
+import { CAPITAL_TROOP_CAP_BONUS, superforkUnitSpec } from "./SuperforkUnits";
 
 declare global {
   interface Window {
@@ -1005,7 +1005,7 @@ export class Config {
   }
 
   maxTroops(player: Player | PlayerView): number {
-    const maxTroops =
+    const base =
       player.type() === PlayerType.Human && this.hasInfiniteTroopsFor(player)
         ? 1_000_000_000
         : 2 * (pow(player.numTilesOwned(), 0.6) * 1000 + 50000) +
@@ -1015,6 +1015,15 @@ export class Config {
             .map((city) => city.level())
             .reduce((a, b) => a + b, 0) *
             this.cityTroopIncrease();
+
+    // Superfork: a standing capital raises the ceiling by a flat percentage.
+    // Applied after the city sum so it scales with the whole army, which is
+    // what makes "centralisation" read as a strategic buff rather than a
+    // rounding error late game. Under-construction capitals do not count.
+    const hasCapital = player
+      .units(UnitType.Capital)
+      .some((u) => !u.isUnderConstruction());
+    const maxTroops = hasCapital ? base * (1 + CAPITAL_TROOP_CAP_BONUS) : base;
 
     if (player.type() === PlayerType.Bot) {
       return maxTroops / 3;

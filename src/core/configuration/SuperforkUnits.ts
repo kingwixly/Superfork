@@ -88,6 +88,47 @@ export const BANK_ACCRUAL_DENOMINATOR = 1_000_000n;
 export const CAPITAL_TROOP_CAP_BONUS = 0.1; // +10% max troop capacity
 export const CAPITAL_CAPTURE_TROOP_LOSS = 0.4; // -40% troops when captured
 
+/**
+ * Structure stacking.
+ *
+ * Vanilla enforces `structureMinDist` between every pair of structures, which
+ * is what makes them one-per-site. Rather than restructuring tiles to hold
+ * multiple units, stacking is modelled as a targeted exemption from that rule:
+ * a listed pair may be placed arbitrarily close, and "stacked" thereafter
+ * means "within STACK_RADIUS of each other".
+ *
+ * This keeps the change small and leaves every existing placement rule intact
+ * for every pair not named here.
+ */
+export const STACK_RADIUS = 2;
+
+const STACKABLE_PAIRS: ReadonlyArray<readonly [UnitType, UnitType]> = [
+  // A coastal capital can host a port, and any capital can host an
+  // international airport. Both directions are handled by canStack below.
+  [UnitType.Capital, UnitType.Port],
+  [UnitType.Capital, UnitType.InternationalAirport],
+];
+
+/** True when the two types are allowed to occupy the same site. */
+export function canStack(a: UnitType, b: UnitType): boolean {
+  return STACKABLE_PAIRS.some(
+    ([x, y]) => (x === a && y === b) || (x === b && y === a),
+  );
+}
+
+/**
+ * Structures that, once stacked onto a capital, lock it permanently.
+ *
+ * Dani's rule: a capital cannot be demoted unless it is destroyed, or unless
+ * it is a plain capital — not a multi-structured port city or airport city.
+ * So placing either of these is the commitment; before that the capital can
+ * still be moved.
+ */
+export const CAPITAL_LOCKING_STRUCTURES: ReadonlyArray<UnitType> = [
+  UnitType.Port,
+  UnitType.InternationalAirport,
+];
+
 /** Embassy seizure effects, per spec. */
 export const EMBASSY_SLOW_DURATION = s(3);
 export const EMBASSY_TROOP_PENALTY = 0.1; // -10% of the loser's troops
