@@ -54,9 +54,56 @@ export type Intent =
   | KickPlayerIntent
   | TogglePauseIntent
   | UpdateGameConfigIntent
-  | ToggleGameStartTimer;
+  | ToggleGameStartTimer
+  // Superfork
+  | PromoteCapitalIntent
+  | DemoteCapitalIntent
+  | EmbassyRequestIntent
+  | EmbassyResponseIntent
+  | CeasefireProposeIntent
+  | CeasefireResponseIntent
+  | SanctionIntent
+  | CedeLandIntent
+  | TreatyCreateIntent
+  | TreatyInviteIntent
+  | TreatyResponseIntent
+  | TreatyLeaveIntent
+  | RequestAssistanceIntent
+  | AssistanceResponseIntent
+  | PuppetCommandIntent
+  | PuppetLiberateIntent
+  | SetBorderPolicyIntent
+  | MoveAircraftIntent;
 
 export type AttackIntent = z.infer<typeof AttackIntentSchema>;
+
+// Superfork intent types.
+export type PromoteCapitalIntent = z.infer<typeof PromoteCapitalIntentSchema>;
+export type DemoteCapitalIntent = z.infer<typeof DemoteCapitalIntentSchema>;
+export type EmbassyRequestIntent = z.infer<typeof EmbassyRequestIntentSchema>;
+export type EmbassyResponseIntent = z.infer<typeof EmbassyResponseIntentSchema>;
+export type CeasefireProposeIntent = z.infer<
+  typeof CeasefireProposeIntentSchema
+>;
+export type CeasefireResponseIntent = z.infer<
+  typeof CeasefireResponseIntentSchema
+>;
+export type SanctionIntent = z.infer<typeof SanctionIntentSchema>;
+export type CedeLandIntent = z.infer<typeof CedeLandIntentSchema>;
+export type TreatyCreateIntent = z.infer<typeof TreatyCreateIntentSchema>;
+export type TreatyInviteIntent = z.infer<typeof TreatyInviteIntentSchema>;
+export type TreatyResponseIntent = z.infer<typeof TreatyResponseIntentSchema>;
+export type TreatyLeaveIntent = z.infer<typeof TreatyLeaveIntentSchema>;
+export type RequestAssistanceIntent = z.infer<
+  typeof RequestAssistanceIntentSchema
+>;
+export type AssistanceResponseIntent = z.infer<
+  typeof AssistanceResponseIntentSchema
+>;
+export type PuppetCommandIntent = z.infer<typeof PuppetCommandIntentSchema>;
+export type PuppetLiberateIntent = z.infer<typeof PuppetLiberateIntentSchema>;
+export type SetBorderPolicyIntent = z.infer<typeof SetBorderPolicyIntentSchema>;
+export type MoveAircraftIntent = z.infer<typeof MoveAircraftIntentSchema>;
 export type CancelAttackIntent = z.infer<typeof CancelAttackIntentSchema>;
 export type SpawnIntent = z.infer<typeof SpawnIntentSchema>;
 export type BoatAttackIntent = z.infer<typeof BoatAttackIntentSchema>;
@@ -763,6 +810,159 @@ export const ToggleGameStartTimerIntentSchema = z.object({
   type: z.literal("toggle_game_start_timer"),
 });
 
+//
+// Superfork intents
+//
+// Buildings and units need no new intent: BuildUnitIntentSchema already keys
+// off z.enum(UnitType), so every type added to that enum rides it for free.
+// What follows is only the verbs vanilla has no equivalent for.
+//
+// These are appended to the end of IntentSchema's union deliberately. The
+// zbin wire is positional, so union order is the wire contract; appending
+// keeps every existing intent's discriminator index stable and confines the
+// churn to new code.
+//
+
+/** Largest area a single cede may transfer, to bound the intent's wire size. */
+export const MAX_CEDE_TILES = 4096;
+
+/** Promote an owned City into this nation's Capital. One per nation. */
+export const PromoteCapitalIntentSchema = z.object({
+  type: z.literal("promote_capital"),
+  unitId: zb.uint(),
+});
+
+/**
+ * Demote is a separate verb rather than a toggle on promote, because it is
+ * the one the demotion rules can legally refuse: a capital stacked with a
+ * Port or International Airport is locked in permanently.
+ */
+export const DemoteCapitalIntentSchema = z.object({
+  type: z.literal("demote_capital"),
+  unitId: zb.uint(),
+});
+
+/**
+ * Embassies require mutual consent, so placement is a two-step handshake:
+ * the guest nominates a tile in the host's territory, the host accepts.
+ */
+export const EmbassyRequestIntentSchema = z.object({
+  type: z.literal("embassy_request"),
+  host: MappedID,
+  tile: zb.uint(),
+});
+
+export const EmbassyResponseIntentSchema = z.object({
+  type: z.literal("embassy_response"),
+  requestor: MappedID,
+  accept: z.boolean(),
+});
+
+/**
+ * `liberationFor` carries the mediator's optional liberation condition: if
+ * set, accepting also reverts that player's territory to its pre-war state.
+ * Folding it into the ceasefire intent rather than giving liberation its own
+ * verb keeps the two atomic — you cannot accept one and not the other.
+ */
+export const CeasefireProposeIntentSchema = z.object({
+  type: z.literal("ceasefire_propose"),
+  recipient: MappedID,
+  liberationFor: MappedID.optional(),
+});
+
+export const CeasefireResponseIntentSchema = z.object({
+  type: z.literal("ceasefire_response"),
+  requestor: MappedID,
+  accept: z.boolean(),
+});
+
+/**
+ * Distinct from embargo: sanctions additionally close land borders to trains
+ * and ships and restrict airspace. Embargo stays as-is for trade-only cuts.
+ */
+export const SanctionIntentSchema = z.object({
+  type: z.literal("sanction"),
+  targetID: MappedID,
+  action: z.union([z.literal("start"), z.literal("stop")]),
+});
+
+/** Hand an owned area to another nation. Reviving a dead nation auto-allies. */
+export const CedeLandIntentSchema = z.object({
+  type: z.literal("cede_land"),
+  recipient: MappedID,
+  tiles: z.array(zb.uint()).nonempty().max(MAX_CEDE_TILES),
+});
+
+/** Up to 3 at creation (self plus two), 5 total once others are invited. */
+export const TreatyCreateIntentSchema = z.object({
+  type: z.literal("treaty_create"),
+  members: z.array(MappedID).nonempty().max(2),
+});
+
+export const TreatyInviteIntentSchema = z.object({
+  type: z.literal("treaty_invite"),
+  treatyID: z.string(),
+  recipient: MappedID,
+});
+
+export const TreatyResponseIntentSchema = z.object({
+  type: z.literal("treaty_response"),
+  treatyID: z.string(),
+  accept: z.boolean(),
+});
+
+export const TreatyLeaveIntentSchema = z.object({
+  type: z.literal("treaty_leave"),
+  treatyID: z.string(),
+});
+
+/**
+ * Alliance fighting: ask an ally to join a war directly, rather than waiting
+ * for their own AI or judgement to bring them in. `mode` picks which form of
+ * help is being asked for.
+ */
+export const RequestAssistanceIntentSchema = z.object({
+  type: z.literal("request_assistance"),
+  recipient: MappedID,
+  against: MappedID,
+  mode: z.union([z.literal("attack"), z.literal("troops")]),
+});
+
+export const AssistanceResponseIntentSchema = z.object({
+  type: z.literal("assistance_response"),
+  requestor: MappedID,
+  accept: z.boolean(),
+});
+
+/** Direct a puppet state at a target. Puppets auto-follow their master's wars. */
+export const PuppetCommandIntentSchema = z.object({
+  type: z.literal("puppet_command"),
+  puppet: MappedID,
+  target: MappedID,
+});
+
+export const PuppetLiberateIntentSchema = z.object({
+  type: z.literal("puppet_liberate"),
+  puppet: MappedID,
+});
+
+/**
+ * The nation control panel. `borderTrade` and `publicAirports` together are
+ * what let non-allied nations fly civilian traffic into your airports.
+ */
+export const SetBorderPolicyIntentSchema = z.object({
+  type: z.literal("set_border_policy"),
+  borderTrade: z.boolean().optional(),
+  publicAirports: z.boolean().optional(),
+});
+
+/** Aircraft repositioning. Mirrors move_warship. */
+export const MoveAircraftIntentSchema = z.object({
+  type: z.literal("move_aircraft"),
+  unitIds: z.array(zb.int()).nonempty(),
+  tile: zb.uint(),
+});
+
 export const IntentSchema = z.discriminatedUnion("type", [
   AttackIntentSchema,
   CancelAttackIntentSchema,
@@ -789,6 +989,26 @@ export const IntentSchema = z.discriminatedUnion("type", [
   TogglePauseIntentSchema,
   UpdateGameConfigIntentSchema,
   ToggleGameStartTimerIntentSchema,
+
+  // Superfork. Appended so existing discriminator indexes stay put.
+  PromoteCapitalIntentSchema,
+  DemoteCapitalIntentSchema,
+  EmbassyRequestIntentSchema,
+  EmbassyResponseIntentSchema,
+  CeasefireProposeIntentSchema,
+  CeasefireResponseIntentSchema,
+  SanctionIntentSchema,
+  CedeLandIntentSchema,
+  TreatyCreateIntentSchema,
+  TreatyInviteIntentSchema,
+  TreatyResponseIntentSchema,
+  TreatyLeaveIntentSchema,
+  RequestAssistanceIntentSchema,
+  AssistanceResponseIntentSchema,
+  PuppetCommandIntentSchema,
+  PuppetLiberateIntentSchema,
+  SetBorderPolicyIntentSchema,
+  MoveAircraftIntentSchema,
 ]);
 
 // StampedIntent = Intent with server-stamped clientID (used in turns and execution)

@@ -135,6 +135,37 @@ export class Executor {
         return new MarkDisconnectedExecution(player, intent.isDisconnected);
       case "toggle_pause":
         return new PauseExecution(player, intent.paused);
+
+      // ------------------------- Superfork -------------------------
+      // Declared but not yet implemented. These are explicit no-ops rather
+      // than falling through to the `default` throw below: the sim runs in
+      // lockstep, and an exception here takes down the tick loop rather than
+      // rejecting one bad intent.
+      //
+      // Nothing emits these yet — the UI for them does not exist — so they
+      // are unreachable in practice. Each arm is replaced by its real
+      // execution in the phase named beside it.
+      case "promote_capital": // Phase 2
+      case "demote_capital": // Phase 2
+      case "move_aircraft": // Phase 3
+      case "embassy_request": // Phase 5
+      case "embassy_response": // Phase 5
+      case "ceasefire_propose": // Phase 5
+      case "ceasefire_response": // Phase 5
+      case "sanction": // Phase 5
+      case "cede_land": // Phase 5
+      case "treaty_create": // Phase 5
+      case "treaty_invite": // Phase 5
+      case "treaty_response": // Phase 5
+      case "treaty_leave": // Phase 5
+      case "request_assistance": // Phase 5
+      case "assistance_response": // Phase 5
+      case "puppet_command": // Phase 5
+      case "puppet_liberate": // Phase 5
+      case "set_border_policy": // Phase 5
+        console.warn(`superfork intent ${intent.type} not yet implemented`);
+        return new NoOpExecution();
+
       default:
         throw new Error(`intent type ${intent} not found`);
     }
