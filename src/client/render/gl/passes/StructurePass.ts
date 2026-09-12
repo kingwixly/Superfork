@@ -16,6 +16,8 @@
 
 import type { GhostPreviewData, RendererConfig, UnitState } from "../../types";
 import {
+  UT_BANK,
+  UT_CAPITAL,
   UT_CITY,
   UT_DEFENSE_POST,
   UT_FACTORY,
@@ -53,6 +55,12 @@ const STRUCTURE_ORDER = [
   UT_DEFENSE_POST,
   UT_SAM_LAUNCHER,
   UT_MISSILE_SILO,
+  // Superfork. Appending keeps every existing column index stable; the order
+  // here IS the atlas layout, and scripts/generate-sprite-atlases.mjs packs
+  // resources/icons/structures/*.png to match. shapeSDF in
+  // structure.frag.glsl needs an arm for each new index.
+  UT_BANK,
+  UT_CAPITAL,
 ] as const;
 
 const ATLAS_COLS = STRUCTURE_ORDER.length;
