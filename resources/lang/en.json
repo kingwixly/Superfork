@@ -157,6 +157,7 @@
   "build_menu": {
     "desc": {
       "atom_bomb": "Small explosion",
+      "bank": "Stores gold over time; captured intact",
       "city": "Increases max population",
       "defense_post": "Increases defenses of nearby borders",
       "factory": "Creates railroads and spawns trains",
@@ -1983,6 +1984,7 @@
   },
   "unit_type": {
     "atom_bomb": "Atom Bomb",
+    "bank": "Bank",
     "boat": "Boat",
     "city": "City",
     "defense_post": "Defense Post",

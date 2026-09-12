@@ -1,4 +1,5 @@
 import { simpleHash, toInt, withinInt } from "../Util";
+import { BANK_RESERVE_CAP } from "../configuration/SuperforkUnits";
 import {
   AllUnitParams,
   MessageType,
@@ -48,6 +49,13 @@ export class UnitImpl implements Unit {
   // Nuke only
   private _deletionAt: number | null = null;
   private _samLauncherState: SamLauncherState | undefined;
+
+  /**
+   * Gold this bank has accrued, capped at BANK_RESERVE_CAP. Only meaningful
+   * for UnitType.Bank. Transfers whole to whoever captures the bank, which is
+   * the entire point of building one somewhere defensible.
+   */
+  private _bankReserve: bigint = 0n;
 
   constructor(
     private _type: UnitType,
@@ -100,6 +108,7 @@ export class UnitImpl implements Unit {
     this._loaded =
       "loaded" in params ? (params.loaded ?? undefined) : undefined;
     this._trainType = "trainType" in params ? params.trainType : undefined;
+    this._bankReserve = "stored" in params ? (params.stored ?? 0n) : 0n;
 
     switch (this._type) {
       case UnitType.Warship:
@@ -109,8 +118,32 @@ export class UnitImpl implements Unit {
       case UnitType.SAMLauncher:
       case UnitType.City:
       case UnitType.Factory:
+      case UnitType.Bank:
         this.mg.stats().unitBuild(_owner, this._type);
     }
+  }
+
+  /** Gold held by this bank. Zero for every other unit type. */
+  bankReserve(): bigint {
+    return this._bankReserve;
+  }
+
+  /**
+   * Accrue toward the reserve, clamped at the cap. Returns nothing — the
+   * gold is minted alongside the owner's income rather than taken from it,
+   * so there is no counterparty to debit.
+   */
+  addBankReserve(amount: bigint): void {
+    if (amount <= 0n) return;
+    const next = this._bankReserve + amount;
+    this._bankReserve = next > BANK_RESERVE_CAP ? BANK_RESERVE_CAP : next;
+  }
+
+  /** Empty the reserve and hand back what was in it, for capture payout. */
+  drainBankReserve(): bigint {
+    const held = this._bankReserve;
+    this._bankReserve = 0n;
+    return held;
   }
 
   setTargetable(targetable: boolean): void {
@@ -238,6 +271,7 @@ export class UnitImpl implements Unit {
       case UnitType.SAMLauncher:
       case UnitType.City:
       case UnitType.Factory:
+      case UnitType.Bank:
         this.mg.stats().unitCapture(newOwner, this._type);
         this.mg.stats().unitLose(this._owner, this._type);
         break;
@@ -258,6 +292,17 @@ export class UnitImpl implements Unit {
     this._owner = newOwner;
     this._owner._units.push(this);
     this._owner._myUnitsVersion++;
+
+    // Capturing a bank takes whatever it had accrued. Drained rather than
+    // carried over, so a bank that changes hands twice does not pay out
+    // twice, and the captor sees the gold as income on their own tile.
+    if (this._type === UnitType.Bank) {
+      const seized = this.drainBankReserve();
+      if (seized > 0n) {
+        newOwner.addGold(seized, this._tile);
+      }
+    }
+
     this.mg.bumpUnitsVersion();
     this.mg.addUpdate(this.toUpdate());
   }

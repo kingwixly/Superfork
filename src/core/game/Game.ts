@@ -273,6 +273,9 @@ export const Structures = unitTypeGroup([
   UnitType.MissileSilo,
   UnitType.Port,
   UnitType.Factory,
+  // Superfork. Types are added here as their feature phase lands; everything
+  // still listed only in SuperforkStructures below is not yet buildable.
+  UnitType.Bank, // Phase 2
 ] as const);
 
 export const BuildMenus = unitTypeGroup([
@@ -701,6 +704,11 @@ export interface Unit {
   setTrainStation(trainStation: boolean): void;
   wasDestroyedByEnemy(): boolean;
   destroyer(): Player | undefined;
+
+  // Bank (superfork). Zero / no-op for every other unit type.
+  bankReserve(): bigint;
+  addBankReserve(amount: bigint): void;
+  drainBankReserve(): bigint;
 
   // Train
   trainType(): TrainType | undefined;

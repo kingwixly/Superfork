@@ -20,6 +20,7 @@ const BUILDING_ORDER = {
   defp: 4,
   silo: 5,
   saml: 6,
+  bank: 7,
 } as const satisfies Record<
   Exclude<(typeof otherUnits)[number], "wshp">,
   number
@@ -35,6 +36,7 @@ const buildingUnits = (
 // MIRV warheads are stats-only rows and keep their own keys. `satisfies` fails
 // compilation if a new stat unit lands without a label.
 const UNIT_LABEL_KEYS = {
+  bank: "unit_type.bank",
   city: "unit_type.city",
   defp: "unit_type.defense_post",
   fact: "unit_type.factory",

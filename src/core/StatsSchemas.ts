@@ -36,6 +36,8 @@ export const otherUnits = [
   "silo",
   "saml",
   "fact",
+  // Superfork. Appended so existing archived records keep their indexes.
+  "bank",
 ] as const;
 export const OtherUnitSchema = z.enum(otherUnits);
 export type OtherUnit = z.infer<typeof OtherUnitSchema>;
@@ -46,7 +48,8 @@ export type OtherUnitType =
   | UnitType.Port
   | UnitType.SAMLauncher
   | UnitType.Warship
-  | UnitType.Factory;
+  | UnitType.Factory
+  | UnitType.Bank;
 
 export const unitTypeToOtherUnit = {
   [UnitType.City]: "city",
@@ -56,6 +59,7 @@ export const unitTypeToOtherUnit = {
   [UnitType.SAMLauncher]: "saml",
   [UnitType.Warship]: "wshp",
   [UnitType.Factory]: "fact",
+  [UnitType.Bank]: "bank",
 } as const satisfies Record<OtherUnitType, OtherUnit>;
 
 // Attacks

@@ -1,5 +1,9 @@
 import { Config } from "../configuration/Config";
 import {
+  BANK_ACCRUAL_DENOMINATOR,
+  BANK_ACCRUAL_NUMERATOR,
+} from "../configuration/SuperforkUnits";
+import {
   Cell,
   Execution,
   Game,
@@ -90,6 +94,21 @@ export class PlayerExecution implements Execution {
 
     // Record stats
     this.mg.stats().goldWork(this.player, goldFromWorkers);
+
+    // Banks accrue alongside the owner's income rather than skimming it:
+    // 900k per 1M earned, each, capped per bank. Integer division keeps this
+    // deterministic across clients — no floats anywhere in the path.
+    if (goldFromWorkers > 0n) {
+      const perBank =
+        (goldFromWorkers * BANK_ACCRUAL_NUMERATOR) / BANK_ACCRUAL_DENOMINATOR;
+      if (perBank > 0n) {
+        for (const bank of this.player.units(UnitType.Bank)) {
+          if (!bank.isUnderConstruction()) {
+            bank.addBankReserve(perBank);
+          }
+        }
+      }
+    }
 
     for (const alliance of this.player.alliances()) {
       if (alliance.expiresAt() <= this.mg.ticks()) {

@@ -1,5 +1,6 @@
 import { Execution, Game, Player, Tick, Unit, UnitType } from "../game/Game";
 import { TileRef } from "../game/GameMap";
+import { BankExecution } from "./BankExecution";
 import { CityExecution } from "./CityExecution";
 import { DefensePostExecution } from "./DefensePostExecution";
 import { FactoryExecution } from "./FactoryExecution";
@@ -150,6 +151,9 @@ export class ConstructionExecution implements Execution {
       case UnitType.Factory:
         this.mg.addExecution(new FactoryExecution(this.structure!));
         break;
+      case UnitType.Bank:
+        this.mg.addExecution(new BankExecution(this.structure!));
+        break;
       default:
         console.warn(
           `unit type ${this.constructionType} cannot be constructed`,
@@ -166,6 +170,7 @@ export class ConstructionExecution implements Execution {
       case UnitType.SAMLauncher:
       case UnitType.City:
       case UnitType.Factory:
+      case UnitType.Bank:
         return true;
       default:
         return false;
