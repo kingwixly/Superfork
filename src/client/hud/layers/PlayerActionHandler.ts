@@ -7,10 +7,12 @@ import {
   SendBoatAttackIntentEvent,
   SendBreakAllianceIntentEvent,
   SendDeleteUnitIntentEvent,
+  SendDemoteCapitalIntentEvent,
   SendDonateGoldIntentEvent,
   SendDonateTroopsIntentEvent,
   SendEmbargoIntentEvent,
   SendEmojiIntentEvent,
+  SendPromoteCapitalIntentEvent,
   SendSpawnIntentEvent,
   SendTargetPlayerIntentEvent,
 } from "../../Transport";
@@ -92,5 +94,13 @@ export class PlayerActionHandler {
 
   handleDeleteUnit(unitId: number) {
     this.eventBus.emit(new SendDeleteUnitIntentEvent(unitId));
+  }
+
+  handlePromoteCapital(unitId: number) {
+    this.eventBus.emit(new SendPromoteCapitalIntentEvent(unitId));
+  }
+
+  handleDemoteCapital(unitId: number) {
+    this.eventBus.emit(new SendDemoteCapitalIntentEvent(unitId));
   }
 }

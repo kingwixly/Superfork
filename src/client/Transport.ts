@@ -158,6 +158,16 @@ export class SendDeleteUnitIntentEvent implements GameEvent {
   constructor(public readonly unitId: number) {}
 }
 
+/** Superfork: promote an owned City into this nation's Capital. */
+export class SendPromoteCapitalIntentEvent implements GameEvent {
+  constructor(public readonly unitId: number) {}
+}
+
+/** Superfork: demote a Capital back to a City, if the stacking rule allows. */
+export class SendDemoteCapitalIntentEvent implements GameEvent {
+  constructor(public readonly unitId: number) {}
+}
+
 export class CancelAttackIntentEvent implements GameEvent {
   constructor(public readonly attackID: string) {}
 }
@@ -334,6 +344,14 @@ export class Transport {
 
     this.eventBus.on(SendDeleteUnitIntentEvent, (e) =>
       this.onSendDeleteUnitIntent(e),
+    );
+
+    this.eventBus.on(SendPromoteCapitalIntentEvent, (e) =>
+      this.onSendPromoteCapitalIntent(e),
+    );
+
+    this.eventBus.on(SendDemoteCapitalIntentEvent, (e) =>
+      this.onSendDemoteCapitalIntent(e),
     );
 
     this.eventBus.on(SendKickPlayerIntentEvent, (e) =>
@@ -889,6 +907,20 @@ export class Transport {
   private onSendDeleteUnitIntent(event: SendDeleteUnitIntentEvent) {
     this.sendIntent({
       type: "delete_unit",
+      unitId: event.unitId,
+    });
+  }
+
+  private onSendPromoteCapitalIntent(event: SendPromoteCapitalIntentEvent) {
+    this.sendIntent({
+      type: "promote_capital",
+      unitId: event.unitId,
+    });
+  }
+
+  private onSendDemoteCapitalIntent(event: SendDemoteCapitalIntentEvent) {
+    this.sendIntent({
+      type: "demote_capital",
       unitId: event.unitId,
     });
   }

@@ -41,6 +41,7 @@ const swordIcon = assetUrl("images/SwordIconWhite.svg");
 const targetIcon = assetUrl("images/TargetIconWhite.svg");
 const traitorIcon = assetUrl("images/TraitorIconWhite.svg");
 const xIcon = assetUrl("images/XIcon.svg");
+const crownIcon = assetUrl("images/CrownIcon.svg");
 
 export interface MenuElementParams {
   myPlayer: PlayerView;
@@ -129,6 +130,7 @@ export enum Slot {
   Ally = "ally",
   Back = "back",
   Delete = "delete",
+  Capital = "capital",
 }
 
 function isFriendlyTarget(params: MenuElementParams): boolean {
@@ -694,6 +696,84 @@ export const deleteUnitElement: MenuElement = {
   },
 };
 
+/** Radius, in tiles, within which the radial menu will pick up a structure. */
+const CAPITAL_SELECTION_RADIUS = 5;
+
+/**
+ * The city nearest the cursor that could become this nation's capital, or the
+ * capital itself when one is already standing there. Returns null when there
+ * is nothing to act on, which is what drives the slot's disabled state.
+ */
+function capitalCandidate(params: MenuElementParams) {
+  const existing = params.myPlayer
+    .units(UnitType.Capital)
+    .find(
+      (u) =>
+        params.game.manhattanDist(u.tile(), params.tile) <=
+        CAPITAL_SELECTION_RADIUS,
+    );
+  if (existing !== undefined) {
+    return { unit: existing, isCapital: true };
+  }
+
+  // No capital under the cursor. Offer promotion only if the nation has no
+  // capital at all — the rule is one per nation.
+  if (params.myPlayer.units(UnitType.Capital).length > 0) {
+    return null;
+  }
+
+  const cities = params.myPlayer
+    .units(UnitType.City)
+    .filter(
+      (u) =>
+        !u.isUnderConstruction() &&
+        params.game.manhattanDist(u.tile(), params.tile) <=
+          CAPITAL_SELECTION_RADIUS,
+    );
+  const closest = findClosestBy(cities, (u) =>
+    params.game.manhattanDist(u.tile(), params.tile),
+  );
+  return closest ? { unit: closest, isCapital: false } : null;
+}
+
+export const capitalElement: MenuElement = {
+  id: Slot.Capital,
+  name: "capital",
+  disabled: (params: MenuElementParams) => {
+    const tileOwner = params.game.owner(params.tile);
+    if (!tileOwner.isPlayer() || tileOwner.id() !== params.myPlayer.id()) {
+      return true;
+    }
+    if (params.game.inSpawnPhase()) {
+      return true;
+    }
+    return capitalCandidate(params) === null;
+  },
+  icon: crownIcon,
+  color: COLORS.build,
+  tooltipKeys: [
+    {
+      key: "radial_menu.capital_title",
+      className: "title",
+    },
+    {
+      key: "radial_menu.capital_description",
+      className: "description",
+    },
+  ],
+  action: (params: MenuElementParams) => {
+    const candidate = capitalCandidate(params);
+    if (candidate !== null) {
+      if (candidate.isCapital) {
+        params.playerActionHandler.handleDemoteCapital(candidate.unit.id());
+      } else {
+        params.playerActionHandler.handlePromoteCapital(candidate.unit.id());
+      }
+    }
+    params.closeMenu();
+  },
+};
+
 export const buildMenuElement: MenuElement = {
   id: Slot.Build,
   name: "build",
@@ -804,7 +884,12 @@ export const rootMenuElement: MenuElement = {
     const menuItems: (MenuElement | null)[] = [
       infoMenuElement,
       ...(isOwnTerritory
-        ? [deleteUnitElement, allyRequestElement, buildMenuElement]
+        ? [
+            deleteUnitElement,
+            capitalElement,
+            allyRequestElement,
+            buildMenuElement,
+          ]
         : [
             isAllied && !isDisconnected ? allyBreakElement : boatMenuElement,
             inExtensionWindow ? allyExtendElement : allyRequestElement,

@@ -1687,6 +1687,8 @@
     "visit_store": "Visit store"
   },
   "radial_menu": {
+    "capital_description": "Promote the nearest city to your capital, or demote it",
+    "capital_title": "Capital",
     "delete_unit_description": "Click to delete the nearest unit",
     "delete_unit_title": "Delete Unit",
     "upgrade_x": "Upgrade x{amount}"
