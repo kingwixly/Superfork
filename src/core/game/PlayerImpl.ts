@@ -35,6 +35,7 @@ import {
   PlayerProfile,
   PlayerType,
   Relation,
+  Sanction,
   Structures,
   Team,
   TerraNullius,
@@ -136,6 +137,8 @@ export class PlayerImpl implements Player {
   private _betrayalCount: number = 0;
 
   private embargoes = new Map<PlayerID, Embargo>();
+  /** Superfork: sanctions. See Sanction in Game.ts for how they differ. */
+  private sanctions = new Map<PlayerID, Sanction>();
 
   public _borderTiles = new TileSet();
 
@@ -1206,6 +1209,26 @@ export class PlayerImpl implements Player {
     const embargo =
       other.hasEmbargoAgainst(this) || this.hasEmbargoAgainst(other);
     return !embargo && other.id() !== this.id();
+  }
+
+  hasSanctionAgainst(other: Player): boolean {
+    return this.sanctions.has(other.id());
+  }
+
+  addSanction(other: Player): void {
+    if (this.sanctions.has(other.id())) return;
+    this.sanctions.set(other.id(), {
+      createdAt: this.mg.ticks(),
+      target: other,
+    });
+  }
+
+  stopSanction(other: Player): void {
+    this.sanctions.delete(other.id());
+  }
+
+  getSanctions(): Sanction[] {
+    return [...this.sanctions.values()];
   }
 
   getEmbargoes(): Embargo[] {

@@ -807,6 +807,16 @@ export interface Embargo {
   target: Player;
 }
 
+/**
+ * A sanction (superfork). Strictly wider than an embargo: an embargo cuts
+ * trade, a sanction additionally closes land borders to trains and ships and
+ * restricts the sanctioner's airspace to the target.
+ */
+export interface Sanction {
+  createdAt: Tick;
+  target: Player;
+}
+
 export interface DisconnectSnapshot {
   currentTick: number;
   teamTiles: number;
@@ -975,6 +985,12 @@ export interface Player {
 
   // Embargo
   hasEmbargoAgainst(other: Player): boolean;
+
+  // Sanctions (superfork).
+  hasSanctionAgainst(other: Player): boolean;
+  addSanction(other: Player): void;
+  stopSanction(other: Player): void;
+  getSanctions(): Sanction[];
   tradingPartners(): Player[];
   addEmbargo(other: Player, isTemporary: boolean): void;
   getEmbargoes(): Embargo[];
