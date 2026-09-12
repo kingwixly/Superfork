@@ -139,6 +139,13 @@ export class PlayerImpl implements Player {
   private embargoes = new Map<PlayerID, Embargo>();
   /** Superfork: sanctions. See Sanction in Game.ts for how they differ. */
   private sanctions = new Map<PlayerID, Sanction>();
+  /**
+   * Superfork: border policy. Both default to false - a nation starts closed
+   * to non-allied civilian traffic and opts in, rather than having to notice
+   * and switch something off.
+   */
+  private _borderTrade = false;
+  private _publicAirports = false;
 
   public _borderTiles = new TileSet();
 
@@ -1209,6 +1216,27 @@ export class PlayerImpl implements Player {
     const embargo =
       other.hasEmbargoAgainst(this) || this.hasEmbargoAgainst(other);
     return !embargo && other.id() !== this.id();
+  }
+
+  borderTradeEnabled(): boolean {
+    return this._borderTrade;
+  }
+
+  publicAirportsEnabled(): boolean {
+    return this._publicAirports;
+  }
+
+  setBorderPolicy(borderTrade?: boolean, publicAirports?: boolean): void {
+    if (borderTrade !== undefined) this._borderTrade = borderTrade;
+    if (publicAirports !== undefined) this._publicAirports = publicAirports;
+  }
+
+  acceptsCivilianFlightsFrom(from: Player): boolean {
+    if (from.id() === this.id()) return true;
+    // A sanction closes the door regardless of how open the policy is.
+    if (this.hasSanctionAgainst(from)) return false;
+    if (this.isFriendly(from)) return true;
+    return this._borderTrade && this._publicAirports;
   }
 
   hasSanctionAgainst(other: Player): boolean {

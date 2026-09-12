@@ -986,6 +986,19 @@ export interface Player {
   // Embargo
   hasEmbargoAgainst(other: Player): boolean;
 
+  // Border policy (superfork). The nation control panel.
+  borderTradeEnabled(): boolean;
+  publicAirportsEnabled(): boolean;
+  setBorderPolicy(borderTrade?: boolean, publicAirports?: boolean): void;
+  /**
+   * Whether `from` may fly civilian traffic into this nation's airports.
+   *
+   * Allies always may. Everyone else may only if this nation has opened both
+   * its borders to trade and its airports to the public - the two halves of
+   * the control panel. A sanction overrides both.
+   */
+  acceptsCivilianFlightsFrom(from: Player): boolean;
+
   // Sanctions (superfork).
   hasSanctionAgainst(other: Player): boolean;
   addSanction(other: Player): void;
