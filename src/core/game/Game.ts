@@ -173,6 +173,16 @@ export interface PublicGameModifiers {
 export const MAX_UPGRADE_AMOUNT = 50;
 
 export interface UnitInfo {
+  /**
+   * Operating radius in tiles (superfork). For bases, how far their aircraft
+   * range; for combatants, engagement range. Undefined for types where the
+   * concept does not apply.
+   */
+  range?: number;
+  /** Tiles per tick (superfork). Undefined for immobile types. */
+  speed?: number;
+  /** Troop capacity (superfork). Undefined for types that carry none. */
+  troopCapacity?: number;
   // extraUnits shifts the cost curve as if the player already had that many
   // additional units/levels — used to price the later steps of a bulk upgrade.
   cost: (game: Game, player: Player, extraUnits?: number) => Gold;
@@ -277,6 +287,9 @@ export const Structures = unitTypeGroup([
   // still listed only in SuperforkStructures below is not yet buildable.
   UnitType.Bank, // Phase 2
   UnitType.Capital, // Phase 2
+  UnitType.Airstrip, // Phase 3
+  UnitType.Airfield, // Phase 3
+  UnitType.InternationalAirport, // Phase 3
 ] as const);
 
 export const BuildMenus = unitTypeGroup([

@@ -1,5 +1,6 @@
 import { Execution, Game, Player, Tick, Unit, UnitType } from "../game/Game";
 import { TileRef } from "../game/GameMap";
+import { AirBaseExecution } from "./AirBaseExecution";
 import { BankExecution } from "./BankExecution";
 import { CityExecution } from "./CityExecution";
 import { DefensePostExecution } from "./DefensePostExecution";
@@ -154,6 +155,11 @@ export class ConstructionExecution implements Execution {
       case UnitType.Bank:
         this.mg.addExecution(new BankExecution(this.structure!));
         break;
+      case UnitType.Airstrip:
+      case UnitType.Airfield:
+      case UnitType.InternationalAirport:
+        this.mg.addExecution(new AirBaseExecution(this.structure!));
+        break;
       default:
         console.warn(
           `unit type ${this.constructionType} cannot be constructed`,
@@ -171,6 +177,9 @@ export class ConstructionExecution implements Execution {
       case UnitType.City:
       case UnitType.Factory:
       case UnitType.Bank:
+      case UnitType.Airstrip:
+      case UnitType.Airfield:
+      case UnitType.InternationalAirport:
         return true;
       default:
         return false;

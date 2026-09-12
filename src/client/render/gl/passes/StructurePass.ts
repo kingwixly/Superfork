@@ -16,11 +16,14 @@
 
 import type { GhostPreviewData, RendererConfig, UnitState } from "../../types";
 import {
+  UT_AIRFIELD,
+  UT_AIRSTRIP,
   UT_BANK,
   UT_CAPITAL,
   UT_CITY,
   UT_DEFENSE_POST,
   UT_FACTORY,
+  UT_INTERNATIONAL_AIRPORT,
   UT_MISSILE_SILO,
   UT_PORT,
   UT_SAM_LAUNCHER,
@@ -61,6 +64,9 @@ const STRUCTURE_ORDER = [
   // structure.frag.glsl needs an arm for each new index.
   UT_BANK,
   UT_CAPITAL,
+  UT_AIRSTRIP, // Phase 3
+  UT_AIRFIELD, // Phase 3
+  UT_INTERNATIONAL_AIRPORT, // Phase 3
 ] as const;
 
 const ATLAS_COLS = STRUCTURE_ORDER.length;

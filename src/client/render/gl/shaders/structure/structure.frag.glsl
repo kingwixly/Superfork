@@ -115,7 +115,7 @@ float sdPolygon(vec2 p, float R, float n, float rot) {
 
 // Per-structure-type shape SDF.
 // Atlas indices: 0=City, 1=Port, 2=Factory, 3=DefensePost, 4=SAM, 5=Silo,
-//                6=Bank, 7=Capital
+//                6=Bank, 7=Capital, 8=Airstrip, 9=Airfield, 10=Intl Airport
 // Every index needs an arm here — an unhandled index silently falls through to
 // the last shape, which reads as the wrong structure rather than as an error.
 float shapeSDF(vec2 p, float R) {
@@ -133,9 +133,17 @@ float shapeSDF(vec2 p, float R) {
     return sdPolygon(p, R, 3.0, PI * 0.5);    // Missile Silo → triangle (vertex up)
   if (vAtlasIdx < 6.5)
     return sdPolygon(p, R, 7.0, PI * 0.5);    // Bank → heptagon (vertex up)
-  // Capital → dodecagon. Nearly a circle on purpose: it should read as a
-  // grander version of the City it was promoted from, not as a new shape.
-  return sdPolygon(p, R, 12.0, 0.0);
+  if (vAtlasIdx < 7.5)
+    // Capital → dodecagon. Nearly a circle on purpose: it should read as a
+    // grander version of the City it was promoted from, not a new shape.
+    return sdPolygon(p, R, 12.0, 0.0);
+  // Air bases share the rhombus family, sized by capability, so they read as
+  // one class of thing at a glance — the way Port and Factory do.
+  if (vAtlasIdx < 8.5)
+    return sdPolygon(p, R * 0.92, 4.0, PI * 0.25);  // Airstrip → small diamond
+  if (vAtlasIdx < 9.5)
+    return sdPolygon(p, R, 4.0, PI * 0.25);         // Airfield → diamond
+  return sdPolygon(p, R, 6.0, 0.0);                 // Intl Airport → hexagon (vertex up)
 }
 
 void main() {

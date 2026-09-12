@@ -63,6 +63,9 @@ const COLUMNS = [
   // Superfork additions.
   "bank",
   "capital",
+  "airstrip",
+  "airfield",
+  "international_airport",
 ];
 
 const CELL = 64;

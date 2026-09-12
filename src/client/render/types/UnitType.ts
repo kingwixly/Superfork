@@ -32,6 +32,9 @@ export const UT_MISSILE_SILO = "Missile Silo" as const;
 // Superfork structures.
 export const UT_BANK = "Bank" as const;
 export const UT_CAPITAL = "Capital" as const;
+export const UT_AIRSTRIP = "Airstrip" as const;
+export const UT_AIRFIELD = "Airfield" as const;
+export const UT_INTERNATIONAL_AIRPORT = "International Airport" as const;
 
 // ---------------------------------------------------------------------------
 // Derived sets
@@ -46,6 +49,9 @@ export const STRUCTURE_TYPES: ReadonlySet<string> = new Set([
   UT_MISSILE_SILO,
   UT_BANK,
   UT_CAPITAL,
+  UT_AIRSTRIP,
+  UT_AIRFIELD,
+  UT_INTERNATIONAL_AIRPORT,
 ]);
 
 export const NUKE_TYPES: ReadonlySet<string> = new Set([
@@ -97,4 +103,7 @@ export const ALL_UNIT_TYPES = [
   UT_TRAIN,
   UT_BANK,
   UT_CAPITAL,
+  UT_AIRSTRIP,
+  UT_AIRFIELD,
+  UT_INTERNATIONAL_AIRPORT,
 ] as const;

@@ -156,12 +156,15 @@
   },
   "build_menu": {
     "desc": {
+      "airfield": "Launches military transport aircraft",
+      "airstrip": "Launches fighter jets",
       "atom_bomb": "Small explosion",
       "bank": "Stores gold over time; captured intact",
       "city": "Increases max population",
       "defense_post": "Increases defenses of nearby borders",
       "factory": "Creates railroads and spawns trains",
       "hydrogen_bomb": "Large explosion",
+      "international_airport": "Civilian flights and any military aircraft",
       "mirv": "Huge explosion, only targets selected player",
       "missile_silo": "Used to launch nukes",
       "port": "Sends trade ships to generate gold",
@@ -1985,6 +1988,8 @@
     "title": "Tutorial"
   },
   "unit_type": {
+    "airfield": "Airfield",
+    "airstrip": "Airstrip",
     "atom_bomb": "Atom Bomb",
     "bank": "Bank",
     "boat": "Boat",
@@ -1993,6 +1998,7 @@
     "defense_post": "Defense Post",
     "factory": "Factory",
     "hydrogen_bomb": "Hydrogen Bomb",
+    "international_airport": "International Airport",
     "mirv": "MIRV",
     "missile_silo": "Missile Silo",
     "port": "Port",

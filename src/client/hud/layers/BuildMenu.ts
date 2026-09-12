@@ -30,6 +30,9 @@ const warshipIcon = assetUrl("images/BattleshipIconWhite.svg");
 const cityIcon = assetUrl("images/CityIconWhite.svg");
 const factoryIcon = assetUrl("images/FactoryIconWhite.svg");
 const bankIcon = assetUrl("images/GoldCoinIcon.svg");
+const airstripIcon = assetUrl("images/AirstripIconWhite.svg");
+const airfieldIcon = assetUrl("images/AirfieldIconWhite.svg");
+const airportIcon = assetUrl("images/AirportIconWhite.svg");
 const goldCoinIcon = assetUrl("images/GoldCoinIcon.svg");
 const mirvIcon = assetUrl("images/MIRVIcon.svg");
 const missileSiloIcon = assetUrl("images/MissileSiloIconWhite.svg");
@@ -124,6 +127,27 @@ export const buildTable: BuildItemDisplay[][] = [
       icon: bankIcon,
       description: "build_menu.desc.bank",
       key: "unit_type.bank",
+      countable: true,
+    },
+    {
+      unitType: UnitType.Airstrip,
+      icon: airstripIcon,
+      description: "build_menu.desc.airstrip",
+      key: "unit_type.airstrip",
+      countable: true,
+    },
+    {
+      unitType: UnitType.Airfield,
+      icon: airfieldIcon,
+      description: "build_menu.desc.airfield",
+      key: "unit_type.airfield",
+      countable: true,
+    },
+    {
+      unitType: UnitType.InternationalAirport,
+      icon: airportIcon,
+      description: "build_menu.desc.international_airport",
+      key: "unit_type.international_airport",
       countable: true,
     },
   ],

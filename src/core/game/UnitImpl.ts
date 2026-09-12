@@ -123,6 +123,9 @@ export class UnitImpl implements Unit {
       case UnitType.Factory:
       case UnitType.Bank:
       case UnitType.Capital:
+      case UnitType.Airstrip:
+      case UnitType.Airfield:
+      case UnitType.InternationalAirport:
         this.mg.stats().unitBuild(_owner, this._type);
     }
   }
@@ -277,6 +280,9 @@ export class UnitImpl implements Unit {
       case UnitType.Factory:
       case UnitType.Bank:
       case UnitType.Capital:
+      case UnitType.Airstrip:
+      case UnitType.Airfield:
+      case UnitType.InternationalAirport:
         this.mg.stats().unitCapture(newOwner, this._type);
         this.mg.stats().unitLose(this._owner, this._type);
         break;

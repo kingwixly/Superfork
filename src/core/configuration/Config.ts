@@ -673,6 +673,9 @@ export class Config {
               ? 0
               : spec.constructionDuration,
             upgradable: spec.upgradable,
+            range: spec.range,
+            speed: spec.speed,
+            troopCapacity: spec.troopCapacity,
           };
           break;
         }
