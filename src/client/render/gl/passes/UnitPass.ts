@@ -26,6 +26,11 @@
  *   Col 9: Train Engine (5×5)
  *   Col 10: Train Carriage (5×5)
  *   Col 11: Train Carriage Loaded (5×5)
+ *   Col 12: Fighter Jet (7×7)          — superfork
+ *   Col 13: Transport Jet (6×6)        — superfork
+ *   Col 14: Cargo Jet (6×5)            — superfork
+ *   Col 15: Airliner (5×6)             — superfork
+ *   Col 16: Interceptor (5×6)          — superfork
  *
  * Data flow:
  *   FrameSnapshot.units → filter by typeToAtlasIdx → instance VBO → GPU
@@ -36,10 +41,15 @@ import { assetUrl } from "src/core/AssetUrls";
 import type { Config } from "src/core/configuration/Config";
 import type { RendererConfig, UnitState } from "../../types";
 import {
+  AIRCRAFT_TYPES,
   SMOOTHED_NUKE_TYPES,
   TrainType,
+  UT_AIRLINER,
   UT_ATOM_BOMB,
+  UT_CARGO_JET,
+  UT_FIGHTER_JET,
   UT_HYDROGEN_BOMB,
+  UT_INTERCEPTOR,
   UT_MIRV,
   UT_MIRV_WARHEAD,
   UT_SAM_MISSILE,
@@ -47,6 +57,7 @@ import {
   UT_TRADE_SHIP,
   UT_TRAIN,
   UT_TRANSPORT,
+  UT_TRANSPORT_JET,
   UT_WARSHIP,
 } from "../../types";
 import { DynamicInstanceBuffer } from "../DynamicBuffer";
@@ -85,6 +96,14 @@ const UNIT_ORDER = [
   "TrainEngine",
   "TrainCarriage",
   "TrainCarriageLoaded",
+  // Superfork aircraft. Appended: column index is the atlas contract, and
+  // scripts/generate-sprite-atlases.mjs appends to unit-atlas.png to match
+  // rather than regenerating columns 0-11, whose sources were never shipped.
+  UT_FIGHTER_JET,
+  UT_TRANSPORT_JET,
+  UT_CARGO_JET,
+  UT_AIRLINER,
+  UT_INTERCEPTOR,
 ] as const;
 
 const ATLAS_COLS = UNIT_ORDER.length;
@@ -147,6 +166,10 @@ const MISSILE_TYPES: ReadonlySet<string> = new Set([
   UT_SAM_MISSILE,
   UT_SHELL,
   UT_MIRV_WARHEAD,
+  // Aircraft share the missile buffer because it is the above-structures
+  // layer, which is where anything airborne belongs. They are not missiles;
+  // this set is really "renders on top".
+  ...AIRCRAFT_TYPES,
 ]);
 
 /** Values per smoothing segment in the flat `smoothSegs` array:

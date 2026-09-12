@@ -33,20 +33,25 @@ export type { BonusEvent, FrameEvents } from "./FrameEvents";
 
 // Unit type string constants and derived sets
 export {
+  AIRCRAFT_TYPES,
   ALL_UNIT_TYPES,
   NUKE_MAGNITUDES,
   NUKE_TYPES,
   SMOOTHED_NUKE_TYPES,
   STRUCTURE_TYPES,
   UT_AIRFIELD,
+  UT_AIRLINER,
   UT_AIRSTRIP,
   UT_ATOM_BOMB,
   UT_BANK,
   UT_CAPITAL,
+  UT_CARGO_JET,
   UT_CITY,
   UT_DEFENSE_POST,
   UT_FACTORY,
+  UT_FIGHTER_JET,
   UT_HYDROGEN_BOMB,
+  UT_INTERCEPTOR,
   UT_INTERNATIONAL_AIRPORT,
   UT_MIRV,
   UT_MIRV_WARHEAD,
@@ -58,5 +63,6 @@ export {
   UT_TRADE_SHIP,
   UT_TRAIN,
   UT_TRANSPORT,
+  UT_TRANSPORT_JET,
   UT_WARSHIP,
 } from "./UnitType";

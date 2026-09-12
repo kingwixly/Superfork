@@ -72,3 +72,45 @@ describe("structure atlas contract", () => {
     ).not.toThrow();
   });
 });
+
+const UNIT_PASS = path.join(ROOT, "src/client/render/gl/passes/UnitPass.ts");
+const UNIT_ATLAS = path.join(ROOT, "resources/atlases/unit-atlas.png");
+
+/**
+ * The unit atlas has the same positional contract as the structure one, and
+ * the same silent failure: a unit type absent from UNIT_ORDER never draws.
+ * Aircraft were added by appending columns, so these pin that the atlas is
+ * wide enough for the order the renderer expects.
+ */
+describe("unit atlas contract", () => {
+  function unitOrder(): string[] {
+    const src = readFileSync(UNIT_PASS, "utf8");
+    const block = /const UNIT_ORDER = \[([\s\S]*?)\] as const;/.exec(src);
+    if (!block) throw new Error("could not find UNIT_ORDER");
+    return [...block[1].matchAll(/UT_([A-Z_]+)|"([A-Za-z]+)"/g)].map(
+      (m) => m[1] ?? m[2],
+    );
+  }
+
+  test("the atlas has a column for every unit in UNIT_ORDER", () => {
+    const png = readFileSync(UNIT_ATLAS);
+    // PNG width is a big-endian uint32 at byte offset 16.
+    const width = png.readUInt32BE(16);
+    const height = png.readUInt32BE(20);
+    expect(height).toBe(13);
+    expect(width / 13).toBe(unitOrder().length);
+  });
+
+  test("aircraft are present in the unit order", () => {
+    const order = unitOrder();
+    for (const t of [
+      "FIGHTER_JET",
+      "TRANSPORT_JET",
+      "CARGO_JET",
+      "AIRLINER",
+      "INTERCEPTOR",
+    ]) {
+      expect(order).toContain(t);
+    }
+  });
+});

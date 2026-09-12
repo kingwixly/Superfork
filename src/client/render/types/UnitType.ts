@@ -35,6 +35,21 @@ export const UT_CAPITAL = "Capital" as const;
 export const UT_AIRSTRIP = "Airstrip" as const;
 export const UT_AIRFIELD = "Airfield" as const;
 export const UT_INTERNATIONAL_AIRPORT = "International Airport" as const;
+// Superfork aircraft.
+export const UT_FIGHTER_JET = "Fighter Jet" as const;
+export const UT_TRANSPORT_JET = "Transport Jet" as const;
+export const UT_CARGO_JET = "Cargo Jet" as const;
+export const UT_AIRLINER = "Airliner" as const;
+export const UT_INTERCEPTOR = "Interceptor" as const;
+
+/** Everything that flies. Rendered above structures, ignores terrain. */
+export const AIRCRAFT_TYPES: ReadonlySet<string> = new Set([
+  UT_FIGHTER_JET,
+  UT_TRANSPORT_JET,
+  UT_CARGO_JET,
+  UT_AIRLINER,
+  UT_INTERCEPTOR,
+]);
 
 // ---------------------------------------------------------------------------
 // Derived sets
@@ -106,4 +121,9 @@ export const ALL_UNIT_TYPES = [
   UT_AIRSTRIP,
   UT_AIRFIELD,
   UT_INTERNATIONAL_AIRPORT,
+  UT_FIGHTER_JET,
+  UT_TRANSPORT_JET,
+  UT_CARGO_JET,
+  UT_AIRLINER,
+  UT_INTERCEPTOR,
 ] as const;

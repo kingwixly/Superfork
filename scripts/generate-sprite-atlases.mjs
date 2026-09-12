@@ -72,6 +72,65 @@ const CELL = 64;
 const SRC_DIR = join(ROOT, "resources/icons/structures");
 const OUT = join(ROOT, "resources/atlases/icon-atlas.png");
 
+/**
+ * Unit atlas columns appended by the superfork.
+ *
+ * The unit atlas is 13px cells and pre-existing columns 0-11 were never
+ * shipped as loose sources, so this script only *appends* to it: the existing
+ * atlas is loaded and new columns are composited on the right. Regenerating
+ * the first twelve would mean reconstructing art we do not have.
+ *
+ * Sprites are greyscale masks; the GPU replaces 180/130/70 with the player's
+ * territory, mid and border colours. Each is centred in its cell.
+ */
+const UNIT_COLUMNS = [
+  "fighter_jet",
+  "transport_jet",
+  "cargo_jet",
+  "airliner",
+  "interceptor",
+];
+
+const UNIT_CELL = 13;
+const UNIT_SRC_DIR = join(ROOT, "resources/icons/units");
+const UNIT_OUT = join(ROOT, "resources/atlases/unit-atlas.png");
+
+async function buildUnitAtlas() {
+  const existing = await sharp(UNIT_OUT).metadata();
+  const baseCols = Math.round(existing.width / UNIT_CELL);
+  const width = UNIT_CELL * (baseCols + UNIT_COLUMNS.length);
+
+  const composites = [{ input: UNIT_OUT, left: 0, top: 0 }];
+  for (let i = 0; i < UNIT_COLUMNS.length; i++) {
+    const file = join(UNIT_SRC_DIR, `${UNIT_COLUMNS[i]}.png`);
+    if (!existsSync(file)) throw new Error(`missing unit sprite: ${file}`);
+    const meta = await sharp(file).metadata();
+    if (meta.width > UNIT_CELL || meta.height > UNIT_CELL) {
+      throw new Error(
+        `${UNIT_COLUMNS[i]}.png is ${meta.width}x${meta.height}, max ${UNIT_CELL}`,
+      );
+    }
+    composites.push({
+      input: file,
+      left:
+        UNIT_CELL * (baseCols + i) + Math.floor((UNIT_CELL - meta.width) / 2),
+      top: Math.floor((UNIT_CELL - meta.height) / 2),
+    });
+  }
+
+  return sharp({
+    create: {
+      width,
+      height: UNIT_CELL,
+      channels: 4,
+      background: { r: 0, g: 0, b: 0, alpha: 0 },
+    },
+  })
+    .composite(composites)
+    .png({ compressionLevel: 9 })
+    .toBuffer();
+}
+
 async function buildStructureAtlas() {
   const composites = [];
   for (let i = 0; i < COLUMNS.length; i++) {
@@ -103,6 +162,7 @@ async function buildStructureAtlas() {
 
 const check = process.argv.includes("--check");
 const buf = await buildStructureAtlas();
+const unitBuf = await buildUnitAtlas();
 
 if (check) {
   const existing = await readFile(OUT).catch(() => null);
@@ -120,5 +180,9 @@ if (check) {
   await writeFile(OUT, buf);
   console.log(
     `wrote ${OUT} — ${COLUMNS.length} columns x ${CELL}px (${COLUMNS.join(", ")})`,
+  );
+  await writeFile(UNIT_OUT, unitBuf);
+  console.log(
+    `wrote ${UNIT_OUT} — +${UNIT_COLUMNS.length} columns x ${UNIT_CELL}px (${UNIT_COLUMNS.join(", ")})`,
   );
 }
