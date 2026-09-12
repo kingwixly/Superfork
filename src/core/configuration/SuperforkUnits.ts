@@ -1,0 +1,276 @@
+/**
+ * Superfork unit specifications.
+ *
+ * Every unit type the superfork adds is described here in one place, rather
+ * than as another arm of the `Config.unitInfo()` switch. Two reasons:
+ *
+ *  1. `Config.ts` is already 1,246 lines. Nineteen more switch arms makes it
+ *     unnavigable.
+ *  2. Rebasing onto future upstream betas. Upstream will keep editing that
+ *     switch; every arm we add there is a merge conflict waiting to happen.
+ *     A one-line delegation is not.
+ *
+ * `Config` reads this table and converts specs into `UnitInfo` using its own
+ * `costWrapper`, so infinite-gold cheats, per-player unit counting and
+ * instant-build all keep working exactly as they do for vanilla units.
+ *
+ * BALANCE STATUS: first pass. These numbers are anchored against vanilla
+ * (City/Port 125k·pow2, SAM 1.5M, Silo 1M, Warship 250k/ea, Atom 750k,
+ * Hydrogen 5M, MIRV 25M) so the economy stays recognisable, but none of it
+ * has been played. Phase 7 is the real balance pass.
+ */
+
+import { pow2 } from "../DetMath";
+import { UnitType } from "../game/Game";
+
+/** Which medium a unit moves through. Drives pathing and interception rules. */
+export enum UnitDomain {
+  Structure = "Structure",
+  Land = "Land",
+  Sea = "Sea",
+  Air = "Air",
+}
+
+export interface SuperforkUnitSpec {
+  domain: UnitDomain;
+
+  /**
+   * Cost curve, as a function of how many qualifying units the player already
+   * owns. Wrapped by `Config.costWrapper`, so returning a plain number here is
+   * enough — bigint conversion and cheat handling happen there.
+   */
+  cost: (numUnits: number) => number;
+
+  /**
+   * Unit types counted toward the cost curve's `numUnits`. Defaults to the
+   * spec's own type. Listing several makes them share a price ladder, the way
+   * vanilla Port and Factory do.
+   */
+  costCountsToward?: UnitType[];
+
+  maxHealth?: number;
+  damage?: number;
+
+  /** Construction time in ticks (10 ticks = 1s), before `instantBuild`. */
+  constructionDuration?: number;
+
+  upgradable?: boolean;
+
+  /**
+   * Operating radius in tiles. For bases, how far their aircraft range. For
+   * combatants, engagement range. For interceptors, intercept radius.
+   */
+  range?: number;
+
+  /** Tiles per tick. Vanilla transport boats are ~1 for reference. */
+  speed?: number;
+
+  /** Troop capacity, for anything that carries troops. */
+  troopCapacity?: number;
+}
+
+const TICKS_PER_SECOND = 10;
+const s = (seconds: number) => seconds * TICKS_PER_SECOND;
+
+/**
+ * Bank reserve cap, and the share of player income each bank accrues.
+ *
+ * Dani's spec: banks store up to 50M, earning 900k per 1M of player income.
+ * Note this is per-bank and not taken out of the player's own income — banks
+ * mint alongside it rather than skimming it. Capturing a bank transfers its
+ * whole accrued reserve to the captor, which is what makes them worth raiding.
+ */
+export const BANK_RESERVE_CAP = 50_000_000n;
+export const BANK_ACCRUAL_NUMERATOR = 900_000n;
+export const BANK_ACCRUAL_DENOMINATOR = 1_000_000n;
+
+/** Capital effects, per spec. */
+export const CAPITAL_TROOP_CAP_BONUS = 0.1; // +10% max troop capacity
+export const CAPITAL_CAPTURE_TROOP_LOSS = 0.4; // -40% troops when captured
+
+/** Embassy seizure effects, per spec. */
+export const EMBASSY_SLOW_DURATION = s(3);
+export const EMBASSY_TROOP_PENALTY = 0.1; // -10% of the loser's troops
+
+export const SUPERFORK_UNITS: Record<string, SuperforkUnitSpec> = {
+  // ------------------------------- Structures -------------------------------
+
+  [UnitType.Bank]: {
+    domain: UnitDomain.Structure,
+    // Same pow2 ladder as City, priced slightly above it: banks are pure
+    // economy with no territorial value, so they should lag city expansion
+    // rather than replace it.
+    cost: (n) => Math.min(1_200_000, pow2(n) * 150_000),
+    constructionDuration: s(4),
+    upgradable: true,
+  },
+
+  [UnitType.Capital]: {
+    domain: UnitDomain.Structure,
+    // Flat: there is only ever one, so a curve is meaningless. Priced as a
+    // serious mid-game commitment, since the demotion rules mean placing it
+    // badly is a mistake you have to live with.
+    cost: () => 2_000_000,
+    constructionDuration: s(10),
+  },
+
+  [UnitType.Embassy]: {
+    domain: UnitDomain.Structure,
+    // Flat and cheap. The cost of an embassy is diplomatic, not economic —
+    // you are handing a foreign power a foothold and a debuff trigger.
+    cost: () => 500_000,
+    constructionDuration: s(5),
+  },
+
+  [UnitType.Airstrip]: {
+    domain: UnitDomain.Structure,
+    cost: (n) => Math.min(2_000_000, (n + 1) * 750_000),
+    constructionDuration: s(8),
+    range: 180,
+  },
+
+  [UnitType.Airfield]: {
+    domain: UnitDomain.Structure,
+    // Dearer than an airstrip: this is the "save up for it" gate on air
+    // transport, which is twice as fast as boats and launches from cover.
+    cost: (n) => Math.min(3_000_000, (n + 1) * 1_000_000),
+    constructionDuration: s(10),
+    range: 200,
+  },
+
+  [UnitType.InternationalAirport]: {
+    domain: UnitDomain.Structure,
+    // pow2 ladder, like Port — it is the air-domain analogue and should scale
+    // the same way trade infrastructure does.
+    cost: (n) => Math.min(4_000_000, pow2(n) * 500_000),
+    constructionDuration: s(15),
+    upgradable: true,
+    range: 250,
+  },
+
+  // -------------------------------- Aircraft --------------------------------
+
+  [UnitType.FighterJet]: {
+    domain: UnitDomain.Air,
+    cost: (n) => Math.min(1_500_000, (n + 1) * 400_000),
+    maxHealth: 600,
+    speed: 2,
+    range: 60,
+  },
+
+  [UnitType.TransportJet]: {
+    domain: UnitDomain.Air,
+    // Flat, like vanilla transport boats — this is a per-sortie cost, not an
+    // accumulating fleet.
+    cost: () => 300_000,
+    maxHealth: 400,
+    speed: 2, // 2x boats, per spec
+    troopCapacity: 1,
+  },
+
+  // Civilian traffic is spawned by airports rather than bought, exactly as
+  // trade ships are spawned by ports. Cost 0 by design.
+  [UnitType.CargoJet]: {
+    domain: UnitDomain.Air,
+    cost: () => 0,
+    maxHealth: 200,
+    speed: 1.5,
+  },
+
+  [UnitType.Airliner]: {
+    domain: UnitDomain.Air,
+    cost: () => 0,
+    maxHealth: 150,
+    speed: 1.75,
+  },
+
+  [UnitType.Interceptor]: {
+    domain: UnitDomain.Air,
+    // Expensive and deliberately fragile. It is the only thing that can kill a
+    // MIRV before separation, and that capability is balanced by dying to any
+    // fighter that finds it — see maxHealth against FighterJet's damage.
+    cost: (n) => Math.min(2_500_000, (n + 1) * 800_000),
+    maxHealth: 350,
+    speed: 1.75,
+    range: 120, // generous intercept envelope
+  },
+
+  [UnitType.AAMissile]: {
+    domain: UnitDomain.Air,
+    cost: () => 0,
+    damage: 300,
+    speed: 4,
+  },
+
+  // ---------------------------------- Ships ----------------------------------
+
+  [UnitType.Destroyer]: {
+    domain: UnitDomain.Sea,
+    // Inherits vanilla Warship's price and health verbatim. Vanilla warship
+    // behaviour lives on as the destroyer; the Warship type is reworked in
+    // Phase 4 into something stronger with a nuke-intercept radius.
+    cost: (n) => Math.min(1_000_000, (n + 1) * 250_000),
+    maxHealth: 1000,
+    speed: 1,
+    range: 90,
+  },
+
+  [UnitType.Corvette]: {
+    domain: UnitDomain.Sea,
+    // Cheap and individually weak — the design intent is swarms. Carries
+    // troops, which is what makes it "land on sea".
+    cost: (n) => Math.min(600_000, (n + 1) * 150_000),
+    maxHealth: 500,
+    speed: 1.25,
+    range: 60,
+    troopCapacity: 1,
+  },
+
+  [UnitType.Carrier]: {
+    domain: UnitDomain.Sea,
+    // The most expensive conventional unit in the game. It is a mobile
+    // airstrip, so it should cost meaningfully more than the airstrip plus a
+    // destroyer, or nobody would ever build the static version.
+    cost: (n) => Math.min(6_000_000, (n + 1) * 3_000_000),
+    maxHealth: 1500,
+    speed: 0.75, // slow and vulnerable without escorts
+    range: 180, // matches Airstrip's aircraft range
+  },
+
+  // -------------------------------- Warheads --------------------------------
+
+  [UnitType.ASBM]: {
+    domain: UnitDomain.Air,
+    // Between Hydrogen (5M) and MIRV (25M). It is MIRV-like in mechanism but
+    // strictly anti-ship, so it should never be the general-purpose choice.
+    cost: () => 15_000_000,
+  },
+
+  [UnitType.ASBMWarhead]: {
+    domain: UnitDomain.Air,
+    cost: () => 0,
+  },
+
+  [UnitType.NeutronBomb]: {
+    domain: UnitDomain.Air,
+    // Cheaper than a Hydrogen bomb because it razes nothing — you are paying
+    // for the troops it kills, and inheriting intact infrastructure is the
+    // reward for the tempo cost of taking the ground afterwards.
+    cost: () => 3_000_000,
+  },
+
+  [UnitType.EMPBomb]: {
+    domain: UnitDomain.Air,
+    // Disables rather than destroys, so it is priced below the neutron bomb.
+    // Its value is tempo — grounding an air force and blinding SAMs for a
+    // window — not attrition.
+    cost: () => 2_500_000,
+  },
+};
+
+/** Lookup used by `Config.unitInfo()`. Returns undefined for vanilla types. */
+export function superforkUnitSpec(
+  type: UnitType,
+): SuperforkUnitSpec | undefined {
+  return SUPERFORK_UNITS[type];
+}

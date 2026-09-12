@@ -208,6 +208,42 @@ export enum UnitType {
   MIRVWarhead = "MIRV Warhead",
   Train = "Train",
   Factory = "Factory",
+
+  // ---------------------------------------------------------------------
+  // Superfork additions. Grouped by domain; see SuperforkUnits.ts for all
+  // cost/health/range tuning. Keep the string values stable once shipped —
+  // they are persisted in replays and sent over the wire.
+  // ---------------------------------------------------------------------
+
+  // Structures
+  Embassy = "Embassy",
+  Bank = "Bank",
+  Capital = "Capital",
+  Airstrip = "Airstrip",
+  Airfield = "Airfield",
+  InternationalAirport = "International Airport",
+
+  // Aircraft
+  FighterJet = "Fighter Jet",
+  TransportJet = "Transport Jet",
+  CargoJet = "Cargo Jet",
+  Airliner = "Airliner",
+  Interceptor = "Interceptor",
+
+  // Air-to-air munition. Nuke interception by Interceptor aircraft reuses
+  // SAMMissile, since the behaviour is the same class of thing.
+  AAMissile = "AA Missile",
+
+  // Ships
+  Destroyer = "Destroyer",
+  Corvette = "Corvette",
+  Carrier = "Carrier",
+
+  // Warheads
+  ASBM = "ASBM",
+  ASBMWarhead = "ASBM Warhead",
+  NeutronBomb = "Neutron Bomb",
+  EMPBomb = "EMP Burst",
 }
 
 export enum TrainType {
@@ -250,6 +286,82 @@ export const PlayerBuildable = unitTypeGroup([
 ] as const);
 
 export type PlayerBuildableUnitType = (typeof PlayerBuildable.types)[number];
+
+// -------------------------------------------------------------------------
+// Superfork groups.
+//
+// These are deliberately NOT folded into Structures / BuildMenus /
+// PlayerBuildable yet. Phase 1 only establishes the taxonomy; each feature
+// phase opts its own types into the buildable set once the behaviour behind
+// them actually exists. That keeps the tree playable-as-vanilla throughout
+// Phase 1 and stops half-built units leaking into the build menu.
+// -------------------------------------------------------------------------
+
+/** Structures introduced by the superfork. */
+export const SuperforkStructures = unitTypeGroup([
+  UnitType.Embassy,
+  UnitType.Bank,
+  UnitType.Capital,
+  UnitType.Airstrip,
+  UnitType.Airfield,
+  UnitType.InternationalAirport,
+] as const);
+
+/** Bases that can launch aircraft. Carrier is here despite being a ship. */
+export const AirBases = unitTypeGroup([
+  UnitType.Airstrip,
+  UnitType.Airfield,
+  UnitType.InternationalAirport,
+  UnitType.Carrier,
+] as const);
+
+/** Anything that moves through the air domain and ignores terrain. */
+export const Aircraft = unitTypeGroup([
+  UnitType.FighterJet,
+  UnitType.TransportJet,
+  UnitType.CargoJet,
+  UnitType.Airliner,
+  UnitType.Interceptor,
+] as const);
+
+/**
+ * Aircraft with no combat role. These are the capture targets for fighters
+ * (flipped rather than destroyed, as warships do to trade ships) and the
+ * units that sanctions and restricted airspace act on.
+ */
+export const CivilianAircraft = unitTypeGroup([
+  UnitType.CargoJet,
+  UnitType.Airliner,
+] as const);
+
+/** Surface combatants. Warship stays in the list; it is reworked, not replaced. */
+export const Warships = unitTypeGroup([
+  UnitType.Warship,
+  UnitType.Destroyer,
+  UnitType.Corvette,
+  UnitType.Carrier,
+] as const);
+
+/** Superfork warheads. Folded into Nukes once their executions land. */
+export const SuperforkNukes = unitTypeGroup([
+  UnitType.ASBM,
+  UnitType.ASBMWarhead,
+  UnitType.NeutronBomb,
+  UnitType.EMPBomb,
+] as const);
+
+/** Every type the superfork adds. Used for the Config.unitInfo delegation. */
+export const SuperforkUnits = unitTypeGroup([
+  ...SuperforkStructures.types,
+  ...Aircraft.types,
+  ...SuperforkNukes.types,
+  UnitType.AAMissile,
+  UnitType.Destroyer,
+  UnitType.Corvette,
+  UnitType.Carrier,
+] as const);
+
+export type SuperforkUnitType = (typeof SuperforkUnits.types)[number];
 
 export interface OwnerComp {
   owner: Player;
@@ -317,6 +429,102 @@ export interface UnitParamsMap {
   [UnitType.SAMLauncher]: Record<string, never>;
 
   [UnitType.City]: Record<string, never>;
+
+  // ----------------------- Superfork: structures -----------------------
+
+  /**
+   * An embassy is owned by the *guest* nation but sits inside the host's
+   * territory, so it carries the host explicitly — ownership alone can't
+   * tell you whose land it stands on.
+   */
+  [UnitType.Embassy]: {
+    host: Player;
+  };
+
+  /** `stored` is the bank's own accrued reserve, capped per SuperforkUnits. */
+  [UnitType.Bank]: {
+    stored?: Gold;
+  };
+
+  [UnitType.Capital]: Record<string, never>;
+
+  [UnitType.Airstrip]: Record<string, never>;
+
+  [UnitType.Airfield]: Record<string, never>;
+
+  [UnitType.InternationalAirport]: Record<string, never>;
+
+  // ------------------------ Superfork: aircraft ------------------------
+
+  [UnitType.FighterJet]: {
+    patrolTile: TileRef;
+    homeBase?: Unit;
+  };
+
+  [UnitType.TransportJet]: {
+    troops?: number;
+    targetTile?: TileRef;
+    homeBase?: Unit;
+  };
+
+  /** Civilian traffic flies base-to-base, so it targets a unit, not a tile. */
+  [UnitType.CargoJet]: {
+    targetUnit: Unit;
+    homeBase?: Unit;
+  };
+
+  [UnitType.Airliner]: {
+    targetUnit: Unit;
+    homeBase?: Unit;
+  };
+
+  [UnitType.Interceptor]: {
+    patrolTile: TileRef;
+    homeBase?: Unit;
+  };
+
+  [UnitType.AAMissile]: {
+    targetUnit: Unit;
+  };
+
+  // -------------------------- Superfork: ships --------------------------
+
+  [UnitType.Destroyer]: {
+    patrolTile: TileRef;
+  };
+
+  /** Corvettes carry troops, which is what makes them land-on-sea. */
+  [UnitType.Corvette]: {
+    patrolTile: TileRef;
+    troops?: number;
+  };
+
+  [UnitType.Carrier]: {
+    patrolTile: TileRef;
+  };
+
+  // ------------------------ Superfork: warheads ------------------------
+
+  /** Like MIRV, ASBM picks a nation and then splits; warheads pick the ships. */
+  [UnitType.ASBM]: {
+    targetTile?: number;
+    targetPlayer?: Player | TerraNullius;
+  };
+
+  [UnitType.ASBMWarhead]: {
+    targetUnit?: Unit;
+    trajectory: TrajectoryTile[];
+  };
+
+  [UnitType.NeutronBomb]: {
+    targetTile?: number;
+    trajectory: TrajectoryTile[];
+  };
+
+  [UnitType.EMPBomb]: {
+    targetTile?: number;
+    trajectory: TrajectoryTile[];
+  };
 }
 
 // Type helper to get params type for a specific unit type

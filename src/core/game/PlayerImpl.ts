@@ -1593,6 +1593,54 @@ export class PlayerImpl implements Player {
       case UnitType.City:
       case UnitType.Factory:
         return this.landBasedStructureSpawn(targetTile, validTiles);
+
+      // ------------------------- Superfork -------------------------
+      // Placement only. Buildability is gated separately: none of these are
+      // in BuildMenus yet, so players cannot select them until their feature
+      // phase lands. The rules below are the scaffolding those phases refine.
+
+      // Land structures. Capital and InternationalAirport will additionally
+      // need stacking support (Phase 2) so they can co-host a Port, and
+      // Embassy needs foreign-territory placement (Phase 5) — it is the one
+      // structure that legitimately spawns outside its owner's borders.
+      case UnitType.Bank:
+      case UnitType.Capital:
+      case UnitType.Embassy:
+      case UnitType.Airstrip:
+      case UnitType.Airfield:
+      case UnitType.InternationalAirport:
+        return this.landBasedStructureSpawn(targetTile, validTiles);
+
+      // Surface combatants use the same water-placement rules as vanilla
+      // warships.
+      case UnitType.Destroyer:
+      case UnitType.Corvette:
+      case UnitType.Carrier:
+        return this.warshipSpawn(targetTile);
+
+      // Aircraft ignore terrain entirely, so placement is unconstrained here.
+      // Phase 3 replaces this with launch-from-base validation — aircraft
+      // should only ever appear at an airstrip, airfield, airport or carrier.
+      case UnitType.FighterJet:
+      case UnitType.TransportJet:
+      case UnitType.CargoJet:
+      case UnitType.Airliner:
+      case UnitType.Interceptor:
+      case UnitType.AAMissile:
+        return targetTile;
+
+      // ASBM picks a nation the way MIRV does, so it needs an owned target.
+      case UnitType.ASBM:
+        if (!this.mg.hasOwner(targetTile)) {
+          return false;
+        }
+        return this.nukeSpawn(targetTile, unitType);
+      case UnitType.NeutronBomb:
+      case UnitType.EMPBomb:
+        return this.nukeSpawn(targetTile, unitType);
+      case UnitType.ASBMWarhead:
+        return targetTile;
+
       default:
         assertNever(unitType);
     }

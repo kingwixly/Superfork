@@ -23,6 +23,7 @@ import { UserSettings } from "../game/UserSettings";
 import { GameConfig, TeamCountConfig } from "../Schemas";
 import { NukeType } from "../StatsSchemas";
 import { assertNever, sigmoid, toInt, within } from "../Util";
+import { superforkUnitSpec } from "./SuperforkUnits";
 
 declare global {
   interface Window {
@@ -654,8 +655,29 @@ export class Config {
           cost: () => 0n,
         };
         break;
-      default:
-        assertNever(type);
+      default: {
+        // Superfork types are specified in SuperforkUnits.ts rather than as
+        // more arms of this switch. The type guard narrows `type` so the
+        // assertNever below still fires for any vanilla type left unhandled,
+        // and for any superfork type missing from the spec table.
+        const spec = superforkUnitSpec(type);
+        if (spec !== undefined) {
+          info = {
+            cost: this.costWrapper(
+              spec.cost,
+              ...(spec.costCountsToward ?? [type]),
+            ),
+            maxHealth: spec.maxHealth,
+            damage: spec.damage,
+            constructionDuration: this.instantBuild()
+              ? 0
+              : spec.constructionDuration,
+            upgradable: spec.upgradable,
+          };
+          break;
+        }
+        assertNever(type as never);
+      }
     }
 
     this.unitInfoCache.set(type, info);
