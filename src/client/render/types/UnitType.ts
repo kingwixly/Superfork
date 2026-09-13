@@ -41,10 +41,12 @@ export const UT_TRANSPORT_JET = "Transport Jet" as const;
 export const UT_CARGO_JET = "Cargo Jet" as const;
 export const UT_AIRLINER = "Airliner" as const;
 export const UT_INTERCEPTOR = "Interceptor" as const;
-// Superfork ships. Destroyer deliberately has no sprite of its own: it
-// inherits vanilla Warship's behaviour, so it inherits its look too.
+// Superfork ships. Destroyer gets its own sprite: it and the reworked
+// Warship coexist, so sharing a column would make them indistinguishable
+// exactly when telling them apart matters most.
 export const UT_CORVETTE = "Corvette" as const;
 export const UT_CARRIER = "Carrier" as const;
+export const UT_DESTROYER = "Destroyer" as const;
 
 /** Everything that flies. Rendered above structures, ignores terrain. */
 export const AIRCRAFT_TYPES: ReadonlySet<string> = new Set([
@@ -132,4 +134,5 @@ export const ALL_UNIT_TYPES = [
   UT_INTERCEPTOR,
   UT_CORVETTE,
   UT_CARRIER,
+  UT_DESTROYER,
 ] as const;

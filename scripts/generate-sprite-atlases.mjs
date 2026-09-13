@@ -91,6 +91,7 @@ const UNIT_COLUMNS = [
   "interceptor",
   "corvette",
   "carrier",
+  "destroyer",
 ];
 
 const UNIT_CELL = 13;
