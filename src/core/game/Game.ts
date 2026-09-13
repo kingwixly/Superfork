@@ -820,6 +820,18 @@ export interface Sanction {
   target: Player;
 }
 
+/**
+ * A ceasefire (superfork). Deliberately thinner than an alliance: it is a
+ * "stop fighting for a second" treaty, not a friendship. It suppresses land
+ * attacks between the parties until `expiresAt` and nothing more — no shared
+ * vision, no betrayal penalty when it lapses, and no effect on naval combat.
+ */
+export interface Ceasefire {
+  createdAt: Tick;
+  expiresAt: Tick;
+  other: Player;
+}
+
 export interface DisconnectSnapshot {
   currentTick: number;
   teamTiles: number;
@@ -1001,6 +1013,11 @@ export interface Player {
    * the control panel. A sanction overrides both.
    */
   acceptsCivilianFlightsFrom(from: Player): boolean;
+
+  // Ceasefires (superfork).
+  hasCeasefireWith(other: Player): boolean;
+  addCeasefire(other: Player, durationTicks: number): void;
+  getCeasefires(): Ceasefire[];
 
   // Sanctions (superfork).
   hasSanctionAgainst(other: Player): boolean;

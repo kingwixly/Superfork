@@ -17,6 +17,7 @@ import {
   AllPlayers,
   Attack,
   BuildableUnit,
+  Ceasefire,
   Cell,
   ColoredTeams,
   DisconnectSnapshot,
@@ -146,6 +147,8 @@ export class PlayerImpl implements Player {
    */
   private _borderTrade = false;
   private _publicAirports = false;
+  /** Superfork: active ceasefires, keyed by the other party. */
+  private ceasefires = new Map<PlayerID, Ceasefire>();
 
   public _borderTiles = new TileSet();
 
@@ -1225,6 +1228,34 @@ export class PlayerImpl implements Player {
     return !embargo && !sanction && other.id() !== this.id();
   }
 
+  hasCeasefireWith(other: Player): boolean {
+    const cf = this.ceasefires.get(other.id());
+    if (cf === undefined) return false;
+    if (this.mg.ticks() >= cf.expiresAt) {
+      // Lapsed. Cleared on read rather than swept every tick: a ceasefire is
+      // only ever consulted when someone tries to attack, so there is nothing
+      // to gain from proactive expiry.
+      this.ceasefires.delete(other.id());
+      return false;
+    }
+    return true;
+  }
+
+  addCeasefire(other: Player, durationTicks: number): void {
+    const now = this.mg.ticks();
+    this.ceasefires.set(other.id(), {
+      createdAt: now,
+      expiresAt: now + durationTicks,
+      other,
+    });
+  }
+
+  getCeasefires(): Ceasefire[] {
+    return [...this.ceasefires.values()].filter(
+      (cf) => this.mg.ticks() < cf.expiresAt,
+    );
+  }
+
   borderTradeEnabled(): boolean {
     return this._borderTrade;
   }
@@ -2010,6 +2041,12 @@ export class PlayerImpl implements Player {
     player: Player,
     treatAFKFriendly: boolean = false,
   ): boolean {
+    // Superfork: a ceasefire suppresses land attacks both ways until it
+    // lapses. Hooked here and not in the naval targeting path on purpose -
+    // per spec, a ceasefire does not stop ships from attacking you.
+    if (this.hasCeasefireWith(player) || player.hasCeasefireWith(this)) {
+      return false;
+    }
     if (this.type() !== PlayerType.Human) {
       // Only human attackers respect PVP immunity
       return !this.isFriendly(player, treatAFKFriendly);

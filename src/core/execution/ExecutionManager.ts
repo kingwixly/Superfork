@@ -12,6 +12,10 @@ import {
   DemoteCapitalExecution,
   PromoteCapitalExecution,
 } from "./CapitalExecution";
+import {
+  CeasefireProposeExecution,
+  CeasefireResponseExecution,
+} from "./CeasefireExecution";
 import { ConstructionExecution } from "./ConstructionExecution";
 import { DeleteUnitExecution } from "./DeleteUnitExecution";
 import { DonateGoldExecution } from "./DonateGoldExecution";
@@ -141,6 +145,18 @@ export class Executor {
       case "toggle_pause":
         return new PauseExecution(player, intent.paused);
 
+      case "ceasefire_propose":
+        return new CeasefireProposeExecution(
+          player,
+          intent.recipient,
+          intent.liberationFor,
+        );
+      case "ceasefire_response":
+        return new CeasefireResponseExecution(
+          player,
+          intent.requestor,
+          intent.accept,
+        );
       case "sanction":
         return new SanctionExecution(player, intent.targetID, intent.action);
       case "promote_capital":
@@ -160,8 +176,6 @@ export class Executor {
       case "move_aircraft": // Phase 3
       case "embassy_request": // Phase 5
       case "embassy_response": // Phase 5
-      case "ceasefire_propose": // Phase 5
-      case "ceasefire_response": // Phase 5
       case "cede_land": // Phase 5
       case "treaty_create": // Phase 5
       case "treaty_invite": // Phase 5
