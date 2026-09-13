@@ -38,8 +38,24 @@ export async function launch({ viewport, rafIntervalMs, args } = {}) {
   // binary is instead unpacked from an npm-delivered build and pointed at
   // here via OPENFRONT_CHROMIUM.
   const executablePath = process.env.OPENFRONT_CHROMIUM ?? undefined;
+  // Superfork: --disable-gpu leaves no GL backend at all, and OpenFront hard
+  // requires WebGL2 - it shows a "WebGL2 not supported" wall and never starts
+  // the sim. SwiftShader gives a software GL2 implementation instead.
+  if (process.env.OPENFRONT_SWIFTSHADER) {
+    env.LD_LIBRARY_PATH = env.LD_LIBRARY_PATH
+      ? `${process.env.OPENFRONT_SWIFTSHADER}:${env.LD_LIBRARY_PATH}`
+      : process.env.OPENFRONT_SWIFTSHADER;
+  }
+  const gpuArgs = process.env.OPENFRONT_SWIFTSHADER
+    ? [
+        "--use-gl=angle",
+        "--use-angle=swiftshader",
+        "--enable-unsafe-swiftshader",
+        "--in-process-gpu",
+      ]
+    : ["--disable-gpu"];
   const browser = await chromium.launch({
-    args: ["--no-sandbox", "--disable-gpu", ...(args ?? [])],
+    args: ["--no-sandbox", ...gpuArgs, ...(args ?? [])],
     env,
     ...(executablePath ? { executablePath } : {}),
   });
