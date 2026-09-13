@@ -33,9 +33,15 @@ export async function launch({ viewport, rafIntervalMs, args } = {}) {
       : libs;
     env.FONTCONFIG_FILE = path.join(CACHE, "fonts.conf");
   }
+  // Superfork: allow an externally-supplied chromium. This container cannot
+  // reach cdn.playwright.dev, so setup.sh's `playwright install` fails; the
+  // binary is instead unpacked from an npm-delivered build and pointed at
+  // here via OPENFRONT_CHROMIUM.
+  const executablePath = process.env.OPENFRONT_CHROMIUM ?? undefined;
   const browser = await chromium.launch({
     args: ["--no-sandbox", "--disable-gpu", ...(args ?? [])],
     env,
+    ...(executablePath ? { executablePath } : {}),
   });
   const context = await browser.newContext({
     viewport: viewport ?? { width: 1400, height: 1000 },
