@@ -6,6 +6,10 @@ import { AllianceExtensionExecution } from "./alliance/AllianceExtensionExecutio
 import { AllianceRejectExecution } from "./alliance/AllianceRejectExecution";
 import { AllianceRequestExecution } from "./alliance/AllianceRequestExecution";
 import { BreakAllianceExecution } from "./alliance/BreakAllianceExecution";
+import {
+  AssistanceResponseExecution,
+  RequestAssistanceExecution,
+} from "./AssistanceExecution";
 import { AttackExecution } from "./AttackExecution";
 import { BoatRetreatExecution } from "./BoatRetreatExecution";
 import {
@@ -166,6 +170,19 @@ export class Executor {
         );
       case "cede_land":
         return new CedeLandExecution(player, intent.recipient, intent.tiles);
+      case "request_assistance":
+        return new RequestAssistanceExecution(
+          player,
+          intent.recipient,
+          intent.against,
+          intent.mode,
+        );
+      case "assistance_response":
+        return new AssistanceResponseExecution(
+          player,
+          intent.requestor,
+          intent.accept,
+        );
       case "treaty_create":
         return new TreatyCreateExecution(player, intent.members);
       case "treaty_invite":
@@ -201,8 +218,6 @@ export class Executor {
       case "move_aircraft": // Phase 3
       case "embassy_request": // Phase 5
       case "embassy_response": // Phase 5
-      case "request_assistance": // Phase 5
-      case "assistance_response": // Phase 5
       case "puppet_command": // Phase 5
       case "puppet_liberate": // Phase 5
       case "set_border_policy": // Phase 5
