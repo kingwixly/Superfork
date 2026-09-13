@@ -26,6 +26,7 @@ import { NoOpExecution } from "./NoOpExecution";
 import { PauseExecution } from "./PauseExecution";
 import { QuickChatExecution } from "./QuickChatExecution";
 import { RetreatExecution } from "./RetreatExecution";
+import { SanctionExecution } from "./SanctionExecution";
 import { SpawnExecution } from "./SpawnExecution";
 import { TargetPlayerExecution } from "./TargetPlayerExecution";
 import { TransportShipExecution } from "./TransportShipExecution";
@@ -140,6 +141,8 @@ export class Executor {
       case "toggle_pause":
         return new PauseExecution(player, intent.paused);
 
+      case "sanction":
+        return new SanctionExecution(player, intent.targetID, intent.action);
       case "promote_capital":
         return new PromoteCapitalExecution(player, intent.unitId);
       case "demote_capital":
@@ -159,7 +162,6 @@ export class Executor {
       case "embassy_response": // Phase 5
       case "ceasefire_propose": // Phase 5
       case "ceasefire_response": // Phase 5
-      case "sanction": // Phase 5
       case "cede_land": // Phase 5
       case "treaty_create": // Phase 5
       case "treaty_invite": // Phase 5

@@ -1215,7 +1215,14 @@ export class PlayerImpl implements Player {
   canTrade(other: Player): boolean {
     const embargo =
       other.hasEmbargoAgainst(this) || this.hasEmbargoAgainst(other);
-    return !embargo && other.id() !== this.id();
+    // Superfork: a sanction is strictly wider than an embargo and blocks
+    // trade in both directions. Hooking it here rather than at each call site
+    // is deliberate - canTrade is the single choke point for trade ships,
+    // trains, port pairing and the nation AI, so one check covers the whole
+    // spec ('stops trade, and prevents ships and trains from crossing').
+    const sanction =
+      other.hasSanctionAgainst(this) || this.hasSanctionAgainst(other);
+    return !embargo && !sanction && other.id() !== this.id();
   }
 
   borderTradeEnabled(): boolean {
