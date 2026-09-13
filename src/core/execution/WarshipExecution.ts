@@ -13,6 +13,7 @@ import { PathStatus } from "../pathfinding/types";
 import { PseudoRandom } from "../PseudoRandom";
 import { findMinimumBy } from "../Util";
 import { ShellExecution } from "./ShellExecution";
+import { WarshipInterceptExecution } from "./WarshipInterceptExecution";
 
 export class WarshipExecution implements Execution {
   private random: PseudoRandom;
@@ -54,6 +55,15 @@ export class WarshipExecution implements Execution {
       );
     }
     this.lastObservedPatrolTile = this.warship.warshipState().patrolTile;
+
+    // Superfork: the reworked Warship carries a nuke-interception radius.
+    // Attached as its own execution rather than folded into this 825-line
+    // state machine, because interception is orthogonal to patrol/hunt/retreat
+    // - and because it keeps the Destroyer split trivial: a destroyer is
+    // simply a warship that never gets this.
+    if (this.warship.type() === UnitType.Warship) {
+      this.mg.addExecution(new WarshipInterceptExecution(this.warship));
+    }
   }
 
   tick(ticks: number): void {

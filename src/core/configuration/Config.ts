@@ -23,7 +23,11 @@ import { UserSettings } from "../game/UserSettings";
 import { GameConfig, TeamCountConfig } from "../Schemas";
 import { NukeType } from "../StatsSchemas";
 import { assertNever, sigmoid, toInt, within } from "../Util";
-import { CAPITAL_TROOP_CAP_BONUS, superforkUnitSpec } from "./SuperforkUnits";
+import {
+  CAPITAL_TROOP_CAP_BONUS,
+  superforkUnitSpec,
+  WARSHIP_INTERCEPT_RANGE,
+} from "./SuperforkUnits";
 
 declare global {
   interface Window {
@@ -538,11 +542,18 @@ export class Config {
         break;
       case UnitType.Warship:
         info = {
+          // Superfork: the warship is reworked into a heavier escort. It costs
+          // and survives more than the Destroyer that inherits its old role,
+          // and gains a nuke-interception radius. Cost curve shares a ladder
+          // with Destroyer so a fleet of one does not dodge the other's
+          // pricing.
           cost: this.costWrapper(
-            (numUnits: number) => Math.min(1_000_000, (numUnits + 1) * 250_000),
+            (numUnits: number) => Math.min(1_600_000, (numUnits + 1) * 400_000),
             UnitType.Warship,
+            UnitType.Destroyer,
           ),
-          maxHealth: 1000,
+          maxHealth: 1400,
+          range: WARSHIP_INTERCEPT_RANGE,
         };
         break;
       case UnitType.Shell:

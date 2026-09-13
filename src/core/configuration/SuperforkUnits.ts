@@ -133,6 +133,15 @@ export const CAPITAL_LOCKING_STRUCTURES: ReadonlyArray<UnitType> = [
 export const EMBASSY_SLOW_DURATION = s(3);
 export const EMBASSY_TROOP_PENALTY = 0.1; // -10% of the loser's troops
 
+/**
+ * Warship interception radius, in tiles.
+ *
+ * Deliberately well under a SAM launcher's. A warship can reposition its
+ * anti-nuke coverage and a SAM site cannot, so mobility is what the smaller
+ * area pays for.
+ */
+export const WARSHIP_INTERCEPT_RANGE = 45;
+
 export const SUPERFORK_UNITS: Record<string, SuperforkUnitSpec> = {
   // ------------------------------- Structures -------------------------------
 
@@ -247,10 +256,11 @@ export const SUPERFORK_UNITS: Record<string, SuperforkUnitSpec> = {
 
   [UnitType.Destroyer]: {
     domain: UnitDomain.Sea,
-    // Inherits vanilla Warship's price and health verbatim. Vanilla warship
-    // behaviour lives on as the destroyer; the Warship type is reworked in
-    // Phase 4 into something stronger with a nuke-intercept radius.
+    // Inherits vanilla Warship's price and health verbatim - the old warship
+    // role lives on here. Shares a cost ladder with Warship (see Config) so
+    // building one does not dodge the other's pricing.
     cost: (n) => Math.min(1_000_000, (n + 1) * 250_000),
+    costCountsToward: [UnitType.Destroyer, UnitType.Warship],
     maxHealth: 1000,
     speed: 1,
     range: 90,
