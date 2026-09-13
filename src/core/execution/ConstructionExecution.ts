@@ -3,6 +3,7 @@ import { TileRef } from "../game/GameMap";
 import { AirBaseExecution } from "./AirBaseExecution";
 import { BankExecution } from "./BankExecution";
 import { CityExecution } from "./CityExecution";
+import { CorvetteExecution } from "./CorvetteExecution";
 import { DefensePostExecution } from "./DefensePostExecution";
 import { FactoryExecution } from "./FactoryExecution";
 import { MirvExecution } from "./MIRVExecution";
@@ -139,6 +140,19 @@ export class ConstructionExecution implements Execution {
           ),
         );
         break;
+      case UnitType.Corvette: {
+        const spawn = player.canBuild(UnitType.Corvette, this.tile);
+        if (spawn !== false) {
+          this.mg.addExecution(
+            new CorvetteExecution(
+              player.buildUnit(UnitType.Corvette, spawn, {
+                patrolTile: this.tile,
+              }),
+            ),
+          );
+        }
+        break;
+      }
       case UnitType.Port:
         this.mg.addExecution(new PortExecution(this.structure!));
         break;

@@ -116,6 +116,7 @@ export class UnitImpl implements Unit {
     switch (this._type) {
       case UnitType.Warship:
       case UnitType.Destroyer:
+      case UnitType.Corvette:
       case UnitType.Port:
       case UnitType.MissileSilo:
       case UnitType.DefensePost:
@@ -274,6 +275,7 @@ export class UnitImpl implements Unit {
     switch (this._type) {
       case UnitType.Warship:
       case UnitType.Destroyer:
+      case UnitType.Corvette:
       case UnitType.Port:
       case UnitType.MissileSilo:
       case UnitType.DefensePost:
