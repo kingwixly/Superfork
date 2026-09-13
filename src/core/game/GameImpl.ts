@@ -9,6 +9,7 @@ import { ATTACK_INDEX_SENT } from "../StatsSchemas";
 import { simpleHash } from "../Util";
 import { AllianceImpl } from "./AllianceImpl";
 import { AllianceRequestImpl } from "./AllianceRequestImpl";
+import { ConquestLedger } from "./ConquestLedger";
 import {
   Alliance,
   AllianceRequest,
@@ -745,6 +746,13 @@ export class GameImpl implements Game {
     this._map.forEachNeighborWithDiag(tile, callback);
   }
 
+  /** Superfork: see ConquestLedger. Drives Liberation. */
+  private _conquestLedger = new ConquestLedger();
+
+  conquestLedger(): ConquestLedger {
+    return this._conquestLedger;
+  }
+
   conquer(owner: PlayerImpl, tile: TileRef): void {
     if (!this.isLand(tile)) {
       throw Error(`cannot conquer water`);
@@ -758,6 +766,17 @@ export class GameImpl implements Game {
       previousOwner._tileChangeVersion++;
       previousOwner._tiles.delete(tile);
       previousOwner._borderTiles.delete(tile);
+      // Superfork: journal the transfer so Liberation can restore it later.
+      // Only player-to-player changes are recorded - taking neutral ground is
+      // expansion, not conquest, and has no prior owner to restore to.
+      this._conquestLedger.record(
+        tile,
+        (previousOwner as PlayerImpl).id(),
+        owner.id(),
+      );
+    } else {
+      // Neutral ground wipes any stale journal entry for this tile.
+      this._conquestLedger.forget(tile);
     }
     this._territoryVersion++;
     this._map.setOwnerID(tile, owner.smallID());

@@ -3,6 +3,7 @@ import { AbstractGraph } from "../pathfinding/algorithms/AbstractGraph";
 import { PathFinder } from "../pathfinding/types";
 import { AllPlayersStats, ClientID } from "../Schemas";
 import { formatPlayerDisplayName } from "../Util";
+import { ConquestLedger } from "./ConquestLedger";
 import { GameMap, TileRef } from "./GameMap";
 import {
   GameUpdate,
@@ -1087,6 +1088,8 @@ export interface Game extends GameMap {
   playerByClientID(id: ClientID): Player | null;
   playerBySmallID(id: number): Player | TerraNullius;
   hasPlayer(id: PlayerID): boolean;
+  /** Superfork: journal of player-to-player tile transfers. Drives Liberation. */
+  conquestLedger(): ConquestLedger;
   addPlayer(playerInfo: PlayerInfo): Player;
   terraNullius(): TerraNullius;
   owner(ref: TileRef): Player | TerraNullius;

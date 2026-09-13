@@ -78,6 +78,10 @@ export class CeasefireResponseExecution implements Execution {
     // about the truce without asking the other.
     proposer.addCeasefire(this.recipient, CEASEFIRE_DURATION_TICKS);
     this.recipient.addCeasefire(proposer, CEASEFIRE_DURATION_TICKS);
+
+    if (offer.liberationFor !== undefined) {
+      liberate(mg, offer.liberationFor, this.recipient, proposer);
+    }
   }
 
   tick(ticks: number): void {}
@@ -121,4 +125,50 @@ export function pendingCeasefireBetween(
 /** Clear all pending offers. Called when a game ends. */
 export function clearPendingCeasefires(): void {
   pendingCeasefires.clear();
+}
+
+/**
+ * Liberation.
+ *
+ * Three parties: a **victim** whose land was taken, an **aggressor** holding
+ * it, and a **mediator** who attached the condition to a ceasefire. When the
+ * aggressor accepts that ceasefire, every tile they still hold that they took
+ * from the victim reverts.
+ *
+ * The reverting is bounded by construction: `ConquestLedger.takenFrom` returns
+ * only tiles the aggressor *currently* holds and *did* take from the victim,
+ * so a liberation never hands back ground the aggressor already lost to
+ * someone else, and never touches tiles that were always theirs.
+ *
+ * A dead victim is revived by the transfer, which is the point — liberation is
+ * how a conquered nation gets put back on the map.
+ */
+export function liberate(
+  mg: Game,
+  victimID: string,
+  aggressor: Player,
+  mediator: Player,
+): number {
+  if (!mg.hasPlayer(victimID)) return 0;
+  const victim = mg.player(victimID);
+  if (victim.id() === aggressor.id()) return 0;
+
+  const tiles = mg.conquestLedger().takenFrom(victim.id(), aggressor.id());
+  let restored = 0;
+  for (const tile of tiles) {
+    // Guard against the ledger and the map disagreeing - the map is the
+    // source of truth, the ledger is only an index into it.
+    if (mg.owner(tile) !== aggressor) continue;
+    victim.conquer(tile);
+    restored++;
+  }
+
+  if (restored > 0) {
+    // The mediator guaranteed the settlement, so it allies the parties it
+    // brokered peace between rather than leaving the victim alone with the
+    // nation that just invaded them.
+    const req = mediator.createAllianceRequest(victim);
+    req?.accept();
+  }
+  return restored;
 }
