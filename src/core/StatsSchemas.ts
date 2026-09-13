@@ -42,6 +42,7 @@ export const otherUnits = [
   "astr",
   "afld",
   "iapt",
+  "dstr",
 ] as const;
 export const OtherUnitSchema = z.enum(otherUnits);
 export type OtherUnit = z.infer<typeof OtherUnitSchema>;
@@ -57,7 +58,8 @@ export type OtherUnitType =
   | UnitType.Capital
   | UnitType.Airstrip
   | UnitType.Airfield
-  | UnitType.InternationalAirport;
+  | UnitType.InternationalAirport
+  | UnitType.Destroyer;
 
 export const unitTypeToOtherUnit = {
   [UnitType.City]: "city",
@@ -72,6 +74,7 @@ export const unitTypeToOtherUnit = {
   [UnitType.Airstrip]: "astr",
   [UnitType.Airfield]: "afld",
   [UnitType.InternationalAirport]: "iapt",
+  [UnitType.Destroyer]: "dstr",
 } as const satisfies Record<OtherUnitType, OtherUnit>;
 
 // Attacks

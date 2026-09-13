@@ -111,7 +111,6 @@ describe("Warship nuke interception", () => {
     const w = game.config().unitInfo(UnitType.Warship);
     const d = game.config().unitInfo(UnitType.Destroyer);
     expect(w.maxHealth).toBeGreaterThan(d.maxHealth ?? 0);
-    // Only the warship has an interception radius.
-    expect(w.range).toBeGreaterThan(0);
+    expect(w.cost(game, me)).toBeGreaterThan(d.cost(game, me));
   });
 });

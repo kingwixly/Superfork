@@ -23,11 +23,7 @@ import { UserSettings } from "../game/UserSettings";
 import { GameConfig, TeamCountConfig } from "../Schemas";
 import { NukeType } from "../StatsSchemas";
 import { assertNever, sigmoid, toInt, within } from "../Util";
-import {
-  CAPITAL_TROOP_CAP_BONUS,
-  superforkUnitSpec,
-  WARSHIP_INTERCEPT_RANGE,
-} from "./SuperforkUnits";
+import { CAPITAL_TROOP_CAP_BONUS, superforkUnitSpec } from "./SuperforkUnits";
 
 declare global {
   interface Window {
@@ -553,7 +549,6 @@ export class Config {
             UnitType.Destroyer,
           ),
           maxHealth: 1400,
-          range: WARSHIP_INTERCEPT_RANGE,
         };
         break;
       case UnitType.Shell:

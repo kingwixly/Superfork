@@ -1,3 +1,4 @@
+import { WARSHIP_INTERCEPT_RANGE } from "../configuration/SuperforkUnits";
 import { Execution, Game, Unit, UnitType } from "../game/Game";
 
 /**
@@ -61,7 +62,10 @@ export class WarshipInterceptExecution implements Execution {
     const tile = this.warship.tile();
     if (tile === undefined) return undefined;
 
-    const range = this.mg.config().unitInfo(UnitType.Warship).range ?? 60;
+    // Deliberately NOT unitInfo().range - that is the gun engagement range,
+    // which every surface combatant has. This is the anti-nuke radius, which
+    // only the reworked Warship carries.
+    const range = WARSHIP_INTERCEPT_RANGE;
     const owner = this.warship.owner();
 
     for (const type of [

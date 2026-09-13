@@ -128,8 +128,15 @@ export class ConstructionExecution implements Execution {
         this.mg.addExecution(new MirvExecution(player, this.tile));
         break;
       case UnitType.Warship:
+      case UnitType.Destroyer:
+        // One execution drives both hulls - they share the whole
+        // patrol/hunt/retreat state machine and differ only in stats and in
+        // whether they carry a nuke-interception radius.
         this.mg.addExecution(
-          new WarshipExecution({ owner: player, patrolTile: this.tile }),
+          new WarshipExecution(
+            { owner: player, patrolTile: this.tile },
+            this.constructionType,
+          ),
         );
         break;
       case UnitType.Port:

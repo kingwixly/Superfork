@@ -15,6 +15,13 @@ import { findMinimumBy } from "../Util";
 import { ShellExecution } from "./ShellExecution";
 import { WarshipInterceptExecution } from "./WarshipInterceptExecution";
 
+/**
+ * Hull types that fight on the surface and are valid targets for each other.
+ * Warship and Destroyer are interchangeable here: a destroyer hunts warships
+ * and vice versa.
+ */
+const SURFACE_COMBATANTS: UnitType[] = [UnitType.Warship, UnitType.Destroyer];
+
 export class WarshipExecution implements Execution {
   private random: PseudoRandom;
   private warship: Unit;
@@ -27,8 +34,17 @@ export class WarshipExecution implements Execution {
   private activeHealingRemainder = 0;
   private lastEmittedCombat = false;
 
+  /**
+   * `hull` selects which surface combatant this execution drives. Warship and
+   * Destroyer share the entire patrol/hunt/retreat state machine - they differ
+   * only in stats and in whether they carry a nuke-interception radius - so
+   * parameterising is far better than forking 825 lines.
+   *
+   * Defaults to Warship, so every existing call site is unchanged.
+   */
   constructor(
     private input: (UnitParams<UnitType.Warship> & OwnerComp) | Unit,
+    private hull: UnitType.Warship | UnitType.Destroyer = UnitType.Warship,
   ) {}
 
   init(mg: Game, ticks: number): void {
@@ -38,21 +54,14 @@ export class WarshipExecution implements Execution {
     if (isUnit(this.input)) {
       this.warship = this.input;
     } else {
-      const spawn = this.input.owner.canBuild(
-        UnitType.Warship,
-        this.input.patrolTile,
-      );
+      const spawn = this.input.owner.canBuild(this.hull, this.input.patrolTile);
       if (spawn === false) {
         console.warn(
           `Failed to spawn warship for ${this.input.owner.name()} at ${this.input.patrolTile}`,
         );
         return;
       }
-      this.warship = this.input.owner.buildUnit(
-        UnitType.Warship,
-        spawn,
-        this.input,
-      );
+      this.warship = this.input.owner.buildUnit(this.hull, spawn, this.input);
     }
     this.lastObservedPatrolTile = this.warship.warshipState().patrolTile;
 
@@ -125,7 +134,9 @@ export class WarshipExecution implements Execution {
     }
 
     // Priority 2: Fight enemy warship if in range
-    if (this.warship.targetUnit()?.type() === UnitType.Warship) {
+    if (
+      SURFACE_COMBATANTS.includes(this.warship.targetUnit()?.type() as UnitType)
+    ) {
       this.shootTarget();
       this.patrol();
       return;
@@ -240,12 +251,12 @@ export class WarshipExecution implements Execution {
   }
 
   private findRetreatAggroTarget(): Unit | undefined {
-    return this.findBestTarget([UnitType.TransportShip, UnitType.Warship]);
+    return this.findBestTarget([UnitType.TransportShip, ...SURFACE_COMBATANTS]);
   }
 
   private findTargetUnit(): Unit | undefined {
     return this.findBestTarget(
-      [UnitType.TransportShip, UnitType.Warship, UnitType.TradeShip],
+      [UnitType.TransportShip, ...SURFACE_COMBATANTS, UnitType.TradeShip],
       true,
     );
   }
@@ -288,7 +299,7 @@ export class WarshipExecution implements Execution {
         unit.owner() === owner ||
         !owner.canAttackPlayer(unit.owner(), true) ||
         this.alreadySentShell.has(unit) ||
-        (unit.type() === UnitType.Warship &&
+        (SURFACE_COMBATANTS.includes(unit.type()) &&
           unit.warshipState().state === "docked")
       ) {
         continue;
@@ -330,7 +341,11 @@ export class WarshipExecution implements Execution {
       }
 
       const typePriority =
-        type === UnitType.TransportShip ? 0 : type === UnitType.Warship ? 1 : 2;
+        type === UnitType.TransportShip
+          ? 0
+          : SURFACE_COMBATANTS.includes(type)
+            ? 1
+            : 2;
 
       if (
         bestUnit === undefined ||
@@ -524,7 +539,7 @@ export class WarshipExecution implements Execution {
     const owner = this.warship.owner();
 
     return this.mg
-      .nearbyUnits(port.tile(), dockingRadius, [UnitType.Warship])
+      .nearbyUnits(port.tile(), dockingRadius, SURFACE_COMBATANTS)
       .filter(({ unit: ship }) => {
         if (excludeShip && ship === excludeShip) return false;
         if (ship.owner() !== owner) return false;
