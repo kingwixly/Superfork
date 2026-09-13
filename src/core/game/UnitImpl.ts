@@ -117,6 +117,7 @@ export class UnitImpl implements Unit {
       case UnitType.Warship:
       case UnitType.Destroyer:
       case UnitType.Corvette:
+      case UnitType.Carrier:
       case UnitType.Port:
       case UnitType.MissileSilo:
       case UnitType.DefensePost:
@@ -276,6 +277,7 @@ export class UnitImpl implements Unit {
       case UnitType.Warship:
       case UnitType.Destroyer:
       case UnitType.Corvette:
+      case UnitType.Carrier:
       case UnitType.Port:
       case UnitType.MissileSilo:
       case UnitType.DefensePost:

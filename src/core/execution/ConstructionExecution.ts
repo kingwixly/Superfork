@@ -140,6 +140,23 @@ export class ConstructionExecution implements Execution {
           ),
         );
         break;
+      case UnitType.Carrier: {
+        // A carrier is an air base that floats, so it gets the same execution
+        // as the land bases - AirBaseExecution reads its launch rules and
+        // range from the unit type, and aircraft homed to it track its tile
+        // as it moves.
+        const spawn = player.canBuild(UnitType.Carrier, this.tile);
+        if (spawn !== false) {
+          this.mg.addExecution(
+            new AirBaseExecution(
+              player.buildUnit(UnitType.Carrier, spawn, {
+                patrolTile: this.tile,
+              }),
+            ),
+          );
+        }
+        break;
+      }
       case UnitType.Corvette: {
         const spawn = player.canBuild(UnitType.Corvette, this.tile);
         if (spawn !== false) {

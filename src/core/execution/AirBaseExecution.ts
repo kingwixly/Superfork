@@ -3,8 +3,8 @@ import { PseudoRandom } from "../PseudoRandom";
 import { CivilianAircraftExecution } from "./CivilianAircraftExecution";
 
 /**
- * Lifecycle for the three air bases (Airstrip, Airfield, International
- * Airport).
+ * Lifecycle for the air bases: Airstrip, Airfield, International Airport, and
+ * the Carrier, which is an airstrip that floats.
  *
  * They share one execution because at this stage they differ only in what they
  * are permitted to launch and how far — both of which are data in
@@ -121,6 +121,10 @@ export class AirBaseExecution implements Execution {
       case UnitType.InternationalAirport:
         // Civilian traffic and any military type.
         return true;
+      case UnitType.Carrier:
+        // A mobile airstrip. Fighters and interceptors only - no runway for
+        // heavy transport, and no civilian traffic would file to a warship.
+        return type === UnitType.FighterJet || type === UnitType.Interceptor;
       default:
         return false;
     }

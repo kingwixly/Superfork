@@ -32,6 +32,7 @@ const factoryIcon = assetUrl("images/FactoryIconWhite.svg");
 const bankIcon = assetUrl("images/GoldCoinIcon.svg");
 const destroyerIcon = assetUrl("images/DestroyerIconWhite.svg");
 const corvetteIcon = assetUrl("images/BoatIconWhite.svg");
+const carrierIcon = assetUrl("images/BattleshipIconWhite.svg");
 const airstripIcon = assetUrl("images/AirstripIconWhite.svg");
 const airfieldIcon = assetUrl("images/AirfieldIconWhite.svg");
 const airportIcon = assetUrl("images/AirportIconWhite.svg");
@@ -136,6 +137,13 @@ export const buildTable: BuildItemDisplay[][] = [
       icon: destroyerIcon,
       description: "build_menu.desc.destroyer",
       key: "unit_type.destroyer",
+      countable: true,
+    },
+    {
+      unitType: UnitType.Carrier,
+      icon: carrierIcon,
+      description: "build_menu.desc.carrier",
+      key: "unit_type.carrier",
       countable: true,
     },
     {
