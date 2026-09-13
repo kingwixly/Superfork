@@ -16,6 +16,7 @@ import {
   CeasefireProposeExecution,
   CeasefireResponseExecution,
 } from "./CeasefireExecution";
+import { CedeLandExecution } from "./CedeLandExecution";
 import { ConstructionExecution } from "./ConstructionExecution";
 import { DeleteUnitExecution } from "./DeleteUnitExecution";
 import { DonateGoldExecution } from "./DonateGoldExecution";
@@ -157,6 +158,8 @@ export class Executor {
           intent.requestor,
           intent.accept,
         );
+      case "cede_land":
+        return new CedeLandExecution(player, intent.recipient, intent.tiles);
       case "sanction":
         return new SanctionExecution(player, intent.targetID, intent.action);
       case "promote_capital":
@@ -176,7 +179,6 @@ export class Executor {
       case "move_aircraft": // Phase 3
       case "embassy_request": // Phase 5
       case "embassy_response": // Phase 5
-      case "cede_land": // Phase 5
       case "treaty_create": // Phase 5
       case "treaty_invite": // Phase 5
       case "treaty_response": // Phase 5
