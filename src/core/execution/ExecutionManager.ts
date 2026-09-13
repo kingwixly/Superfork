@@ -35,6 +35,12 @@ import { SanctionExecution } from "./SanctionExecution";
 import { SpawnExecution } from "./SpawnExecution";
 import { TargetPlayerExecution } from "./TargetPlayerExecution";
 import { TransportShipExecution } from "./TransportShipExecution";
+import {
+  TreatyCreateExecution,
+  TreatyInviteExecution,
+  TreatyLeaveExecution,
+  TreatyResponseExecution,
+} from "./TreatyExecution";
 import { TribeSpawner } from "./TribeSpawner";
 import { UpgradeStructureExecution } from "./UpgradeStructureExecution";
 import { PlayerSpawner } from "./utils/PlayerSpawner";
@@ -160,6 +166,22 @@ export class Executor {
         );
       case "cede_land":
         return new CedeLandExecution(player, intent.recipient, intent.tiles);
+      case "treaty_create":
+        return new TreatyCreateExecution(player, intent.members);
+      case "treaty_invite":
+        return new TreatyInviteExecution(
+          player,
+          intent.treatyID,
+          intent.recipient,
+        );
+      case "treaty_response":
+        return new TreatyResponseExecution(
+          player,
+          intent.treatyID,
+          intent.accept,
+        );
+      case "treaty_leave":
+        return new TreatyLeaveExecution(player, intent.treatyID);
       case "sanction":
         return new SanctionExecution(player, intent.targetID, intent.action);
       case "promote_capital":
@@ -179,10 +201,6 @@ export class Executor {
       case "move_aircraft": // Phase 3
       case "embassy_request": // Phase 5
       case "embassy_response": // Phase 5
-      case "treaty_create": // Phase 5
-      case "treaty_invite": // Phase 5
-      case "treaty_response": // Phase 5
-      case "treaty_leave": // Phase 5
       case "request_assistance": // Phase 5
       case "assistance_response": // Phase 5
       case "puppet_command": // Phase 5
