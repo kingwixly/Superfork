@@ -108,7 +108,17 @@ const UNIT_ICONS = {
   tradeShip: "images/TradeShipIconWhite.svg",
   troop: "images/SoldierIcon.svg",
   nuke: "images/NukeIconWhite.svg",
-  warship: "images/DestroyerIconWhite.svg",
+  warship: "images/BattleshipIconWhite.svg",
+  // Superfork. Without an entry here the stats row renders with no icon.
+  bank: "images/BankIconWhite.svg",
+  capital: "images/CrownIcon.svg",
+  embassy: "images/EmbassyIconWhite.svg",
+  airstrip: "images/AirstripIconWhite.svg",
+  airfield: "images/AirfieldIconWhite.svg",
+  internationalAirport: "images/AirportIconWhite.svg",
+  destroyer: "images/DestroyerIconWhite.svg",
+  corvette: "images/CorvetteIconWhite.svg",
+  carrier: "images/CarrierIconWhite.svg",
   gold: "images/GoldCoinIcon.svg",
 } as const;
 
