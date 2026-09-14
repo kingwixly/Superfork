@@ -64,6 +64,19 @@ export class PromoteCapitalExecution implements Execution {
       return;
     }
 
+    // Affordability must be checked HERE. Every other build path goes through
+    // canBuild, which gates on cost; a promotion is not a build, so it skips
+    // that. And removeGold clamps to the balance rather than failing, so
+    // without this a broke player promotes for free and simply loses whatever
+    // gold they had.
+    const cost = this.mg
+      .config()
+      .unitInfo(UnitType.Capital)
+      .cost(this.mg, this.player);
+    if (this.player.gold() < cost) {
+      return;
+    }
+
     const tile = city.tile();
     if (tile === undefined) return;
 

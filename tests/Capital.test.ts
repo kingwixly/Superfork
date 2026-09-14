@@ -171,3 +171,36 @@ describe("Capital", () => {
     expect(player.troops()).toBe(1000);
   });
 });
+
+describe("Capital promotion cost", () => {
+  test("a player who cannot afford it does not get a capital", async () => {
+    const g: Game = await setup(
+      "half_land_half_ocean",
+      { instantBuild: true },
+      [new PlayerInfo("poor", PlayerType.Human, null, "poor_id")],
+    );
+    const poor = g.player("poor_id");
+    for (let x = 0; x < g.width(); x++) {
+      for (let y = 0; y < g.height(); y++) {
+        const t = g.ref(x, y);
+        if (g.isLand(t) && !g.hasOwner(t)) poor.conquer(t);
+      }
+    }
+    g.config().structureMinDist = () => 1;
+
+    const city = poor.buildUnit(UnitType.City, g.ref(7, 10), {});
+    poor.removeGold(poor.gold()); // broke
+    const before = poor.gold();
+
+    const exec = new PromoteCapitalExecution(poor, city.id());
+    exec.init(g, 0);
+    exec.tick(0);
+
+    // No capital, and no gold silently drained either - removeGold clamps to
+    // the balance, so an unchecked promotion would take everything and still
+    // succeed.
+    expect(poor.units(UnitType.Capital).length).toBe(0);
+    expect(poor.gold()).toBe(before);
+    expect(city.isActive()).toBe(true);
+  });
+});
