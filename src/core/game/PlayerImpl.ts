@@ -1,4 +1,7 @@
-import { canStack } from "../configuration/SuperforkUnits";
+import {
+  canStack,
+  canUseSuperforkSystems,
+} from "../configuration/SuperforkUnits";
 import { PseudoRandom } from "../PseudoRandom";
 import { ClientID } from "../Schemas";
 import {
@@ -38,6 +41,7 @@ import {
   Relation,
   Sanction,
   Structures,
+  SuperforkUnits,
   Team,
   TerraNullius,
   Tick,
@@ -1658,6 +1662,12 @@ export class PlayerImpl implements Player {
     validTiles: TileRef[] | null = null,
   ): TileRef | false {
     if (!this.canBuildUnitType(unitType)) {
+      return false;
+    }
+    // Tribes are excluded from every superfork system - see
+    // canUseSuperforkSystems. Checked here because canBuild is the one path
+    // every buildable unit goes through.
+    if (SuperforkUnits.has(unitType) && !canUseSuperforkSystems(this.type())) {
       return false;
     }
 

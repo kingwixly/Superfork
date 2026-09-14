@@ -1,3 +1,4 @@
+import { canUseSuperforkSystems } from "../configuration/SuperforkUnits";
 import { Execution, Game, Player } from "../game/Game";
 import { AttackExecution } from "./AttackExecution";
 
@@ -58,6 +59,9 @@ export class RequestAssistanceExecution implements Execution {
 
   init(mg: Game, ticks: number): void {
     this.active = false;
+    // Tribes do not participate in superfork diplomacy - see
+    // canUseSuperforkSystems.
+    if (!canUseSuperforkSystems(this.requestor.type())) return;
     if (!mg.hasPlayer(this.helperID) || !mg.hasPlayer(this.againstID)) return;
 
     const helper = mg.player(this.helperID);

@@ -1,3 +1,4 @@
+import { canUseSuperforkSystems } from "../configuration/SuperforkUnits";
 import { Execution, Game, Player } from "../game/Game";
 import { AttackExecution } from "./AttackExecution";
 
@@ -74,6 +75,9 @@ export class PuppetCommandExecution implements Execution {
 
   init(mg: Game, ticks: number): void {
     this.active = false;
+    // Tribes do not participate in superfork diplomacy - see
+    // canUseSuperforkSystems.
+    if (!canUseSuperforkSystems(this.master.type())) return;
     if (!mg.hasPlayer(this.puppetID) || !mg.hasPlayer(this.targetID)) return;
 
     const puppet = mg.player(this.puppetID);

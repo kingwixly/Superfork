@@ -1,3 +1,4 @@
+import { canUseSuperforkSystems } from "../configuration/SuperforkUnits";
 import { Execution, Game, Player } from "../game/Game";
 
 /** Members at creation (including the founder), and the hard ceiling. */
@@ -104,6 +105,9 @@ export class TreatyCreateExecution implements Execution {
 
   init(mg: Game, ticks: number): void {
     this.active = false;
+    // Tribes do not participate in superfork diplomacy - see
+    // canUseSuperforkSystems.
+    if (!canUseSuperforkSystems(this.founder.type())) return;
 
     const invited = this.memberIDs
       .filter((id) => mg.hasPlayer(id))

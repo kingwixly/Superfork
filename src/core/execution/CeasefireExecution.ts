@@ -1,3 +1,4 @@
+import { canUseSuperforkSystems } from "../configuration/SuperforkUnits";
 import { Execution, Game, Player } from "../game/Game";
 
 /** Two minutes at 10 ticks per second, per spec. */
@@ -28,6 +29,8 @@ export class CeasefireProposeExecution implements Execution {
 
   init(mg: Game, ticks: number): void {
     this.active = false;
+    // Tribes do not negotiate - see canUseSuperforkSystems.
+    if (!canUseSuperforkSystems(this.proposer.type())) return;
     if (!mg.hasPlayer(this.recipientID)) return;
     const recipient = mg.player(this.recipientID);
     if (recipient.id() === this.proposer.id()) return;

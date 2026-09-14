@@ -1,3 +1,4 @@
+import { canUseSuperforkSystems } from "../configuration/SuperforkUnits";
 import { Execution, Game, Player } from "../game/Game";
 
 /**
@@ -27,6 +28,9 @@ export class SanctionExecution implements Execution {
 
   init(mg: Game, ticks: number): void {
     this.active = false;
+    // Tribes do not participate in superfork diplomacy - see
+    // canUseSuperforkSystems.
+    if (!canUseSuperforkSystems(this.sanctioner.type())) return;
 
     if (!mg.hasPlayer(this.targetID)) {
       console.warn(`sanction: no such player ${this.targetID}`);

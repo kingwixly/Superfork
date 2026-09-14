@@ -21,7 +21,7 @@
  */
 
 import { pow2 } from "../DetMath";
-import { UnitType } from "../game/Game";
+import { PlayerType, UnitType } from "../game/Game";
 
 /** Which medium a unit moves through. Drives pathing and interception rules. */
 export enum UnitDomain {
@@ -318,6 +318,27 @@ export const SUPERFORK_UNITS: Record<string, SuperforkUnitSpec> = {
     cost: () => 2_500_000,
   },
 };
+
+/**
+ * Whether a player may use superfork systems at all.
+ *
+ * **Tribes are excluded.** They exist to be rolled over in the opening minutes
+ * — deliberately weak, easily forgotten, and not participants in the wider
+ * game. Letting them build banks and carriers or sign treaties would make the
+ * early game noisy and would waste simulation on nations nobody interacts
+ * with after the first few minutes.
+ *
+ * `PlayerType.Bot` is exactly the tribe set (see TribeSpawner); the real
+ * nation AI is `PlayerType.Nation` and is expected to use everything — that is
+ * Phase 8's job.
+ *
+ * Applied at `PlayerImpl.canBuild`, so it covers every superfork unit in one
+ * place, and re-checked in the diplomacy executions, which do not route
+ * through building at all.
+ */
+export function canUseSuperforkSystems(type: PlayerType): boolean {
+  return type !== PlayerType.Bot;
+}
 
 /** Lookup used by `Config.unitInfo()`. Returns undefined for vanilla types. */
 export function superforkUnitSpec(
