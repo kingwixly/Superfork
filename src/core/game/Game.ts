@@ -1015,6 +1015,13 @@ export interface Player {
    */
   acceptsCivilianFlightsFrom(from: Player): boolean;
 
+  // Puppet states (superfork).
+  /** The nation this one answers to, if any. */
+  master(): Player | null;
+  setMaster(master: Player | null): void;
+  /** Nations that answer to this one. */
+  puppets(): Player[];
+
   // Ceasefires (superfork).
   hasCeasefireWith(other: Player): boolean;
   addCeasefire(other: Player, durationTicks: number): void;

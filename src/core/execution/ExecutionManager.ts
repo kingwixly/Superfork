@@ -33,6 +33,10 @@ import { MoveWarshipExecution } from "./MoveWarshipExecution";
 import { NationExecution } from "./NationExecution";
 import { NoOpExecution } from "./NoOpExecution";
 import { PauseExecution } from "./PauseExecution";
+import {
+  PuppetCommandExecution,
+  PuppetLiberateExecution,
+} from "./PuppetExecution";
 import { QuickChatExecution } from "./QuickChatExecution";
 import { RetreatExecution } from "./RetreatExecution";
 import { SanctionExecution } from "./SanctionExecution";
@@ -170,6 +174,10 @@ export class Executor {
         );
       case "cede_land":
         return new CedeLandExecution(player, intent.recipient, intent.tiles);
+      case "puppet_command":
+        return new PuppetCommandExecution(player, intent.puppet, intent.target);
+      case "puppet_liberate":
+        return new PuppetLiberateExecution(player, intent.puppet);
       case "request_assistance":
         return new RequestAssistanceExecution(
           player,
@@ -218,8 +226,6 @@ export class Executor {
       case "move_aircraft": // Phase 3
       case "embassy_request": // Phase 5
       case "embassy_response": // Phase 5
-      case "puppet_command": // Phase 5
-      case "puppet_liberate": // Phase 5
       case "set_border_policy": // Phase 5
         console.warn(`superfork intent ${intent.type} not yet implemented`);
         return new NoOpExecution();

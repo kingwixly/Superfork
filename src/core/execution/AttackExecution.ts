@@ -16,6 +16,7 @@ import {
 import { GameMap, TileRef } from "../game/GameMap";
 import { PseudoRandom } from "../PseudoRandom";
 import { assertNever } from "../Util";
+import { followMasterIntoWar } from "./PuppetExecution";
 import { FlatBinaryHeap } from "./utils/FlatBinaryHeap"; // adjust path if needed
 
 const malusForRetreat = 25;
@@ -56,6 +57,9 @@ export class AttackExecution implements Execution {
     return false;
   }
 
+  /** Set once this attack has already pulled in its owner's puppets. */
+  private puppetsFollowing = false;
+
   init(mg: Game, ticks: number) {
     if (!this.active) {
       return;
@@ -67,6 +71,16 @@ export class AttackExecution implements Execution {
       console.warn(`target ${this._targetID} not found`);
       this.active = false;
       return;
+    }
+
+    // Superfork: puppets follow their master into war automatically. Hooked
+    // here rather than in the intent layer so it fires for every attack a
+    // master makes, however it was started - UI, AI, or another execution.
+    // `puppetsFollowing` guards the recursion: a puppet joining does not
+    // itself drag its own puppets in a second time.
+    if (!this.puppetsFollowing && this._targetID !== null) {
+      this.puppetsFollowing = true;
+      followMasterIntoWar(mg, this._owner, this._targetID);
     }
 
     this.target =

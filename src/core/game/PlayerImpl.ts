@@ -149,6 +149,8 @@ export class PlayerImpl implements Player {
   private _publicAirports = false;
   /** Superfork: active ceasefires, keyed by the other party. */
   private ceasefires = new Map<PlayerID, Ceasefire>();
+  /** Superfork: the nation this one answers to, if any. */
+  private _master: Player | null = null;
 
   public _borderTiles = new TileSet();
 
@@ -1226,6 +1228,20 @@ export class PlayerImpl implements Player {
     const sanction =
       other.hasSanctionAgainst(this) || this.hasSanctionAgainst(other);
     return !embargo && !sanction && other.id() !== this.id();
+  }
+
+  master(): Player | null {
+    return this._master;
+  }
+
+  setMaster(master: Player | null): void {
+    this._master = master;
+  }
+
+  puppets(): Player[] {
+    // Derived rather than stored on both sides: one source of truth means a
+    // liberation cannot leave a dangling entry in a master's puppet list.
+    return this.mg.players().filter((p) => p.master()?.id() === this.id());
   }
 
   hasCeasefireWith(other: Player): boolean {
