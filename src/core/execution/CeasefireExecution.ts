@@ -1,5 +1,6 @@
+import { translateText } from "../../client/Utils";
 import { canUseSuperforkSystems } from "../configuration/SuperforkUnits";
-import { Execution, Game, Player } from "../game/Game";
+import { Execution, Game, MessageType, Player } from "../game/Game";
 
 /** Two minutes at 10 ticks per second, per spec. */
 export const CEASEFIRE_DURATION_TICKS = 120 * 10;
@@ -44,6 +45,23 @@ export class CeasefireProposeExecution implements Execution {
       liberationFor: this.liberationFor,
       createdAt: ticks,
     });
+
+    // The recipient must be told an offer exists or it can never be answered,
+    // and the proposer must be told it was sent.
+    mg.displayMessage(
+      translateText("events_display.ceasefire_offered", {
+        player: recipient.displayName(),
+      }),
+      MessageType.ALLIANCE_REQUEST,
+      this.proposer.id(),
+    );
+    mg.displayMessage(
+      translateText("events_display.ceasefire_received", {
+        player: this.proposer.displayName(),
+      }),
+      MessageType.ALLIANCE_REQUEST,
+      recipient.id(),
+    );
   }
 
   tick(ticks: number): void {}
@@ -84,6 +102,19 @@ export class CeasefireResponseExecution implements Execution {
 
     if (offer.liberationFor !== undefined) {
       liberate(mg, offer.liberationFor, this.recipient, proposer);
+    }
+
+    for (const [who, other] of [
+      [proposer, this.recipient],
+      [this.recipient, proposer],
+    ] as const) {
+      mg.displayMessage(
+        translateText("events_display.ceasefire_agreed", {
+          player: other.displayName(),
+        }),
+        MessageType.ALLIANCE_ACCEPTED,
+        who.id(),
+      );
     }
   }
 

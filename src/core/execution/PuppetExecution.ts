@@ -1,5 +1,6 @@
+import { translateText } from "../../client/Utils";
 import { canUseSuperforkSystems } from "../configuration/SuperforkUnits";
-import { Execution, Game, Player } from "../game/Game";
+import { Execution, Game, MessageType, Player } from "../game/Game";
 import { AttackExecution } from "./AttackExecution";
 
 /** Share of a puppet's army committed when its master points it at a target. */
@@ -137,6 +138,19 @@ export class PuppetLiberateExecution implements Execution {
     if (puppet.id() !== this.liberator.id()) {
       const req = this.liberator.createAllianceRequest(puppet);
       req?.accept();
+    }
+
+    for (const [who, other] of [
+      [this.liberator, puppet],
+      [puppet, this.liberator],
+    ] as const) {
+      mg.displayMessage(
+        translateText("events_display.puppet_freed", {
+          player: other.displayName(),
+        }),
+        MessageType.ALLIANCE_ACCEPTED,
+        who.id(),
+      );
     }
   }
 

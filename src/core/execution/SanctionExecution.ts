@@ -1,5 +1,6 @@
+import { translateText } from "../../client/Utils";
 import { canUseSuperforkSystems } from "../configuration/SuperforkUnits";
-import { Execution, Game, Player } from "../game/Game";
+import { Execution, Game, MessageType, Player } from "../game/Game";
 
 /**
  * Start or lift a sanction.
@@ -44,6 +45,26 @@ export class SanctionExecution implements Execution {
     } else {
       this.sanctioner.stopSanction(target);
     }
+
+    // Both sides are told. A sanction has no visual representation anywhere in
+    // the UI, so without a message the player cannot tell a working button
+    // from a dead one - which is exactly how this shipped.
+    const key =
+      this.action === "start"
+        ? "events_display.sanction_started"
+        : "events_display.sanction_lifted";
+    mg.displayMessage(
+      translateText(key, { player: target.displayName() }),
+      MessageType.ALLIANCE_BROKEN,
+      this.sanctioner.id(),
+    );
+    mg.displayMessage(
+      translateText(key + "_against", {
+        player: this.sanctioner.displayName(),
+      }),
+      MessageType.ALLIANCE_BROKEN,
+      target.id(),
+    );
   }
 
   tick(ticks: number): void {}

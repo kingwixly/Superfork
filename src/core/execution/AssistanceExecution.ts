@@ -1,5 +1,6 @@
+import { translateText } from "../../client/Utils";
 import { canUseSuperforkSystems } from "../configuration/SuperforkUnits";
-import { Execution, Game, Player } from "../game/Game";
+import { Execution, Game, MessageType, Player } from "../game/Game";
 import { AttackExecution } from "./AttackExecution";
 
 /** Share of the helper's army committed when they answer a call for help. */
@@ -77,6 +78,21 @@ export class RequestAssistanceExecution implements Execution {
       against,
       mode: this.mode,
     });
+
+    mg.displayMessage(
+      translateText("events_display.aid_requested", {
+        player: helper.displayName(),
+      }),
+      MessageType.ALLIANCE_REQUEST,
+      this.requestor.id(),
+    );
+    mg.displayMessage(
+      translateText("events_display.aid_asked_of_you", {
+        player: this.requestor.displayName(),
+      }),
+      MessageType.ALLIANCE_REQUEST,
+      helper.id(),
+    );
   }
 
   tick(ticks: number): void {}

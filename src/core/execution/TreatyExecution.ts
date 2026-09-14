@@ -1,5 +1,6 @@
+import { translateText } from "../../client/Utils";
 import { canUseSuperforkSystems } from "../configuration/SuperforkUnits";
-import { Execution, Game, Player } from "../game/Game";
+import { Execution, Game, MessageType, Player } from "../game/Game";
 
 /** Members at creation (including the founder), and the hard ceiling. */
 export const TREATY_FOUNDING_SIZE = 3;
@@ -122,6 +123,16 @@ export class TreatyCreateExecution implements Execution {
     const treaty = new Treaty(id, this.founder);
     for (const p of invited.slice(0, seats)) treaty.add(p);
     treaties.set(id, treaty);
+
+    for (const m of treaty.getMembers()) {
+      mg.displayMessage(
+        translateText("events_display.treaty_formed", {
+          count: treaty.getMembers().length,
+        }),
+        MessageType.ALLIANCE_ACCEPTED,
+        m.id(),
+      );
+    }
   }
 
   tick(ticks: number): void {}
