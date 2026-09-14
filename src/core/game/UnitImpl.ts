@@ -360,6 +360,24 @@ export class UnitImpl implements Unit {
       applyEmbassySeizure(this.mg, this, this._lastOwner, newOwner);
     }
 
+    // A nation may only ever hold one capital. Promotion enforces that, but
+    // CAPTURE does not go through promotion - so taking an enemy capital while
+    // holding your own left you with two, and shipped that way. The captured
+    // one reverts to a City: you took the building, not their statehood.
+    if (this._type === UnitType.Capital) {
+      const existing = newOwner
+        .units(UnitType.Capital)
+        .filter((u) => u !== this && u.isActive());
+      if (existing.length > 0) {
+        const tile = this._tile;
+        const level = this._level;
+        this.delete(false);
+        const city = newOwner.buildUnit(UnitType.City, tile, {});
+        for (let i = 1; i < level; i++) city.increaseLevel();
+        return;
+      }
+    }
+
     // Losing your capital costs a flat share of your standing army — the
     // decapitation penalty. Charged to the previous owner, not the captor,
     // and only when it actually changes hands between different players.

@@ -192,9 +192,10 @@ export const SUPERFORK_UNITS: Record<string, SuperforkUnitSpec> = {
 
   [UnitType.InternationalAirport]: {
     domain: UnitDomain.Structure,
-    // pow2 ladder, like Port — it is the air-domain analogue and should scale
-    // the same way trade infrastructure does.
-    cost: (n) => Math.min(4_000_000, pow2(n) * 500_000),
+    // pow2 ladder like Port, but the BASE must exceed the airfield's or the
+    // most capable air base is also the cheapest - which is what shipped.
+    // Airstrip 750k < Airfield 1M < Airport 1.5M at n=0.
+    cost: (n) => Math.min(8_000_000, pow2(n) * 1_500_000),
     constructionDuration: s(15),
     upgradable: true,
     range: 250,

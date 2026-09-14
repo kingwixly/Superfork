@@ -171,3 +171,66 @@ describe("Capital", () => {
     expect(player.troops()).toBe(1000);
   });
 });
+
+describe("One capital per nation", () => {
+  test("capturing a capital while holding one demotes it to a city", async () => {
+    const g: Game = await setup(
+      "half_land_half_ocean",
+      { instantBuild: true },
+      [
+        new PlayerInfo("a", PlayerType.Human, null, "a_id"),
+        new PlayerInfo("b", PlayerType.Human, null, "b_id"),
+      ],
+    );
+    const a = g.player("a_id");
+    const b = g.player("b_id");
+    g.config().structureMinDist = () => 1;
+    const land: number[] = [];
+    for (let x = 0; x < g.width(); x++) {
+      for (let y = 0; y < g.height(); y++) {
+        const t = g.ref(x, y);
+        if (g.isLand(t)) land.push(t);
+      }
+    }
+    const half = Math.floor(land.length / 2);
+    for (const t of land.slice(0, half)) a.conquer(t);
+    for (const t of land.slice(half)) b.conquer(t);
+
+    a.buildUnit(UnitType.Capital, land[0], {});
+    const theirs = b.buildUnit(UnitType.Capital, land[half], {});
+
+    // A takes B's capital while already holding one.
+    theirs.setOwner(a);
+
+    // You took the building, not their statehood.
+    expect(a.units(UnitType.Capital).length).toBe(1);
+    expect(a.units(UnitType.City).length).toBe(1);
+  });
+
+  test("capturing a capital with none of your own keeps it a capital", async () => {
+    // The normal case must still work.
+    const g: Game = await setup(
+      "half_land_half_ocean",
+      { instantBuild: true },
+      [
+        new PlayerInfo("x", PlayerType.Human, null, "x_id"),
+        new PlayerInfo("y", PlayerType.Human, null, "y_id"),
+      ],
+    );
+    const x = g.player("x_id");
+    const y = g.player("y_id");
+    g.config().structureMinDist = () => 1;
+    const tiles: number[] = [];
+    for (let i = 0; i < g.width(); i++) {
+      for (let j = 0; j < g.height(); j++) {
+        const t = g.ref(i, j);
+        if (g.isLand(t)) tiles.push(t);
+      }
+    }
+    for (const t of tiles) x.conquer(t);
+
+    const cap = x.buildUnit(UnitType.Capital, tiles[0], {});
+    cap.setOwner(y);
+    expect(y.units(UnitType.Capital).length).toBe(1);
+  });
+});

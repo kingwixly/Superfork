@@ -20,7 +20,12 @@ import { WarshipInterceptExecution } from "./WarshipInterceptExecution";
  * Warship and Destroyer are interchangeable here: a destroyer hunts warships
  * and vice versa.
  */
-const SURFACE_COMBATANTS: UnitType[] = [UnitType.Warship, UnitType.Destroyer];
+const SURFACE_COMBATANTS: UnitType[] = [
+  UnitType.Warship,
+  UnitType.Destroyer,
+  UnitType.Corvette,
+  UnitType.Carrier,
+];
 
 export class WarshipExecution implements Execution {
   private random: PseudoRandom;
@@ -44,7 +49,11 @@ export class WarshipExecution implements Execution {
    */
   constructor(
     private input: (UnitParams<UnitType.Warship> & OwnerComp) | Unit,
-    private hull: UnitType.Warship | UnitType.Destroyer = UnitType.Warship,
+    private hull:
+      | UnitType.Warship
+      | UnitType.Destroyer
+      | UnitType.Corvette
+      | UnitType.Carrier = UnitType.Warship,
   ) {}
 
   init(mg: Game, ticks: number): void {

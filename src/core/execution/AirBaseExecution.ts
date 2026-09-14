@@ -2,6 +2,17 @@ import { Execution, Game, Player, Unit, UnitType } from "../game/Game";
 import { PseudoRandom } from "../PseudoRandom";
 import { CivilianAircraftExecution } from "./CivilianAircraftExecution";
 
+/** Ceiling on civilian aircraft a single nation can have aloft. */
+const MAX_CIVILIAN_AIRCRAFT = 6;
+/**
+ * Multiplier on the trade-ship spawn interval for air traffic.
+ *
+ * Higher is rarer. Aircraft cross the map several times faster than ships, so
+ * an identical spawn rate yields far more completed trips - and far more
+ * income - per minute.
+ */
+const CIVILIAN_SPAWN_SLOWDOWN = 4;
+
 /**
  * Lifecycle for the air bases: Airstrip, Airfield, International Airport, and
  * the Carrier, which is an airstrip that floats.
@@ -44,13 +55,28 @@ export class AirBaseExecution implements Execution {
    */
   private maybeLaunchCivilian(): void {
     if (this.base.isUnderConstruction() || this.base.isDisabled()) return;
-    const rate = this.mg
-      .config()
-      .tradeShipSpawnRate(
-        this.spawnRejections,
-        this.mg.units(UnitType.CargoJet).length +
-          this.mg.units(UnitType.Airliner).length,
-      );
+    // Hard cap per airport first. Civilian traffic is flavour and income, not
+    // a fleet - without a ceiling every airport kept minting until the sky was
+    // full, which is what shipped.
+    const mine =
+      this.base.owner().units(UnitType.CargoJet).length +
+      this.base.owner().units(UnitType.Airliner).length;
+    const airports = this.base
+      .owner()
+      .units(UnitType.InternationalAirport).length;
+    if (mine >= Math.min(MAX_CIVILIAN_AIRCRAFT, airports * 2)) return;
+
+    // Then the shared trade throttle, slowed further: the trade rate is tuned
+    // for ports serving a whole nation, and aircraft fly far faster than
+    // ships, so the same rate produces many more completed trips per minute.
+    const rate =
+      this.mg
+        .config()
+        .tradeShipSpawnRate(
+          this.spawnRejections,
+          this.mg.units(UnitType.CargoJet).length +
+            this.mg.units(UnitType.Airliner).length,
+        ) * CIVILIAN_SPAWN_SLOWDOWN;
     if (!this.random.chance(rate)) {
       this.spawnRejections++;
       return;

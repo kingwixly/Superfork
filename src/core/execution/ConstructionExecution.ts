@@ -147,25 +147,29 @@ export class ConstructionExecution implements Execution {
         // as it moves.
         const spawn = player.canBuild(UnitType.Carrier, this.tile);
         if (spawn !== false) {
-          this.mg.addExecution(
-            new AirBaseExecution(
-              player.buildUnit(UnitType.Carrier, spawn, {
-                patrolTile: this.tile,
-              }),
-            ),
-          );
+          const carrier = player.buildUnit(UnitType.Carrier, spawn, {
+            patrolTile: this.tile,
+          });
+          // TWO executions: AirBaseExecution launches its aircraft,
+          // WarshipExecution moves the hull. With only the first it sat
+          // motionless - a mobile airstrip that never moved, which is what
+          // shipped.
+          this.mg.addExecution(new AirBaseExecution(carrier));
+          this.mg.addExecution(new WarshipExecution(carrier, UnitType.Carrier));
         }
         break;
       }
       case UnitType.Corvette: {
         const spawn = player.canBuild(UnitType.Corvette, this.tile);
         if (spawn !== false) {
+          const corvette = player.buildUnit(UnitType.Corvette, spawn, {
+            patrolTile: this.tile,
+          });
+          // Same pairing as the carrier: CorvetteExecution owns troop
+          // loading and deployment, WarshipExecution moves the hull.
+          this.mg.addExecution(new CorvetteExecution(corvette));
           this.mg.addExecution(
-            new CorvetteExecution(
-              player.buildUnit(UnitType.Corvette, spawn, {
-                patrolTile: this.tile,
-              }),
-            ),
+            new WarshipExecution(corvette, UnitType.Corvette),
           );
         }
         break;

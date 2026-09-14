@@ -16,7 +16,7 @@ import type { Config } from "../../../../core/configuration/Config";
 import { UnitType } from "../../../../core/game/Game";
 import { maxHealthWithVeterancy } from "../../../../core/game/Veterancy";
 import type { RendererConfig, UnitState } from "../../types";
-import { UT_MISSILE_SILO, UT_SAM_LAUNCHER } from "../../types";
+import { AIRCRAFT_TYPES, UT_MISSILE_SILO, UT_SAM_LAUNCHER } from "../../types";
 import type { RenderSettings } from "../RenderSettings";
 import { createProgram } from "../utils/GlUtils";
 
@@ -144,6 +144,10 @@ export class BarPass {
     // warship-only.
     for (const unit of mobileUnits.values()) {
       if (unit.health === null || unit.health <= 0) continue;
+      // Superfork: aircraft carry health too, but this loop scales everything
+      // against warshipMaxHealth - a 600hp fighter rendered as a single red
+      // pixel. Aircraft simply do not get bars.
+      if (AIRCRAFT_TYPES.has(unit.unitType)) continue;
       // Veteran warships have a higher effective max health, so a full veteran
       // ship reads as full. Shared with the engine's UnitImpl.maxHealth().
       const maxHealth = maxHealthWithVeterancy(
