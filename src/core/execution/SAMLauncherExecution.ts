@@ -408,6 +408,19 @@ export class SAMLauncherExecution implements Execution {
   private engageAircraft(): boolean {
     const sam = this.sam;
     if (sam === null) return false;
+
+    // Global early-out, mirroring the nuke path's. Without it every launcher
+    // ran a radius query every tick whether or not a single aircraft existed
+    // - upstream measured that exact pattern at ~7% of a headless game with
+    // 150 launchers, and this added a second one.
+    let anyAircraft = false;
+    for (const t of Aircraft.types) {
+      if (this.mg.unitCount(t) > 0) {
+        anyAircraft = true;
+        break;
+      }
+    }
+    if (!anyAircraft) return false;
     const samTile = sam.tile();
     if (samTile === null || samTile === undefined) return false;
     const range = this.mg.config().maxSamRange();

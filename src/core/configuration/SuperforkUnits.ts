@@ -157,10 +157,12 @@ export const SUPERFORK_UNITS: Record<string, SuperforkUnitSpec> = {
 
   [UnitType.Capital]: {
     domain: UnitDomain.Structure,
-    // Flat: there is only ever one, so a curve is meaningless. Priced as a
-    // serious mid-game commitment, since the demotion rules mean placing it
-    // badly is a mistake you have to live with.
-    cost: () => 2_000_000,
+    // FREE by design. A capital is promoted from a city you already paid for,
+    // and it carries a -40% troop penalty if captured - the commitment is the
+    // risk, not the price. Zero rather than unchecked: buildUnit calls
+    // removeGold regardless, and removeGold clamps to the balance, so any
+    // non-zero cost here would silently drain a poor player.
+    cost: () => 0,
     constructionDuration: s(10),
   },
 

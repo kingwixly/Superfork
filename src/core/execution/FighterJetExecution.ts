@@ -5,6 +5,9 @@ import { AircraftExecution } from "./AircraftExecution";
 /** Types a fighter will shoot at rather than capture. */
 const COMBAT_TARGETS = [UnitType.FighterJet, UnitType.Interceptor];
 
+/** Everything a fighter looks for, in one list so it needs one query. */
+const HUNTED: UnitType[] = [...CivilianAircraft.types, ...COMBAT_TARGETS];
+
 /**
  * Fighter jet.
  *
@@ -37,18 +40,36 @@ export class FighterJetExecution extends AircraftExecution {
       return;
     }
 
+    // Nothing else airborne: skip the spatial query. Fighters patrol
+    // constantly, so this ran every tick per fighter regardless.
+    let anyAirborne = false;
+    for (const t of HUNTED) {
+      if (this.mg.unitCount(t) > 0) {
+        anyAirborne = true;
+        break;
+      }
+    }
+    if (!anyAirborne) {
+      this.destination ??= this.patrolTile;
+      return;
+    }
+
+    // ONE query covering both target classes, split in memory. Previously two
+    // separate radius lookups ran every tick per fighter.
+    const seen = this.hostileAircraftNear(range, HUNTED);
+
     // Civilians first. A capture is worth more than a kill, and contesting
     // fighters will usually still be there next tick.
-    const civilian = this.hostileAircraftNear(range, [
-      ...CivilianAircraft.types,
-    ])[0];
+    const civilian = seen.find((u) =>
+      CivilianAircraft.types.includes(u.type() as never),
+    );
     if (civilian !== undefined) {
       if (this.tryCapture(civilian)) return;
       this.destination = civilian.tile();
       return;
     }
 
-    const combatant = this.hostileAircraftNear(range, COMBAT_TARGETS)[0];
+    const combatant = seen.find((u) => COMBAT_TARGETS.includes(u.type()));
     if (combatant !== undefined) {
       if (this.tryEngage(combatant)) return;
       this.destination = combatant.tile();

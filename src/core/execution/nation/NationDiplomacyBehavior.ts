@@ -39,7 +39,11 @@ export class NationDiplomacyBehavior {
   ) {}
 
   tick(): void {
-    this.answerCeasefires();
+    // All three throttled. answerCeasefires walks every player, so at 50
+    // nations an unthrottled call was ~2500 lookups per tick across the
+    // fleet before any other behaviour ran. A truce offer waiting a few
+    // ticks for an answer is invisible in play.
+    if (this.random.chance(20)) this.answerCeasefires();
     if (this.random.chance(200)) this.maybeSanction();
     if (this.random.chance(300)) this.maybeSueForPeace();
   }

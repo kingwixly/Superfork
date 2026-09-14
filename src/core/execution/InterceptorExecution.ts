@@ -76,12 +76,28 @@ export class InterceptorExecution extends AircraftExecution {
    * munition they exist to stop flies past.
    */
   private bestTarget(): Unit | undefined {
-    const range = this.mg.config().unitInfo(UnitType.Interceptor).range ?? 120;
-    for (const type of INTERCEPT_TARGETS) {
-      const found = this.hostileAircraftNear(range, [type])[0];
-      if (found !== undefined) return found;
+    // Nothing in flight anywhere: skip the query. Interceptors patrol
+    // constantly, so without this they each ran eight radius-120 lookups
+    // every tick for warheads that did not exist.
+    let any = false;
+    for (const t of INTERCEPT_TARGETS) {
+      if (this.mg.unitCount(t) > 0) {
+        any = true;
+        break;
+      }
     }
-    return undefined;
+    if (!any) return undefined;
+
+    const range = this.mg.config().unitInfo(UnitType.Interceptor).range ?? 120;
+    // ONE query across every warhead type, ranked in memory afterwards.
+    const found = this.hostileAircraftNear(range, INTERCEPT_TARGETS);
+    if (found.length === 0) return undefined;
+    found.sort(
+      (a, b) =>
+        INTERCEPT_TARGETS.indexOf(a.type()) -
+        INTERCEPT_TARGETS.indexOf(b.type()),
+    );
+    return found[0];
   }
 
   protected onArrived(): void {
