@@ -645,6 +645,20 @@
     "impossible": "Impossible",
     "medium": "Medium"
   },
+  "diplomacy": {
+    "aid": "Request aid",
+    "aid_desc": "Ask this ally to send troops for your war",
+    "alliance": "Alliance",
+    "alliance_desc": "Propose a mutual defence pact",
+    "ceasefire": "Ceasefire",
+    "ceasefire_desc": "Offer a 2 minute truce. Ships keep fighting",
+    "liberate": "Liberate",
+    "liberate_desc": "Free this nation from its master",
+    "sanction": "Sanction",
+    "sanction_desc": "Cut trade, close borders and airspace",
+    "treaty": "Treaty",
+    "treaty_desc": "Form a bloc of up to 5 allied nations"
+  },
   "discord_user_header": {
     "avatar_alt": "Avatar"
   },

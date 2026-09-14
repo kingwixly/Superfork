@@ -42,6 +42,12 @@ const targetIcon = assetUrl("images/TargetIconWhite.svg");
 const traitorIcon = assetUrl("images/TraitorIconWhite.svg");
 const xIcon = assetUrl("images/XIcon.svg");
 const crownIcon = assetUrl("images/CrownIcon.svg");
+// Distinct icons per diplomacy verb. Four identical handshakes meant the only
+// way to tell the buttons apart was memorising their positions.
+const ceasefireIcon = assetUrl("images/AllianceIconFaded.svg");
+const sanctionIcon = assetUrl("images/DisabledIcon.svg");
+const treatyIcon = assetUrl("images/AllianceIconWhite.svg");
+const liberateIcon = assetUrl("images/ClaimIcon.svg");
 
 export interface MenuElementParams {
   myPlayer: PlayerView;
@@ -811,6 +817,13 @@ export const diplomacyMenuElement: MenuElement = {
       name: "alliance",
       icon: allianceIcon,
       color: COLORS.ally,
+      tooltipItems: [
+        { text: translateText("diplomacy.alliance"), className: "title" },
+        {
+          text: translateText("diplomacy.alliance_desc"),
+          className: "description",
+        },
+      ],
       disabled: () =>
         !params.playerActions?.interaction?.canSendAllianceRequest,
       action: () => {
@@ -824,8 +837,15 @@ export const diplomacyMenuElement: MenuElement = {
     items.push({
       id: "dip_ceasefire",
       name: "ceasefire",
-      icon: allianceIcon,
+      icon: ceasefireIcon,
       color: COLORS.ally,
+      tooltipItems: [
+        { text: translateText("diplomacy.ceasefire"), className: "title" },
+        {
+          text: translateText("diplomacy.ceasefire_desc"),
+          className: "description",
+        },
+      ],
       disabled: () => friendly,
       action: () => {
         params.playerActionHandler.handleCeasefire(target);
@@ -837,8 +857,15 @@ export const diplomacyMenuElement: MenuElement = {
     items.push({
       id: "dip_sanction",
       name: "sanction",
-      icon: emojiIcon,
+      icon: sanctionIcon,
       color: COLORS.attack,
+      tooltipItems: [
+        { text: translateText("diplomacy.sanction"), className: "title" },
+        {
+          text: translateText("diplomacy.sanction_desc"),
+          className: "description",
+        },
+      ],
       disabled: () => friendly,
       action: () => {
         params.playerActionHandler.handleSanction(target, "start");
@@ -850,8 +877,15 @@ export const diplomacyMenuElement: MenuElement = {
     items.push({
       id: "dip_treaty",
       name: "treaty",
-      icon: allianceIcon,
+      icon: treatyIcon,
       color: COLORS.ally,
+      tooltipItems: [
+        { text: translateText("diplomacy.treaty"), className: "title" },
+        {
+          text: translateText("diplomacy.treaty_desc"),
+          className: "description",
+        },
+      ],
       disabled: () => !friendly,
       action: () => {
         params.playerActionHandler.handleTreatyCreate(target);
@@ -865,6 +899,13 @@ export const diplomacyMenuElement: MenuElement = {
       name: "aid",
       icon: donateTroopIcon,
       color: COLORS.ally,
+      tooltipItems: [
+        { text: translateText("diplomacy.aid"), className: "title" },
+        {
+          text: translateText("diplomacy.aid_desc"),
+          className: "description",
+        },
+      ],
       disabled: () => !friendly,
       action: () => {
         // Whoever we are currently attacking. Troops rather than an attack:
@@ -893,8 +934,15 @@ export const diplomacyMenuElement: MenuElement = {
     items.push({
       id: "dip_liberate",
       name: "liberate",
-      icon: allianceIcon,
+      icon: liberateIcon,
       color: COLORS.ally,
+      tooltipItems: [
+        { text: translateText("diplomacy.liberate"), className: "title" },
+        {
+          text: translateText("diplomacy.liberate_desc"),
+          className: "description",
+        },
+      ],
       // No client-side view of puppet status yet, so this stays enabled and
       // the execution rejects a non-puppet. Better a no-op than a hidden verb.
       disabled: () => false,
