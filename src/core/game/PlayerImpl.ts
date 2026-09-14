@@ -1,6 +1,7 @@
 import {
   canStack,
   canUseSuperforkSystems,
+  STACK_RADIUS,
 } from "../configuration/SuperforkUnits";
 import { PseudoRandom } from "../PseudoRandom";
 import { ClientID } from "../Schemas";
@@ -1827,6 +1828,10 @@ export class PlayerImpl implements Player {
   }
 
   portSpawn(tile: TileRef, validTiles: TileRef[] | null): TileRef | false {
+    // Stacking anchor first, same reasoning as landBasedStructureSpawn.
+    const anchor = this.stackAnchorNear(tile, UnitType.Port);
+    if (anchor !== null) return anchor;
+
     const spawns = Array.from(
       this.mg.bfs(
         tile,
@@ -1877,11 +1882,45 @@ export class PlayerImpl implements Player {
     validTiles: TileRef[] | null = null,
     placing?: UnitType,
   ): TileRef | false {
+    // Stacking: if a compatible anchor sits under the cursor, place directly
+    // ON it and skip the flood entirely.
+    //
+    // Exempting the anchor from structureMinDist was not enough. minDist is
+    // 15 and the search radius is also 15, so a capital promoted from a city
+    // inside a normal city cluster has OTHER structures blocking every
+    // candidate tile - the exemption spared the capital and nothing else, and
+    // stacking appeared not to work at all.
+    if (placing !== undefined) {
+      const anchor = this.stackAnchorNear(tile, placing);
+      if (anchor !== null) return anchor;
+    }
+
     const tiles = validTiles ?? this.validStructureSpawnTiles(tile, placing);
     if (tiles.length === 0) {
       return false;
     }
     return tiles[0];
+  }
+
+  /**
+   * A tile holding a structure `placing` may stack onto, within reach of the
+   * cursor. Null when there is none.
+   */
+  private stackAnchorNear(tile: TileRef, placing: UnitType): TileRef | null {
+    for (const { unit } of this.mg.nearbyUnits(
+      tile,
+      STACK_RADIUS * 2,
+      Structures.types,
+    )) {
+      if (unit.owner() !== this) continue;
+      if (!canStack(placing, unit.type())) continue;
+      const anchorTile = unit.tile();
+      if (anchorTile === undefined) continue;
+      // A port still has to be on water's edge, whatever it is stacking onto.
+      if (placing === UnitType.Port && !this.mg.isShore(anchorTile)) continue;
+      return anchorTile;
+    }
+    return null;
   }
 
   private validStructureSpawnTiles(

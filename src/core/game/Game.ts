@@ -278,6 +278,9 @@ export const BuildableAttacks = unitTypeGroup([
   UnitType.Destroyer, // Phase 4
   UnitType.Corvette, // Phase 4
   UnitType.Carrier, // Phase 4
+  UnitType.NeutronBomb, // Phase 6
+  UnitType.EMPBomb, // Phase 6
+  UnitType.ASBM, // Phase 6
 ] as const);
 
 export const Structures = unitTypeGroup([

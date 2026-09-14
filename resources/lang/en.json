@@ -158,6 +158,7 @@
     "desc": {
       "airfield": "Launches military transport aircraft",
       "airstrip": "Launches fighter jets",
+      "asbm": "Destroys a nation's ships; ignores land",
       "atom_bomb": "Small explosion",
       "bank": "Stores gold over time; captured intact",
       "carrier": "Mobile airstrip; launches fighters at sea",
@@ -165,6 +166,7 @@
       "corvette": "Carries troops; deploys past your coastline",
       "defense_post": "Increases defenses of nearby borders",
       "destroyer": "Surface combat ship",
+      "emp_bomb": "Disables structures and downs aircraft; destroys nothing",
       "factory": "Creates railroads and spawns trains",
       "hydrogen_bomb": "Large explosion",
       "international_airport": "Civilian flights and any military aircraft",
@@ -1996,6 +1998,7 @@
   "unit_type": {
     "airfield": "Airfield",
     "airstrip": "Airstrip",
+    "asbm": "ASBM",
     "atom_bomb": "Atom Bomb",
     "bank": "Bank",
     "boat": "Boat",
@@ -2006,11 +2009,13 @@
     "defense_post": "Defense Post",
     "destroyer": "Destroyer",
     "embassy": "Embassy",
+    "emp_bomb": "EMP Burst",
     "factory": "Factory",
     "hydrogen_bomb": "Hydrogen Bomb",
     "international_airport": "International Airport",
     "mirv": "MIRV",
     "missile_silo": "Missile Silo",
+    "neutron_bomb": "Neutron Bomb",
     "port": "Port",
     "sam_launcher": "SAM Launcher",
     "warship": "Warship"

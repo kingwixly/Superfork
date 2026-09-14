@@ -140,6 +140,27 @@ export const buildTable: BuildItemDisplay[][] = [
       countable: true,
     },
     {
+      unitType: UnitType.NeutronBomb,
+      icon: atomBombIcon,
+      description: "build_menu.desc.neutron_bomb",
+      key: "unit_type.neutron_bomb",
+      countable: false,
+    },
+    {
+      unitType: UnitType.EMPBomb,
+      icon: mirvIcon,
+      description: "build_menu.desc.emp_bomb",
+      key: "unit_type.emp_bomb",
+      countable: false,
+    },
+    {
+      unitType: UnitType.ASBM,
+      icon: destroyerIcon,
+      description: "build_menu.desc.asbm",
+      key: "unit_type.asbm",
+      countable: false,
+    },
+    {
       unitType: UnitType.Carrier,
       icon: carrierIcon,
       description: "build_menu.desc.carrier",

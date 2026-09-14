@@ -3,6 +3,7 @@ import { customElement, property, state } from "lit/decorators.js";
 import { assetUrl } from "../../../core/AssetUrls";
 import { EventBus } from "../../../core/EventBus";
 import {
+  Aircraft,
   PlayerProfile,
   PlayerType,
   Relation,
@@ -156,9 +157,27 @@ export class PlayerInfoOverlay extends LitElement implements Controller {
         this.playerProfile = p;
       });
       this.setVisible(true);
-    } else if (!this.game.isLand(tile)) {
+    } else {
+      // Aircraft fly over land AND water, so this can no longer be gated on
+      // water. Ships stay water-only; without that, hovering your own
+      // territory would surface a ship off the coast.
+      //
+      // The superfork hulls were missing from this list entirely, which is why
+      // hovering a destroyer or carrier surfaced a nearby TRADE SHIP instead -
+      // the label was right, the unit picked was wrong.
+      const types = this.game.isLand(tile)
+        ? [...Aircraft.types]
+        : [
+            UnitType.Warship,
+            UnitType.Destroyer,
+            UnitType.Corvette,
+            UnitType.Carrier,
+            UnitType.TradeShip,
+            UnitType.TransportShip,
+            ...Aircraft.types,
+          ];
       const units = this.game
-        .units(UnitType.Warship, UnitType.TradeShip, UnitType.TransportShip)
+        .units(...types)
         .filter((u) => euclideanDistWorld(worldCoord, u.tile(), this.game) < 50)
         .sort(distSortUnitWorld(worldCoord, this.game));
 

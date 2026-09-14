@@ -1,6 +1,7 @@
 import { Execution, Game, Player, Tick, Unit, UnitType } from "../game/Game";
 import { TileRef } from "../game/GameMap";
 import { AirBaseExecution } from "./AirBaseExecution";
+import { ASBMExecution } from "./ASBMExecution";
 import { BankExecution } from "./BankExecution";
 import { CityExecution } from "./CityExecution";
 import { CorvetteExecution } from "./CorvetteExecution";
@@ -11,6 +12,7 @@ import { MissileSiloExecution } from "./MissileSiloExecution";
 import { NukeExecution } from "./NukeExecution";
 import { PortExecution } from "./PortExecution";
 import { SAMLauncherExecution } from "./SAMLauncherExecution";
+import { SpecialWarheadExecution } from "./SpecialWarheadExecution";
 import { WarshipExecution } from "./WarshipExecution";
 
 export class ConstructionExecution implements Execution {
@@ -128,6 +130,26 @@ export class ConstructionExecution implements Execution {
       case UnitType.MIRV:
         this.mg.addExecution(new MirvExecution(player, this.tile));
         break;
+      // Superfork warheads. These existed and were tested from Phase 6 but
+      // were never wired here or into BuildableAttacks, so nothing could
+      // launch them - they were unreachable in play.
+      case UnitType.NeutronBomb:
+      case UnitType.EMPBomb:
+        this.mg.addExecution(
+          new SpecialWarheadExecution(player, this.constructionType, this.tile),
+        );
+        break;
+      case UnitType.ASBM: {
+        // ASBM picks a nation, not a tile: it targets whoever owns the tile
+        // you aimed at, then hunts that nation's hulls wherever they are.
+        const owner = this.mg.owner(this.tile);
+        if (owner.isPlayer()) {
+          this.mg.addExecution(
+            new ASBMExecution(player, (owner as Player).id()),
+          );
+        }
+        break;
+      }
       case UnitType.Warship:
       case UnitType.Destroyer:
         // One execution drives both hulls - they share the whole
