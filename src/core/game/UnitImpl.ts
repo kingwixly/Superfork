@@ -700,11 +700,17 @@ export class UnitImpl implements Unit {
   }
 
   setTargetedBySAM(targeted: boolean): void {
-    this._nukeState!.targetedBySam = targeted;
+    // Superfork: SAMs now engage aircraft as well as nukes, and aircraft have
+    // no nuke state. The flag exists to stop two SAMs wasting missiles on one
+    // warhead; for aircraft there is nothing to mark, so this is a no-op
+    // rather than a crash.
+    if (this._nukeState === undefined) return;
+    this._nukeState.targetedBySam = targeted;
   }
 
   targetedBySAM(): boolean {
-    return this._nukeState!.targetedBySam;
+    // Aircraft have no nuke state; see setTargetedBySAM.
+    return this._nukeState?.targetedBySam ?? false;
   }
 
   setReachedTarget(): void {

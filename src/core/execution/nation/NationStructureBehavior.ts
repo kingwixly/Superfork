@@ -14,6 +14,7 @@ import { TileRef } from "../../game/GameMap";
 import { Cluster } from "../../game/TrainStation";
 import { PseudoRandom } from "../../PseudoRandom";
 import { assertNever } from "../../Util";
+import { PromoteCapitalExecution } from "../CapitalExecution";
 import { ConstructionExecution } from "../ConstructionExecution";
 import { UpgradeStructureExecution } from "../UpgradeStructureExecution";
 import { nearestTileDist, nearestTileDistCapped } from "../Util";
@@ -60,6 +61,31 @@ function getStructureRatios(
       ratioPerCity: 0.2,
       perceivedCostIncreasePerOwned: 1,
     },
+    // ---------------------------- Superfork ----------------------------
+    // Ratios are set below the vanilla economy structures on purpose: a
+    // nation that builds banks and airbases INSTEAD of cities and ports ends
+    // up poor and small, which reads as a broken bot rather than a varied
+    // one. These are additions to a working economy, not replacements.
+    // Tuned DOWN from a first pass at 0.4/0.25/0.15/0.2, which cost the
+    // benchmark ~20% of its factories: the new structures were competing with
+    // the economy rather than supplementing it. These are additions to a
+    // working economy, not replacements for one.
+    [UnitType.Bank]: {
+      ratioPerCity: 0.2,
+      perceivedCostIncreasePerOwned: 1.5,
+    },
+    [UnitType.Airstrip]: {
+      ratioPerCity: 0.12,
+      perceivedCostIncreasePerOwned: 1.5,
+    },
+    [UnitType.Airfield]: {
+      ratioPerCity: 0.08,
+      perceivedCostIncreasePerOwned: 1.5,
+    },
+    [UnitType.InternationalAirport]: {
+      ratioPerCity: 0.1,
+      perceivedCostIncreasePerOwned: 1.5,
+    },
   };
 }
 
@@ -68,6 +94,14 @@ const CITY_PERCEIVED_COST_INCREASE_PER_OWNED = 1;
 
 /** Factory ratio multiplier when the nation has coastal tiles */
 const FACTORY_COASTAL_RATIO_MULTIPLIER = 0.33;
+
+/**
+ * Cities a nation wants before promoting one to a capital.
+ *
+ * A capital costs 40% of the army when captured, so promoting the only city a
+ * bot owns turns an early rush into a rout.
+ */
+const CITIES_BEFORE_CAPITAL = 3;
 
 /** Maximum number of missile silos a nation will build */
 const MAX_MISSILE_SILOS = 3;
@@ -495,6 +529,13 @@ export class NationStructureBehavior {
       UnitType.Factory,
       UnitType.SAMLauncher,
       UnitType.MissileSilo,
+      // Superfork, ordered after the vanilla economy: a bank is worthless
+      // without income to compound, and an airbase is worthless without the
+      // gold to fly anything from it.
+      UnitType.Bank,
+      UnitType.InternationalAirport,
+      UnitType.Airstrip,
+      UnitType.Airfield,
     ];
 
     const nukesEnabled =
@@ -540,7 +581,42 @@ export class NationStructureBehavior {
       return true;
     }
 
+    if (this.maybePromoteCapital()) {
+      return true;
+    }
+
     return false;
+  }
+
+  /**
+   * Promote a city to this nation's capital once it is worth defending.
+   *
+   * A capital is not built, so it cannot ride the ratio system with the other
+   * structures - it is a promotion of an existing city, and it carries a
+   * -40% troop penalty if captured. Gated on having several cities so a bot
+   * does not promote its only city and hand an early attacker a free
+   * decapitation.
+   */
+  private maybePromoteCapital(): boolean {
+    if (this.game.config().isUnitDisabled(UnitType.Capital)) return false;
+    if (this.player.unitsOwned(UnitType.Capital) > 0) return false;
+
+    const cities = this.player
+      .units(UnitType.City)
+      .filter((c) => !c.isUnderConstruction());
+    if (cities.length < CITIES_BEFORE_CAPITAL) return false;
+
+    const cost = this.game
+      .config()
+      .unitInfo(UnitType.Capital)
+      .cost(this.game, this.player);
+    if (this.player.gold() < cost) return false;
+
+    // The most developed city: the promotion carries its level over, so
+    // promoting the biggest keeps the most value.
+    const best = cities.reduce((a, b) => (b.level() > a.level() ? b : a));
+    this.game.addExecution(new PromoteCapitalExecution(this.player, best.id()));
+    return true;
   }
 
   private hasHighStartingGold(): boolean {
@@ -912,6 +988,20 @@ export class NationStructureBehavior {
         return this.portValue();
       case UnitType.SAMLauncher:
         return this.samLauncherValue();
+      // Superfork. Each reuses an existing heuristic rather than inventing a
+      // new one, because each wants the same thing an existing structure
+      // wants:
+      //   Bank      - interior safety, like a city.
+      //   Air bases - interior safety too; they are soft targets that must
+      //               not sit on a contested border.
+      // This dispatch THROWS on an unknown type, so adding a structure to the
+      // build order without a value function crashes the nation AI mid-game.
+      // That is how this gap was found.
+      case UnitType.Bank:
+      case UnitType.Airstrip:
+      case UnitType.Airfield:
+      case UnitType.InternationalAirport:
+        return this.cityValue();
       default:
         throw new Error(`Value function not implemented for ${type}`);
     }
