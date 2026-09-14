@@ -724,6 +724,11 @@ export interface Unit {
   wasDestroyedByEnemy(): boolean;
   destroyer(): Player | undefined;
 
+  // Disabled state (superfork). Set by an EMP burst: the unit still stands
+  // but does nothing until the tick passes.
+  disable(untilTick: Tick): void;
+  isDisabled(): boolean;
+
   // Bank (superfork). Zero / no-op for every other unit type.
   bankReserve(): bigint;
   addBankReserve(amount: bigint): void;

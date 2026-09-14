@@ -14,6 +14,10 @@ export class MissileSiloExecution implements Execution {
   }
 
   tick(ticks: number): void {
+    // Superfork: an EMP burst leaves this standing but inert.
+    if (this.silo.isDisabled()) {
+      return;
+    }
     if (this.silo.isUnderConstruction()) {
       return;
     }

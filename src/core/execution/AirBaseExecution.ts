@@ -43,7 +43,7 @@ export class AirBaseExecution implements Execution {
    * economy scales like the sea one rather than needing its own tuning.
    */
   private maybeLaunchCivilian(): void {
-    if (this.base.isUnderConstruction()) return;
+    if (this.base.isUnderConstruction() || this.base.isDisabled()) return;
     const rate = this.mg
       .config()
       .tradeShipSpawnRate(
@@ -111,6 +111,8 @@ export class AirBaseExecution implements Execution {
 
   /** Whether this base may launch the given aircraft type. */
   canLaunch(type: UnitType): boolean {
+    // An EMP burst grounds everything until it wears off.
+    if (this.base.isDisabled()) return false;
     switch (this.base.type()) {
       case UnitType.Airstrip:
         // Fighters only — the cheap forward air-defence option.

@@ -60,6 +60,14 @@ export class UnitImpl implements Unit {
    * the entire point of building one somewhere defensible.
    */
   private _bankReserve: bigint = 0n;
+  /**
+   * Superfork: tick until which this unit is disabled by an EMP burst.
+   *
+   * Structures were previously binary alive/destroyed. EMP needs a third
+   * state - standing but inert - and the neutron bomb's 'leave the buildings'
+   * behaviour reads the same field.
+   */
+  private _disabledUntil = 0;
 
   constructor(
     private _type: UnitType,
@@ -133,6 +141,15 @@ export class UnitImpl implements Unit {
       case UnitType.Embassy:
         this.mg.stats().unitBuild(_owner, this._type);
     }
+  }
+
+  disable(untilTick: Tick): void {
+    this._disabledUntil = Math.max(this._disabledUntil, untilTick);
+    this.touch();
+  }
+
+  isDisabled(): boolean {
+    return this.mg.ticks() < this._disabledUntil;
   }
 
   /** Gold held by this bank. Zero for every other unit type. */

@@ -317,6 +317,10 @@ export class SAMLauncherExecution implements Execution {
       this.targetingSystem.onLevelUp();
     }
 
+    // Superfork: an EMP burst leaves this standing but inert.
+    if (this.sam.isDisabled()) {
+      return;
+    }
     if (this.sam.isUnderConstruction()) {
       return;
     }
