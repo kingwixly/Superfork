@@ -50,24 +50,35 @@ describe("SAM vs aircraft", () => {
     expect(sam.missileTimerQueue().length).toBeGreaterThan(before);
   });
 
-  test("it engages transports and civilian traffic too", () => {
-    for (const type of [
-      UnitType.TransportJet,
-      UnitType.CargoJet,
-      UnitType.Airliner,
-      UnitType.Interceptor,
-    ]) {
+  test("it engages military transports", () => {
+    const { sam, exec } = samAt(land[0]);
+    foe.buildUnit(UnitType.TransportJet, land[0], { troops: 100 });
+    const before = sam.missileTimerQueue().length;
+    exec.tick(1);
+    expect(sam.missileTimerQueue().length).toBeGreaterThan(before);
+  });
+
+  test.each([UnitType.CargoJet, UnitType.Airliner, UnitType.Interceptor])(
+    "it does NOT engage %s",
+    (type) => {
+      // Civilian traffic is spared so open borders stay viable; interceptors
+      // are spared because they are already fragile to fighters, and ground
+      // fire deleting them too would leave no counter to a MIRV.
+      //
+      // Each case builds its own SAM and its own aircraft - an earlier version
+      // looped over all four reusing the map, so a leftover transport from a
+      // previous iteration satisfied every assertion and the test passed
+      // whatever the targeting rule was.
       const { sam, exec } = samAt(land[0]);
       foe.buildUnit(type, land[0], {
         patrolTile: land[0],
-        targetUnit: undefined as never,
-      });
+        targetUnit: undefined,
+      } as never);
       const before = sam.missileTimerQueue().length;
       exec.tick(1);
-      expect(sam.missileTimerQueue().length).toBeGreaterThan(before);
-      sam.delete(false);
-    }
-  });
+      expect(sam.missileTimerQueue().length).toBe(before);
+    },
+  );
 
   test("it ignores friendly aircraft", () => {
     const { sam, exec } = samAt(land[0]);

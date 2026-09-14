@@ -1,5 +1,4 @@
 import {
-  Aircraft,
   Execution,
   Game,
   GameType,
@@ -272,6 +271,19 @@ class SAMTargetingSystem {
   }
 }
 
+/**
+ * Aircraft a SAM will engage.
+ *
+ * Fighters and military transports only. Civilian traffic is spared so open
+ * borders stay viable, and interceptors are spared because they are already
+ * fragile to fighters - ground fire deleting them as well would leave nothing
+ * able to stop a MIRV before separation.
+ */
+const SAM_AIR_TARGETS: UnitType[] = [
+  UnitType.FighterJet,
+  UnitType.TransportJet,
+];
+
 export class SAMLauncherExecution implements Execution {
   private mg: Game;
   private active: boolean = true;
@@ -414,7 +426,7 @@ export class SAMLauncherExecution implements Execution {
     // - upstream measured that exact pattern at ~7% of a headless game with
     // 150 launchers, and this added a second one.
     let anyAircraft = false;
-    for (const t of Aircraft.types) {
+    for (const t of SAM_AIR_TARGETS) {
       if (this.mg.unitCount(t) > 0) {
         anyAircraft = true;
         break;
@@ -426,8 +438,13 @@ export class SAMLauncherExecution implements Execution {
     const range = this.mg.config().maxSamRange();
     const owner = sam.owner();
 
+    // Per Dani: SAMs should reliably kill military aircraft, but NOT civilian
+    // traffic or interceptors. Shooting down airliners would make open borders
+    // suicidal and kill the air economy; interceptors are already fragile to
+    // fighters, and letting ground fire delete them too would leave no counter
+    // to a MIRV.
     const found = this.mg
-      .nearbyUnits(samTile, range, [...Aircraft.types])
+      .nearbyUnits(samTile, range, SAM_AIR_TARGETS)
       .filter(
         ({ unit }) =>
           unit.isActive() &&
