@@ -15,6 +15,7 @@ import { TileRef } from "../game/GameMap";
 import { PseudoRandom } from "../PseudoRandom";
 import { GameID } from "../Schemas";
 import { assertNever, simpleHash } from "../Util";
+import { NationAirBehavior } from "./nation/NationAirBehavior";
 import { NationAllianceBehavior } from "./nation/NationAllianceBehavior";
 import { NationEmojiBehavior } from "./nation/NationEmojiBehavior";
 import { NationMIRVBehavior } from "./nation/NationMIRVBehavior";
@@ -34,6 +35,8 @@ export class NationExecution implements Execution {
   private attackBehavior!: AiAttackBehavior;
   private allianceBehavior!: NationAllianceBehavior;
   private warshipBehavior!: NationWarshipBehavior;
+  /** Superfork: fighters and interceptors from the nation's air bases. */
+  private airBehavior!: NationAirBehavior;
   private nukeBehavior!: NationNukeBehavior;
   private structureBehavior!: NationStructureBehavior;
   private mg: Game;
@@ -203,6 +206,9 @@ export class NationExecution implements Execution {
     this.mirvBehavior.considerMIRV();
     this.structureBehavior.handleStructures();
     this.warshipBehavior.maybeSpawnWarship();
+    // Superfork: without this, the air bases the structure behaviour builds
+    // would sit empty, which looks worse than not having them.
+    this.airBehavior.maybeLaunchAircraft();
     this.handleEmbargoesToHostileNations();
     this.attackBehavior.maybeAttack();
     this.warshipBehavior.counterWarshipInfestation();
@@ -235,6 +241,7 @@ export class NationExecution implements Execution {
       this.player,
       this.emojiBehavior,
     );
+    this.airBehavior = new NationAirBehavior(this.random, this.mg, this.player);
     this.attackBehavior = new AiAttackBehavior(
       this.random,
       this.mg,

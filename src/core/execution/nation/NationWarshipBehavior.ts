@@ -35,34 +35,91 @@ export class NationWarshipBehavior {
 
   maybeSpawnWarship(): boolean {
     if (this.player === null) throw new Error("not initialized");
-    if (this.game.config().isUnitDisabled(UnitType.Warship)) {
-      return false;
-    }
     if (!this.random.chance(50)) {
       return false;
     }
     const ports = this.player.units(UnitType.Port);
-    const ships = this.player.units(UnitType.Warship);
-    if (
-      ports.length > 0 &&
-      ships.length === 0 &&
-      this.player.gold() > this.cost(UnitType.Warship)
-    ) {
-      const port = this.random.randElement(ports);
-      const targetTile = this.warshipSpawnTile(port.tile(), 250);
-      if (targetTile === null) {
-        return false;
-      }
-      const canBuild = this.player.canBuild(UnitType.Warship, targetTile);
-      if (canBuild === false) {
-        return false;
-      }
-      this.game.addExecution(
-        new ConstructionExecution(this.player, UnitType.Warship, targetTile),
-      );
-      return true;
+    if (ports.length === 0) return false;
+
+    const hull = this.nextHull(ports.length);
+    if (hull === null) return false;
+
+    const port = this.random.randElement(ports);
+    const targetTile = this.warshipSpawnTile(port.tile(), 250);
+    if (targetTile === null) {
+      return false;
     }
-    return false;
+    if (this.player.canBuild(hull, targetTile) === false) {
+      return false;
+    }
+    this.game.addExecution(
+      new ConstructionExecution(this.player, hull, targetTile),
+    );
+    return true;
+  }
+
+  /**
+   * The next hull this nation should add, or null if the fleet is big enough.
+   *
+   * Vanilla built exactly one warship, ever. With four hull types that would
+   * leave three of them unused, so this builds a composition instead:
+   *
+   *  - **Destroyers** are the backbone. Cheapest real combatant, so a bot with
+   *    any navy at all should have some.
+   *  - **One warship** for its nuke-interception radius — a second adds much
+   *    less than the first, since coverage overlaps.
+   *  - **Corvettes** only alongside destroyers; alone they lose to anything.
+   *  - **A carrier** only for a serious naval power, since it is the dearest
+   *    hull in the game and useless without escorts.
+   *
+   * Fleet size scales with ports, so a landlocked nation with one harbour does
+   * not field a task force.
+   */
+  private nextHull(portCount: number): UnitType | null {
+    const config = this.game.config();
+    const enabled = (t: UnitType) => !config.isUnitDisabled(t);
+    const owned = (t: UnitType) => this.player.units(t).length;
+    const affordable = (t: UnitType) => this.player.gold() > this.cost(t);
+
+    const fleetCap = Math.min(6, 1 + portCount);
+    const total =
+      owned(UnitType.Destroyer) +
+      owned(UnitType.Warship) +
+      owned(UnitType.Corvette) +
+      owned(UnitType.Carrier);
+    if (total >= fleetCap) return null;
+
+    if (
+      enabled(UnitType.Destroyer) &&
+      owned(UnitType.Destroyer) < 2 &&
+      affordable(UnitType.Destroyer)
+    ) {
+      return UnitType.Destroyer;
+    }
+    if (
+      enabled(UnitType.Warship) &&
+      owned(UnitType.Warship) === 0 &&
+      affordable(UnitType.Warship)
+    ) {
+      return UnitType.Warship;
+    }
+    if (
+      enabled(UnitType.Corvette) &&
+      owned(UnitType.Destroyer) > 0 &&
+      owned(UnitType.Corvette) < 2 &&
+      affordable(UnitType.Corvette)
+    ) {
+      return UnitType.Corvette;
+    }
+    if (
+      enabled(UnitType.Carrier) &&
+      owned(UnitType.Carrier) === 0 &&
+      portCount >= 3 &&
+      affordable(UnitType.Carrier)
+    ) {
+      return UnitType.Carrier;
+    }
+    return null;
   }
 
   private warshipSpawnTile(portTile: TileRef, radius: number): TileRef | null {

@@ -59,3 +59,54 @@ describe("Nation AI covers superfork structures", () => {
     expect(Number(gate![1])).toBeGreaterThan(1);
   });
 });
+
+const WARSHIP = path.join(
+  ROOT,
+  "src/core/execution/nation/NationWarshipBehavior.ts",
+);
+const AIR = path.join(ROOT, "src/core/execution/nation/NationAirBehavior.ts");
+const NATION = path.join(ROOT, "src/core/execution/NationExecution.ts");
+
+describe("Nation AI fields superfork units", () => {
+  const warship = readFileSync(WARSHIP, "utf8");
+  const air = readFileSync(AIR, "utf8");
+  const nation = readFileSync(NATION, "utf8");
+
+  test("the fleet is a composition, not a single warship", () => {
+    // Vanilla built exactly one warship ever, which with four hull types
+    // would leave three unused.
+    for (const hull of ["Destroyer", "Warship", "Corvette", "Carrier"]) {
+      expect(warship).toContain(`UnitType.${hull}`);
+    }
+  });
+
+  test("corvettes are gated behind destroyers", () => {
+    // Alone they lose to anything; the design intent is swarms with escorts.
+    expect(warship).toMatch(/Corvette[\s\S]*?owned\(UnitType\.Destroyer\) > 0/);
+  });
+
+  test("fleet size is bounded", () => {
+    expect(warship).toContain("fleetCap");
+  });
+
+  test("the air wing is wired into the nation tick", () => {
+    // Without this the air bases the structure behaviour builds sit empty.
+    expect(nation).toContain("maybeLaunchAircraft");
+    expect(nation).toContain("NationAirBehavior");
+  });
+
+  test("interceptors are gated behind fighters", () => {
+    // An interceptor carries no air-to-air weapon; unescorted it is a free
+    // kill, so buying one first wastes the money.
+    expect(air).toMatch(/Interceptor[\s\S]*?fighters > 0/);
+  });
+
+  test("the air wing only uses bases that can launch the type", () => {
+    expect(air).toContain("canLaunch");
+  });
+
+  test("disabled bases are skipped", () => {
+    // An EMP burst grounds them.
+    expect(air).toContain("isDisabled");
+  });
+});
