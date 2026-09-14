@@ -110,3 +110,59 @@ describe("Nation AI fields superfork units", () => {
     expect(air).toContain("isDisabled");
   });
 });
+
+const DIPLOMACY = path.join(
+  ROOT,
+  "src/core/execution/nation/NationDiplomacyBehavior.ts",
+);
+
+describe("Nation AI diplomacy is conservative", () => {
+  const dip = readFileSync(DIPLOMACY, "utf8");
+  const nation = readFileSync(NATION, "utf8");
+
+  test("it is wired into the nation tick", () => {
+    expect(nation).toContain("NationDiplomacyBehavior");
+    expect(nation).toContain("diplomacyBehavior.tick()");
+  });
+
+  test("it never sanctions an ally", () => {
+    expect(dip).toContain("!this.player.isFriendly(p)");
+  });
+
+  test("it only sanctions nations it already treats as hostile", () => {
+    // A sanction is the escalation of an embargo, so it follows the same
+    // hostility signal vanilla already uses.
+    expect(dip).toContain("Relation.Hostile");
+  });
+
+  test("it never sanctions a tribe", () => {
+    expect(dip).toContain("PlayerType.Bot");
+  });
+
+  test("it accepts a ceasefire only when losing", () => {
+    // Accepting while ahead throws away a won war.
+    expect(dip).toContain("LOSING_RATIO");
+  });
+
+  test("it sues for peace to the biggest threat, not a random one", () => {
+    expect(dip).toContain("b.troops() > a.troops()");
+  });
+
+  test("it leaves the judgement-heavy verbs to humans", () => {
+    // Treaties, liberation, cede-land and puppets each need a read of the
+    // whole board; a bot doing them badly is worse than not doing them.
+    // Checked against actual import statements, not raw text. A substring
+    // search over the file matches the prose explaining WHY these are
+    // excluded - "deliberately" contains "liberate", which is how this test
+    // first failed.
+    const imported = [...dip.matchAll(/from "([^"]+)"/g)].map((m) => m[1]);
+    for (const mod of [
+      "TreatyExecution",
+      "CedeLandExecution",
+      "PuppetExecution",
+      "LiberationExecution",
+    ]) {
+      expect(imported.some((i) => i.includes(mod))).toBe(false);
+    }
+  });
+});
