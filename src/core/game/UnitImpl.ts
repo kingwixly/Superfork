@@ -68,6 +68,8 @@ export class UnitImpl implements Unit {
    * behaviour reads the same field.
    */
   private _disabledUntil = 0;
+  /** Superfork: player-given capital name. See Unit.capitalName. */
+  private _capitalName = "";
 
   constructor(
     private _type: UnitType,
@@ -121,6 +123,8 @@ export class UnitImpl implements Unit {
       "loaded" in params ? (params.loaded ?? undefined) : undefined;
     this._trainType = "trainType" in params ? params.trainType : undefined;
     this._bankReserve = "stored" in params ? (params.stored ?? 0n) : 0n;
+    this._capitalName =
+      "capitalName" in params ? (params.capitalName ?? "") : "";
 
     switch (this._type) {
       case UnitType.Warship:
@@ -141,6 +145,15 @@ export class UnitImpl implements Unit {
       case UnitType.Embassy:
         this.mg.stats().unitBuild(_owner, this._type);
     }
+  }
+
+  capitalName(): string {
+    return this._capitalName;
+  }
+
+  setCapitalName(name: string): void {
+    this._capitalName = name;
+    this.touch();
   }
 
   disable(untilTick: Tick): void {

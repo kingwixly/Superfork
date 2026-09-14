@@ -15,6 +15,7 @@ import { BoatRetreatExecution } from "./BoatRetreatExecution";
 import {
   DemoteCapitalExecution,
   PromoteCapitalExecution,
+  RenameCapitalExecution,
 } from "./CapitalExecution";
 import {
   CeasefireProposeExecution,
@@ -223,6 +224,8 @@ export class Executor {
         return new SanctionExecution(player, intent.targetID, intent.action);
       case "promote_capital":
         return new PromoteCapitalExecution(player, intent.unitId);
+      case "rename_capital":
+        return new RenameCapitalExecution(player, intent.unitId, intent.name);
       case "demote_capital":
         return new DemoteCapitalExecution(player, intent.unitId);
 

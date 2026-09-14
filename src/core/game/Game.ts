@@ -468,7 +468,9 @@ export interface UnitParamsMap {
     stored?: Gold;
   };
 
-  [UnitType.Capital]: Record<string, never>;
+  [UnitType.Capital]: {
+    capitalName?: string;
+  };
 
   [UnitType.Airstrip]: Record<string, never>;
 
@@ -723,6 +725,15 @@ export interface Unit {
   setTrainStation(trainStation: boolean): void;
   wasDestroyedByEnemy(): boolean;
   destroyer(): Player | undefined;
+
+  /**
+   * Player-given name for this Capital (superfork). Empty for every other
+   * type. Stored on the unit rather than the player deliberately: a capital
+   * can be lost and a different city promoted, and the name belongs to the
+   * building, not the nation.
+   */
+  capitalName(): string;
+  setCapitalName(name: string): void;
 
   // Disabled state (superfork). Set by an EMP burst: the unit still stands
   // but does nothing until the tick passes.

@@ -3,9 +3,11 @@ import { customElement, state } from "lit/decorators.js";
 import Countries from "resources/countries.json" with { type: "json" };
 import { assetUrl } from "../../../core/AssetUrls";
 import { EventBus } from "../../../core/EventBus";
+import { capitalDisplayName } from "../../../core/execution/CapitalExecution";
 import {
   AllPlayers,
   GameType,
+  Player,
   PlayerActions,
   PlayerProfile,
   PlayerType,
@@ -56,6 +58,7 @@ const stopTradingIcon = assetUrl("images/StopIconWhite.svg");
 const targetIcon = assetUrl("images/TargetIconWhite.svg");
 const startTradingIcon = assetUrl("images/TradingIconWhite.svg");
 const traitorIcon = assetUrl("images/TraitorIconLightRed.svg");
+const crownIcon = assetUrl("images/CrownIcon.svg");
 const breakAllianceIcon = assetUrl("images/TraitorIconWhite.svg");
 
 @customElement("player-panel")
@@ -469,6 +472,24 @@ export class PlayerPanel extends LitElement implements Controller {
     return Math.ceil(ticksLeft / 10); // 10 ticks = 1 second
   }
 
+  /**
+   * Capital name line, shown in the nation-info panel.
+   *
+   * Renders nothing when the nation has no capital or has not named one, so
+   * an unnamed capital costs no vertical space rather than showing a
+   * placeholder.
+   */
+  private renderCapitalName(other: PlayerView) {
+    const name = capitalDisplayName(other as unknown as Player);
+    if (name === null) return null;
+    return html`
+      <div class="mt-1 flex items-center gap-2 text-sm text-white/80">
+        <img src=${crownIcon} alt="" aria-hidden="true" class="size-4" />
+        <span class="truncate" title=${name}>${name}</span>
+      </div>
+    `;
+  }
+
   private renderTraitorBadge(other: PlayerView) {
     if (!other.isTraitor()) return html``;
 
@@ -616,7 +637,7 @@ export class PlayerPanel extends LitElement implements Controller {
             </span>`
           : html``}
       </div>
-      ${this.renderTraitorBadge(other)}
+      ${this.renderCapitalName(other)} ${this.renderTraitorBadge(other)}
       ${this.renderRelationPillIfNation(other, my)}
     `;
   }

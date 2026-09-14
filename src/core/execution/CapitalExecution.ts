@@ -3,6 +3,7 @@ import {
   STACK_RADIUS,
 } from "../configuration/SuperforkUnits";
 import { Execution, Game, Player, Unit, UnitType } from "../game/Game";
+import { MAX_USERNAME_LENGTH, validateUsername } from "../validations/username";
 
 /**
  * Returns the structures stacked on a capital's site — anything of a stacking
@@ -84,6 +85,66 @@ export class PromoteCapitalExecution implements Execution {
   activeDuringSpawnPhase(): boolean {
     return false;
   }
+}
+
+/** Longest permitted capital name. Matches the username cap. */
+export const MAX_CAPITAL_NAME_LENGTH = MAX_USERNAME_LENGTH;
+
+/**
+ * Name or rename your capital.
+ *
+ * Validated through the same path usernames use, because it is displayed to
+ * other players in the nation-info panel and so carries the same abuse risk.
+ * An empty name is legal and simply clears it back to the default.
+ */
+export class RenameCapitalExecution implements Execution {
+  private active = true;
+
+  constructor(
+    private player: Player,
+    private unitId: number,
+    private name: string,
+  ) {}
+
+  init(mg: Game, ticks: number): void {
+    this.active = false;
+
+    const capital = this.player
+      .units(UnitType.Capital)
+      .find((u) => u.id() === this.unitId);
+    if (capital === undefined || !capital.isActive()) return;
+
+    const trimmed = this.name.trim();
+    if (trimmed.length === 0) {
+      capital.setCapitalName("");
+      return;
+    }
+    if (trimmed.length > MAX_CAPITAL_NAME_LENGTH) return;
+    if (!validateUsername(trimmed).isValid) return;
+
+    capital.setCapitalName(trimmed);
+  }
+
+  tick(ticks: number): void {}
+  isActive(): boolean {
+    return this.active;
+  }
+  activeDuringSpawnPhase(): boolean {
+    return false;
+  }
+}
+
+/**
+ * The capital's display name for a player, or null if they have none.
+ *
+ * Used by the nation-info panel. Falls back to nothing rather than a
+ * placeholder, so an unnamed capital simply does not add a line.
+ */
+export function capitalDisplayName(player: Player): string | null {
+  const capital = player.units(UnitType.Capital)[0];
+  if (capital === undefined) return null;
+  const name = capital.capitalName();
+  return name.length > 0 ? name : null;
 }
 
 /** Demote a Capital back to a City, if the stacking rule permits it. */

@@ -73,7 +73,8 @@ export type Intent =
   | PuppetCommandIntent
   | PuppetLiberateIntent
   | SetBorderPolicyIntent
-  | MoveAircraftIntent;
+  | MoveAircraftIntent
+  | RenameCapitalIntent;
 
 export type AttackIntent = z.infer<typeof AttackIntentSchema>;
 
@@ -104,6 +105,7 @@ export type PuppetCommandIntent = z.infer<typeof PuppetCommandIntentSchema>;
 export type PuppetLiberateIntent = z.infer<typeof PuppetLiberateIntentSchema>;
 export type SetBorderPolicyIntent = z.infer<typeof SetBorderPolicyIntentSchema>;
 export type MoveAircraftIntent = z.infer<typeof MoveAircraftIntentSchema>;
+export type RenameCapitalIntent = z.infer<typeof RenameCapitalIntentSchema>;
 export type CancelAttackIntent = z.infer<typeof CancelAttackIntentSchema>;
 export type SpawnIntent = z.infer<typeof SpawnIntentSchema>;
 export type BoatAttackIntent = z.infer<typeof BoatAttackIntentSchema>;
@@ -956,6 +958,13 @@ export const SetBorderPolicyIntentSchema = z.object({
   publicAirports: z.boolean().optional(),
 });
 
+/** Name or rename your capital. Empty string clears it. */
+export const RenameCapitalIntentSchema = z.object({
+  type: z.literal("rename_capital"),
+  unitId: zb.uint(),
+  name: z.string(),
+});
+
 /** Aircraft repositioning. Mirrors move_warship. */
 export const MoveAircraftIntentSchema = z.object({
   type: z.literal("move_aircraft"),
@@ -1009,6 +1018,7 @@ export const IntentSchema = z.discriminatedUnion("type", [
   PuppetLiberateIntentSchema,
   SetBorderPolicyIntentSchema,
   MoveAircraftIntentSchema,
+  RenameCapitalIntentSchema,
 ]);
 
 // StampedIntent = Intent with server-stamped clientID (used in turns and execution)
