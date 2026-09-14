@@ -281,6 +281,11 @@ export const BuildableAttacks = unitTypeGroup([
   UnitType.NeutronBomb, // Phase 6
   UnitType.EMPBomb, // Phase 6
   UnitType.ASBM, // Phase 6
+  // Aircraft. Player-flyable types only: cargo jets and airliners are spawned
+  // by airports as traffic, not bought.
+  UnitType.FighterJet, // Phase 14
+  UnitType.Interceptor, // Phase 14
+  UnitType.TransportJet, // Phase 14
 ] as const);
 
 export const Structures = unitTypeGroup([

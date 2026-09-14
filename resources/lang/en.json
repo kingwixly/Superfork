@@ -168,12 +168,14 @@
       "destroyer": "Surface combat ship",
       "emp_bomb": "Disables structures and downs aircraft; destroys nothing",
       "factory": "Creates railroads and spawns trains",
+      "fighter_jet": "Launches from an airstrip; hunts aircraft",
       "hydrogen_bomb": "Large explosion",
       "international_airport": "Civilian flights and any military aircraft",
       "mirv": "Huge explosion, only targets selected player",
       "missile_silo": "Used to launch nukes",
       "port": "Sends trade ships to generate gold",
       "sam_launcher": "Defends against incoming nukes",
+      "transport_jet": "Air assault from an airfield; twice boat speed",
       "warship": "Captures trade ships, destroys ships and boats"
     },
     "not_enough_money": "Not enough money",
@@ -679,6 +681,7 @@
       "structures": "Structures",
       "train": "Train",
       "transportShipTrail": "Boat Trail",
+      "transport_jet": "Transport Jet",
       "warship": "Warship"
     }
   },
@@ -2013,7 +2016,9 @@
     "embassy": "Embassy",
     "emp_bomb": "EMP Burst",
     "factory": "Factory",
+    "fighter_jet": "Fighter Jet",
     "hydrogen_bomb": "Hydrogen Bomb",
+    "interceptor": "Interceptor",
     "international_airport": "International Airport",
     "mirv": "MIRV",
     "missile_silo": "Missile Silo",

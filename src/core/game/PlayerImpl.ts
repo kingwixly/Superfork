@@ -1750,13 +1750,23 @@ export class PlayerImpl implements Player {
       // Aircraft ignore terrain entirely, so placement is unconstrained here.
       // Phase 3 replaces this with launch-from-base validation — aircraft
       // should only ever appear at an airstrip, airfield, airport or carrier.
+      case UnitType.AAMissile:
+        return targetTile;
+
+      // Aircraft launch from a base, never from the clicked tile. The click
+      // says where to GO; the spawn point is whichever of your bases can
+      // actually operate the type and is nearest the target. Returning the
+      // clicked tile here - which is what shipped - meant the build menu had
+      // no way to express "launch from a base", so aircraft were never made
+      // buildable at all and the whole air layer was unreachable for players.
       case UnitType.FighterJet:
       case UnitType.TransportJet:
       case UnitType.CargoJet:
       case UnitType.Airliner:
-      case UnitType.Interceptor:
-      case UnitType.AAMissile:
-        return targetTile;
+      case UnitType.Interceptor: {
+        const base = this.launchBaseFor(unitType, targetTile);
+        return base ?? false;
+      }
 
       // ASBM picks a nation the way MIRV does, so it needs an owned target.
       case UnitType.ASBM:
@@ -1906,6 +1916,53 @@ export class PlayerImpl implements Player {
    * A tile holding a structure `placing` may stack onto, within reach of the
    * cursor. Null when there is none.
    */
+  /**
+   * The tile of an owned air base that can launch `type` and is nearest
+   * `target`, or null if there is none.
+   *
+   * Launch rules live on AirBaseExecution, but duplicating the small switch
+   * here avoids constructing an execution purely to ask a question during
+   * build validation, which runs on every cursor move.
+   */
+  launchBaseFor(type: UnitType, target: TileRef): TileRef | null {
+    const canOperate = (baseType: UnitType): boolean => {
+      switch (baseType) {
+        case UnitType.Airstrip:
+          return type === UnitType.FighterJet;
+        case UnitType.Airfield:
+          return type === UnitType.TransportJet || type === UnitType.FighterJet;
+        case UnitType.Carrier:
+          return type === UnitType.FighterJet || type === UnitType.Interceptor;
+        case UnitType.InternationalAirport:
+          return true;
+        default:
+          return false;
+      }
+    };
+
+    let best: TileRef | null = null;
+    let bestDist = Number.POSITIVE_INFINITY;
+    for (const baseType of [
+      UnitType.Airstrip,
+      UnitType.Airfield,
+      UnitType.InternationalAirport,
+      UnitType.Carrier,
+    ]) {
+      if (!canOperate(baseType)) continue;
+      for (const base of this.units(baseType)) {
+        if (base.isUnderConstruction() || base.isDisabled()) continue;
+        const tile = base.tile();
+        if (tile === undefined) continue;
+        const d = this.mg.manhattanDist(tile, target);
+        if (d < bestDist) {
+          bestDist = d;
+          best = tile;
+        }
+      }
+    }
+    return best;
+  }
+
   private stackAnchorNear(tile: TileRef, placing: UnitType): TileRef | null {
     for (const { unit } of this.mg.nearbyUnits(
       tile,

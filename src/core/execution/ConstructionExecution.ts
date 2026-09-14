@@ -7,12 +7,15 @@ import { CityExecution } from "./CityExecution";
 import { CorvetteExecution } from "./CorvetteExecution";
 import { DefensePostExecution } from "./DefensePostExecution";
 import { FactoryExecution } from "./FactoryExecution";
+import { FighterJetExecution } from "./FighterJetExecution";
+import { InterceptorExecution } from "./InterceptorExecution";
 import { MirvExecution } from "./MIRVExecution";
 import { MissileSiloExecution } from "./MissileSiloExecution";
 import { NukeExecution } from "./NukeExecution";
 import { PortExecution } from "./PortExecution";
 import { SAMLauncherExecution } from "./SAMLauncherExecution";
 import { SpecialWarheadExecution } from "./SpecialWarheadExecution";
+import { TransportJetExecution } from "./TransportJetExecution";
 import { WarshipExecution } from "./WarshipExecution";
 
 export class ConstructionExecution implements Execution {
@@ -178,6 +181,51 @@ export class ConstructionExecution implements Execution {
           // shipped.
           this.mg.addExecution(new AirBaseExecution(carrier));
           this.mg.addExecution(new WarshipExecution(carrier, UnitType.Carrier));
+        }
+        break;
+      }
+      case UnitType.FighterJet:
+      case UnitType.Interceptor: {
+        // canBuild already resolved the spawn to a capable base; the clicked
+        // tile becomes the patrol point.
+        const spawn = player.canBuild(this.constructionType, this.tile);
+        if (spawn !== false) {
+          const base = [
+            ...player.units(UnitType.Airstrip),
+            ...player.units(UnitType.Airfield),
+            ...player.units(UnitType.InternationalAirport),
+            ...player.units(UnitType.Carrier),
+          ].find((b) => b.tile() === spawn);
+          const unit = player.buildUnit(this.constructionType, spawn, {
+            patrolTile: this.tile,
+            homeBase: base,
+          });
+          this.mg.addExecution(
+            this.constructionType === UnitType.Interceptor
+              ? new InterceptorExecution(unit, base, this.tile)
+              : new FighterJetExecution(unit, base, this.tile),
+          );
+        }
+        break;
+      }
+      case UnitType.TransportJet: {
+        // The air assault: launches from an airfield or airport and lands
+        // troops on the clicked tile, twice as fast as a boat.
+        const spawn = player.canBuild(UnitType.TransportJet, this.tile);
+        if (spawn !== false) {
+          const base = [
+            ...player.units(UnitType.Airfield),
+            ...player.units(UnitType.InternationalAirport),
+          ].find((b) => b.tile() === spawn);
+          const troops = player.troops() / 4;
+          const unit = player.buildUnit(UnitType.TransportJet, spawn, {
+            troops,
+            targetTile: this.tile,
+            homeBase: base,
+          });
+          this.mg.addExecution(
+            new TransportJetExecution(unit, base, this.tile, player),
+          );
         }
         break;
       }

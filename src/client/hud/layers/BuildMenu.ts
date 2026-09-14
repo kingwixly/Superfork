@@ -34,6 +34,9 @@ const destroyerIcon = assetUrl("images/DestroyerIconWhite.svg");
 const corvetteIcon = assetUrl("images/CorvetteIconWhite.svg");
 const carrierIcon = assetUrl("images/CarrierIconWhite.svg");
 const airstripIcon = assetUrl("images/AirstripIconWhite.svg");
+const fighterIcon = assetUrl("images/FighterIconWhite.svg");
+const interceptorIcon = assetUrl("images/InterceptorIconWhite.svg");
+const transportJetIcon = assetUrl("images/TransportJetIconWhite.svg");
 const airfieldIcon = assetUrl("images/AirfieldIconWhite.svg");
 const airportIcon = assetUrl("images/AirportIconWhite.svg");
 const goldCoinIcon = assetUrl("images/GoldCoinIcon.svg");
@@ -173,6 +176,27 @@ export const buildTable: BuildItemDisplay[][] = [
       description: "build_menu.desc.corvette",
       key: "unit_type.corvette",
       countable: true,
+    },
+    {
+      unitType: UnitType.FighterJet,
+      icon: fighterIcon,
+      description: "build_menu.desc.fighter_jet",
+      key: "unit_type.fighter_jet",
+      countable: true,
+    },
+    {
+      unitType: UnitType.Interceptor,
+      icon: interceptorIcon,
+      description: "build_menu.desc.interceptor",
+      key: "unit_type.interceptor",
+      countable: true,
+    },
+    {
+      unitType: UnitType.TransportJet,
+      icon: transportJetIcon,
+      description: "build_menu.desc.transport_jet",
+      key: "unit_type.transport_jet",
+      countable: false,
     },
     {
       unitType: UnitType.Airstrip,
