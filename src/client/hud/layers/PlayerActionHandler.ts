@@ -6,6 +6,8 @@ import {
   SendAttackIntentEvent,
   SendBoatAttackIntentEvent,
   SendBreakAllianceIntentEvent,
+  SendCeasefireIntentEvent,
+  SendCeasefireResponseIntentEvent,
   SendDeleteUnitIntentEvent,
   SendDemoteCapitalIntentEvent,
   SendDonateGoldIntentEvent,
@@ -13,8 +15,12 @@ import {
   SendEmbargoIntentEvent,
   SendEmojiIntentEvent,
   SendPromoteCapitalIntentEvent,
+  SendPuppetLiberateIntentEvent,
+  SendRequestAssistanceIntentEvent,
+  SendSanctionIntentEvent,
   SendSpawnIntentEvent,
   SendTargetPlayerIntentEvent,
+  SendTreatyCreateIntentEvent,
 } from "../../Transport";
 import { UIState } from "../../UIState";
 import { PlayerView } from "../../view";
@@ -98,6 +104,48 @@ export class PlayerActionHandler {
 
   handlePromoteCapital(unitId: number) {
     this.eventBus.emit(new SendPromoteCapitalIntentEvent(unitId));
+  }
+
+  // ---------------------------- Diplomacy ----------------------------
+  // Each verb had a working, tested execution and no way to reach it.
+
+  handleCeasefire(recipient: PlayerView) {
+    this.eventBus.emit(new SendCeasefireIntentEvent(recipient.id(), undefined));
+  }
+
+  /** Propose a ceasefire conditioned on freeing `victim` — liberation. */
+  handleCeasefireWithLiberation(recipient: PlayerView, victim: PlayerView) {
+    this.eventBus.emit(
+      new SendCeasefireIntentEvent(recipient.id(), victim.id()),
+    );
+  }
+
+  handleCeasefireResponse(requestor: PlayerView, accept: boolean) {
+    this.eventBus.emit(
+      new SendCeasefireResponseIntentEvent(requestor.id(), accept),
+    );
+  }
+
+  handleSanction(target: PlayerView, action: "start" | "stop") {
+    this.eventBus.emit(new SendSanctionIntentEvent(target.id(), action));
+  }
+
+  handleTreatyCreate(member: PlayerView) {
+    this.eventBus.emit(new SendTreatyCreateIntentEvent([member.id()]));
+  }
+
+  handlePuppetLiberate(puppet: PlayerView) {
+    this.eventBus.emit(new SendPuppetLiberateIntentEvent(puppet.id()));
+  }
+
+  handleRequestAssistance(
+    ally: PlayerView,
+    against: PlayerView,
+    mode: "attack" | "troops",
+  ) {
+    this.eventBus.emit(
+      new SendRequestAssistanceIntentEvent(ally.id(), against.id(), mode),
+    );
   }
 
   handleDemoteCapital(unitId: number) {

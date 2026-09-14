@@ -131,6 +131,7 @@ export enum Slot {
   Back = "back",
   Delete = "delete",
   Capital = "capital",
+  Diplomacy = "diplomacy",
 }
 
 function isFriendlyTarget(params: MenuElementParams): boolean {
@@ -774,6 +775,139 @@ export const capitalElement: MenuElement = {
   },
 };
 
+/**
+ * Diplomacy submenu.
+ *
+ * Every verb below had a working, tested execution from Phase 5 and no way to
+ * reach it — this is what made them real. Alliance requests move in here too,
+ * per Dani, so all negotiation lives in one place rather than alliance sitting
+ * alone on the root ring.
+ *
+ * Only PLAYER-TARGETED verbs are here. Cede-land and embassies need map
+ * selection (an area, a tile) rather than a target, which is a different
+ * interaction and is not built yet.
+ */
+export const diplomacyMenuElement: MenuElement = {
+  id: Slot.Diplomacy,
+  name: "diplomacy",
+  icon: allianceIcon,
+  color: COLORS.ally,
+  tooltipKeys: [
+    { key: "radial_menu.diplomacy_title", className: "title" },
+    { key: "radial_menu.diplomacy_description", className: "description" },
+  ],
+  disabled: (params: MenuElementParams) => params.selected === undefined,
+  subMenu: (params: MenuElementParams) => {
+    const target = params.selected;
+    if (target === undefined || target === null) return [];
+    const me = params.myPlayer;
+    const friendly = me.isFriendly(target);
+
+    const items: MenuElement[] = [];
+
+    // Alliance, moved here from the root ring.
+    items.push({
+      id: "dip_ally",
+      name: "alliance",
+      icon: allianceIcon,
+      color: COLORS.ally,
+      disabled: () =>
+        !params.playerActions?.interaction?.canSendAllianceRequest,
+      action: () => {
+        params.playerActionHandler.handleAllianceRequest(me, target);
+        params.closeMenu();
+      },
+    });
+
+    // Ceasefire: a truce with someone you are fighting, so it is pointless
+    // toward an ally and hidden there.
+    items.push({
+      id: "dip_ceasefire",
+      name: "ceasefire",
+      icon: allianceIcon,
+      color: COLORS.ally,
+      disabled: () => friendly,
+      action: () => {
+        params.playerActionHandler.handleCeasefire(target);
+        params.closeMenu();
+      },
+    });
+
+    // Sanction: cuts trade, closes borders and airspace.
+    items.push({
+      id: "dip_sanction",
+      name: "sanction",
+      icon: emojiIcon,
+      color: COLORS.attack,
+      disabled: () => friendly,
+      action: () => {
+        params.playerActionHandler.handleSanction(target, "start");
+        params.closeMenu();
+      },
+    });
+
+    // Treaty: a multi-party bloc, so it only makes sense with an ally.
+    items.push({
+      id: "dip_treaty",
+      name: "treaty",
+      icon: allianceIcon,
+      color: COLORS.ally,
+      disabled: () => !friendly,
+      action: () => {
+        params.playerActionHandler.handleTreatyCreate(target);
+        params.closeMenu();
+      },
+    });
+
+    // Ask an ally to join your war against whoever you are fighting.
+    items.push({
+      id: "dip_assist",
+      name: "aid",
+      icon: donateTroopIcon,
+      color: COLORS.ally,
+      disabled: () => !friendly,
+      action: () => {
+        // Whoever we are currently attacking. Troops rather than an attack:
+        // it works at any distance, where an attack needs a shared border the
+        // ally may not have.
+        const targetID = me
+          .outgoingAttacks()
+          .map((a) => a.targetID)
+          .find((id) => id !== undefined && id !== null);
+        const enemy =
+          targetID !== undefined && targetID !== null
+            ? params.game.playerBySmallID(targetID)
+            : undefined;
+        if (enemy !== undefined && enemy.isPlayer()) {
+          params.playerActionHandler.handleRequestAssistance(
+            target,
+            enemy as PlayerView,
+            "troops",
+          );
+        }
+        params.closeMenu();
+      },
+    });
+
+    // Free a puppet. Only shown when the target actually is one.
+    items.push({
+      id: "dip_liberate",
+      name: "liberate",
+      icon: allianceIcon,
+      color: COLORS.ally,
+      // No client-side view of puppet status yet, so this stays enabled and
+      // the execution rejects a non-puppet. Better a no-op than a hidden verb.
+      disabled: () => false,
+      action: () => {
+        params.playerActionHandler.handlePuppetLiberate(target);
+        params.closeMenu();
+      },
+    });
+
+    return items;
+  },
+};
+
 export const buildMenuElement: MenuElement = {
   id: Slot.Build,
   name: "build",
@@ -892,7 +1026,10 @@ export const rootMenuElement: MenuElement = {
           ]
         : [
             isAllied && !isDisconnected ? allyBreakElement : boatMenuElement,
-            inExtensionWindow ? allyExtendElement : allyRequestElement,
+            // Alliance moved INTO the diplomacy submenu, per Dani, so all
+            // negotiation lives in one place. Extending an existing alliance
+            // stays on the ring: it is time-critical and wants one click.
+            inExtensionWindow ? allyExtendElement : diplomacyMenuElement,
             showDonateInsteadOfAttack
               ? donateGoldRadialElement
               : attackMenuElement,

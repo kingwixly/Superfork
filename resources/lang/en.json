@@ -1702,6 +1702,8 @@
     "capital_title": "Capital",
     "delete_unit_description": "Click to delete the nearest unit",
     "delete_unit_title": "Delete Unit",
+    "diplomacy_description": "Alliances, ceasefires, sanctions and treaties",
+    "diplomacy_title": "Diplomacy",
     "upgrade_x": "Upgrade x{amount}"
   },
   "relation": {

@@ -163,6 +163,49 @@ export class SendPromoteCapitalIntentEvent implements GameEvent {
   constructor(public readonly unitId: number) {}
 }
 
+/** Superfork diplomacy: propose a ceasefire. */
+export class SendCeasefireIntentEvent implements GameEvent {
+  constructor(
+    public readonly recipient: string,
+    public readonly liberationFor: string | undefined,
+  ) {}
+}
+
+/** Superfork diplomacy: answer a ceasefire offer. */
+export class SendCeasefireResponseIntentEvent implements GameEvent {
+  constructor(
+    public readonly requestor: string,
+    public readonly accept: boolean,
+  ) {}
+}
+
+/** Superfork diplomacy: start or lift a sanction. */
+export class SendSanctionIntentEvent implements GameEvent {
+  constructor(
+    public readonly targetID: string,
+    public readonly action: "start" | "stop",
+  ) {}
+}
+
+/** Superfork diplomacy: found a treaty with one other nation. */
+export class SendTreatyCreateIntentEvent implements GameEvent {
+  constructor(public readonly members: string[]) {}
+}
+
+/** Superfork diplomacy: free someone else's puppet. */
+export class SendPuppetLiberateIntentEvent implements GameEvent {
+  constructor(public readonly puppet: string) {}
+}
+
+/** Superfork diplomacy: ask an ally to join a war. */
+export class SendRequestAssistanceIntentEvent implements GameEvent {
+  constructor(
+    public readonly recipient: string,
+    public readonly against: string,
+    public readonly mode: "attack" | "troops",
+  ) {}
+}
+
 /** Superfork: demote a Capital back to a City, if the stacking rule allows. */
 export class SendDemoteCapitalIntentEvent implements GameEvent {
   constructor(public readonly unitId: number) {}
@@ -352,6 +395,42 @@ export class Transport {
 
     this.eventBus.on(SendDemoteCapitalIntentEvent, (e) =>
       this.onSendDemoteCapitalIntent(e),
+    );
+
+    this.eventBus.on(SendCeasefireIntentEvent, (e) =>
+      this.sendIntent({
+        type: "ceasefire_propose",
+        recipient: e.recipient,
+        liberationFor: e.liberationFor,
+      }),
+    );
+    this.eventBus.on(SendCeasefireResponseIntentEvent, (e) =>
+      this.sendIntent({
+        type: "ceasefire_response",
+        requestor: e.requestor,
+        accept: e.accept,
+      }),
+    );
+    this.eventBus.on(SendSanctionIntentEvent, (e) =>
+      this.sendIntent({
+        type: "sanction",
+        targetID: e.targetID,
+        action: e.action,
+      }),
+    );
+    this.eventBus.on(SendTreatyCreateIntentEvent, (e) =>
+      this.sendIntent({ type: "treaty_create", members: e.members }),
+    );
+    this.eventBus.on(SendPuppetLiberateIntentEvent, (e) =>
+      this.sendIntent({ type: "puppet_liberate", puppet: e.puppet }),
+    );
+    this.eventBus.on(SendRequestAssistanceIntentEvent, (e) =>
+      this.sendIntent({
+        type: "request_assistance",
+        recipient: e.recipient,
+        against: e.against,
+        mode: e.mode,
+      }),
     );
 
     this.eventBus.on(SendKickPlayerIntentEvent, (e) =>
