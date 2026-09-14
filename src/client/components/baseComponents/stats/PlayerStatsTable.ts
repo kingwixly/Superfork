@@ -28,6 +28,7 @@ const BUILDING_ORDER = {
   dstr: 12,
   corv: 13,
   carr: 14,
+  emby: 15,
 } as const satisfies Record<
   Exclude<(typeof otherUnits)[number], "wshp">,
   number
@@ -52,6 +53,7 @@ const UNIT_LABEL_KEYS = {
   city: "unit_type.city",
   corv: "unit_type.corvette",
   defp: "unit_type.defense_post",
+  emby: "unit_type.embassy",
   fact: "unit_type.factory",
   iapt: "unit_type.international_airport",
   port: "unit_type.port",

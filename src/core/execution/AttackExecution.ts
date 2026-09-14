@@ -281,7 +281,10 @@ export class AttackExecution implements Execution {
 
     const borderSize = this.attack.borderSize() + this.random.nextInt(0, 5);
     // Each tile consumes a fraction of the tick; conquer until it is spent.
-    let tickBudget = 1;
+    // Superfork: an embassy seizure halves the attacker's throughput for a
+    // few seconds. Applied to the budget rather than to troop counts so it
+    // slows the advance without destroying the army.
+    let tickBudget = this._owner.isTroopSlowed() ? 0.5 : 1;
 
     while (tickBudget > 0) {
       if (troopCount < 1) {

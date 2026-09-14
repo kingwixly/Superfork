@@ -294,6 +294,7 @@ export const Structures = unitTypeGroup([
   UnitType.Airstrip, // Phase 3
   UnitType.Airfield, // Phase 3
   UnitType.InternationalAirport, // Phase 3
+  UnitType.Embassy, // Phase 5
 ] as const);
 
 export const BuildMenus = unitTypeGroup([
@@ -1014,6 +1015,12 @@ export interface Player {
    * the control panel. A sanction overrides both.
    */
   acceptsCivilianFlightsFrom(from: Player): boolean;
+
+  // Embassy seizure debuff (superfork).
+  /** Slow the player's attacks until `untilTick`. */
+  applyTroopSlow(untilTick: Tick): void;
+  /** Whether attacks are currently slowed by an embassy seizure. */
+  isTroopSlowed(): boolean;
 
   // Puppet states (superfork).
   /** The nation this one answers to, if any. */

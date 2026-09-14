@@ -155,6 +155,8 @@ export class PlayerImpl implements Player {
   private ceasefires = new Map<PlayerID, Ceasefire>();
   /** Superfork: the nation this one answers to, if any. */
   private _master: Player | null = null;
+  /** Superfork: tick until which attacks are slowed by an embassy seizure. */
+  private _troopSlowUntil = 0;
 
   public _borderTiles = new TileSet();
 
@@ -1232,6 +1234,16 @@ export class PlayerImpl implements Player {
     const sanction =
       other.hasSanctionAgainst(this) || this.hasSanctionAgainst(other);
     return !embargo && !sanction && other.id() !== this.id();
+  }
+
+  applyTroopSlow(untilTick: Tick): void {
+    // Takes the later of the two: a fresh seizure extends an active slow
+    // rather than resetting it to something shorter.
+    this._troopSlowUntil = Math.max(this._troopSlowUntil, untilTick);
+  }
+
+  isTroopSlowed(): boolean {
+    return this.mg.ticks() < this._troopSlowUntil;
   }
 
   master(): Player | null {

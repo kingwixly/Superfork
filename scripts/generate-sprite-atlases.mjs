@@ -66,6 +66,7 @@ const COLUMNS = [
   "airstrip",
   "airfield",
   "international_airport",
+  "embassy",
 ];
 
 const CELL = 64;

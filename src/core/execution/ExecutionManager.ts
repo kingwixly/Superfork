@@ -27,6 +27,10 @@ import { DonateGoldExecution } from "./DonateGoldExecution";
 import { DonateTroopsExecution } from "./DonateTroopExecution";
 import { EmbargoAllExecution } from "./EmbargoAllExecution";
 import { EmbargoExecution } from "./EmbargoExecution";
+import {
+  EmbassyRequestExecution,
+  EmbassyResponseExecution,
+} from "./EmbassyExecution";
 import { EmojiExecution } from "./EmojiExecution";
 import { MarkDisconnectedExecution } from "./MarkDisconnectedExecution";
 import { MoveWarshipExecution } from "./MoveWarshipExecution";
@@ -174,6 +178,14 @@ export class Executor {
         );
       case "cede_land":
         return new CedeLandExecution(player, intent.recipient, intent.tiles);
+      case "embassy_request":
+        return new EmbassyRequestExecution(player, intent.host, intent.tile);
+      case "embassy_response":
+        return new EmbassyResponseExecution(
+          player,
+          intent.requestor,
+          intent.accept,
+        );
       case "puppet_command":
         return new PuppetCommandExecution(player, intent.puppet, intent.target);
       case "puppet_liberate":
@@ -224,8 +236,6 @@ export class Executor {
       // are unreachable in practice. Each arm is replaced by its real
       // execution in the phase named beside it.
       case "move_aircraft": // Phase 3
-      case "embassy_request": // Phase 5
-      case "embassy_response": // Phase 5
       case "set_border_policy": // Phase 5
         console.warn(`superfork intent ${intent.type} not yet implemented`);
         return new NoOpExecution();

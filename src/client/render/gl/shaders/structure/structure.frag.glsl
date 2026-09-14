@@ -115,7 +115,8 @@ float sdPolygon(vec2 p, float R, float n, float rot) {
 
 // Per-structure-type shape SDF.
 // Atlas indices: 0=City, 1=Port, 2=Factory, 3=DefensePost, 4=SAM, 5=Silo,
-//                6=Bank, 7=Capital, 8=Airstrip, 9=Airfield, 10=Intl Airport
+//                6=Bank, 7=Capital, 8=Airstrip, 9=Airfield, 10=Intl Airport,
+//                11=Embassy
 // Every index needs an arm here — an unhandled index silently falls through to
 // the last shape, which reads as the wrong structure rather than as an error.
 float shapeSDF(vec2 p, float R) {
@@ -143,7 +144,11 @@ float shapeSDF(vec2 p, float R) {
     return sdPolygon(p, R * 0.92, 4.0, PI * 0.25);  // Airstrip → small diamond
   if (vAtlasIdx < 9.5)
     return sdPolygon(p, R, 4.0, PI * 0.25);         // Airfield → diamond
-  return sdPolygon(p, R, 6.0, 0.0);                 // Intl Airport → hexagon (vertex up)
+  if (vAtlasIdx < 10.5)
+    return sdPolygon(p, R, 6.0, 0.0);              // Intl Airport → hexagon
+  // Embassy → pentagon rotated point-down, so it reads as related to the Port
+  // pentagon but never mistaken for it.
+  return sdPolygon(p, R, 5.0, -PI * 0.5);          // Embassy
 }
 
 void main() {

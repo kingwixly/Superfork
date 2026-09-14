@@ -171,6 +171,10 @@
       "International Airport": {
         "scale": 1.35,
         "iconFill": 0.85
+      },
+      "Embassy": {
+        "scale": 1.05,
+        "iconFill": 0.85
       }
     },
     "highlightOutlineWidth": 0.04,

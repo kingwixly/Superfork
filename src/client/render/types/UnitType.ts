@@ -35,6 +35,7 @@ export const UT_CAPITAL = "Capital" as const;
 export const UT_AIRSTRIP = "Airstrip" as const;
 export const UT_AIRFIELD = "Airfield" as const;
 export const UT_INTERNATIONAL_AIRPORT = "International Airport" as const;
+export const UT_EMBASSY = "Embassy" as const;
 // Superfork aircraft.
 export const UT_FIGHTER_JET = "Fighter Jet" as const;
 export const UT_TRANSPORT_JET = "Transport Jet" as const;
@@ -73,6 +74,7 @@ export const STRUCTURE_TYPES: ReadonlySet<string> = new Set([
   UT_AIRSTRIP,
   UT_AIRFIELD,
   UT_INTERNATIONAL_AIRPORT,
+  UT_EMBASSY,
 ]);
 
 export const NUKE_TYPES: ReadonlySet<string> = new Set([
@@ -127,6 +129,7 @@ export const ALL_UNIT_TYPES = [
   UT_AIRSTRIP,
   UT_AIRFIELD,
   UT_INTERNATIONAL_AIRPORT,
+  UT_EMBASSY,
   UT_FIGHTER_JET,
   UT_TRANSPORT_JET,
   UT_CARGO_JET,

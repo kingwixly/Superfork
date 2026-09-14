@@ -1,8 +1,9 @@
-import { simpleHash, toInt, withinInt } from "../Util";
 import {
   BANK_RESERVE_CAP,
   CAPITAL_CAPTURE_TROOP_LOSS,
 } from "../configuration/SuperforkUnits";
+import { applyEmbassySeizure } from "../execution/EmbassyExecution";
+import { simpleHash, toInt, withinInt } from "../Util";
 import {
   AllUnitParams,
   MessageType,
@@ -129,6 +130,7 @@ export class UnitImpl implements Unit {
       case UnitType.Airstrip:
       case UnitType.Airfield:
       case UnitType.InternationalAirport:
+      case UnitType.Embassy:
         this.mg.stats().unitBuild(_owner, this._type);
     }
   }
@@ -289,6 +291,7 @@ export class UnitImpl implements Unit {
       case UnitType.Airstrip:
       case UnitType.Airfield:
       case UnitType.InternationalAirport:
+      case UnitType.Embassy:
         this.mg.stats().unitCapture(newOwner, this._type);
         this.mg.stats().unitLose(this._owner, this._type);
         break;
@@ -318,6 +321,13 @@ export class UnitImpl implements Unit {
       if (seized > 0n) {
         newOwner.addGold(seized, this._tile);
       }
+    }
+
+    // Superfork: seizing an embassy costs its former owner troops and slows
+    // their advance. Recapture flips the penalty, so a contested embassy
+    // swings it back and forth.
+    if (this._type === UnitType.Embassy && this._lastOwner !== newOwner) {
+      applyEmbassySeizure(this.mg, this, this._lastOwner, newOwner);
     }
 
     // Losing your capital costs a flat share of your standing army — the
