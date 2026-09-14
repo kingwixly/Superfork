@@ -1,4 +1,5 @@
 import {
+  Aircraft,
   Execution,
   Game,
   GameType,
@@ -350,6 +351,18 @@ export class SAMLauncherExecution implements Execution {
 
     this.pseudoRandom ??= new PseudoRandom(this.sam.id());
 
+    // Superfork: aircraft engagement, per spec ('SAMs can intercept jets,
+    // planes, air transports and interceptors in range').
+    //
+    // Kept separate from the nuke path rather than folded into it. That path
+    // is a trajectory predictor - it solves where a ballistic arc will be in
+    // N ticks - and aircraft have no trajectory to solve: they steer. So this
+    // is a straightforward in-range engagement, sharing the same launcher and
+    // cooldown so a SAM cannot shoot a nuke and a jet in the same breath.
+    if (this.engageAircraft()) {
+      return;
+    }
+
     // No nuke in flight anywhere: nothing to target, skip the grid query. Every SAM ran it every
     // tick (~7 % of a long headless game with 150 launchers). Exact: with no nukes the query is
     // empty and the targeting loop a no-op; the only side effect skipped is pruning cache entries
@@ -382,6 +395,43 @@ export class SAMLauncherExecution implements Execution {
         ),
       );
     }
+  }
+
+  /**
+   * Shoot the nearest hostile aircraft in range, if any.
+   *
+   * Returns true if a missile was spent, so the caller skips the nuke pass -
+   * one launcher, one shot per cooldown. Nukes are checked first in the tick
+   * order only because their pass is cheap when the sky is empty; a SAM that
+   * has already fired at a jet simply has nothing left this cycle.
+   */
+  private engageAircraft(): boolean {
+    const sam = this.sam;
+    if (sam === null) return false;
+    const samTile = sam.tile();
+    if (samTile === null || samTile === undefined) return false;
+    const range = this.mg.config().maxSamRange();
+    const owner = sam.owner();
+
+    const found = this.mg
+      .nearbyUnits(samTile, range, [...Aircraft.types])
+      .filter(
+        ({ unit }) =>
+          unit.isActive() &&
+          unit.owner().id() !== owner.id() &&
+          !owner.isFriendly(unit.owner()),
+      )
+      .sort((a, b) => a.distSquared - b.distSquared)[0];
+    if (found === undefined) return false;
+
+    const targetTile = found.unit.tile();
+    if (targetTile === null || targetTile === undefined) return false;
+
+    sam.launch();
+    this.mg.addExecution(
+      new SAMMissileExecution(samTile, owner, sam, found.unit, targetTile),
+    );
+    return true;
   }
 
   isActive(): boolean {
