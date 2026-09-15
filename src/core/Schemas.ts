@@ -74,7 +74,8 @@ export type Intent =
   | PuppetLiberateIntent
   | SetBorderPolicyIntent
   | MoveAircraftIntent
-  | RenameCapitalIntent;
+  | RenameCapitalIntent
+  | WithdrawBankIntent;
 
 export type AttackIntent = z.infer<typeof AttackIntentSchema>;
 
@@ -106,6 +107,7 @@ export type PuppetLiberateIntent = z.infer<typeof PuppetLiberateIntentSchema>;
 export type SetBorderPolicyIntent = z.infer<typeof SetBorderPolicyIntentSchema>;
 export type MoveAircraftIntent = z.infer<typeof MoveAircraftIntentSchema>;
 export type RenameCapitalIntent = z.infer<typeof RenameCapitalIntentSchema>;
+export type WithdrawBankIntent = z.infer<typeof WithdrawBankIntentSchema>;
 export type CancelAttackIntent = z.infer<typeof CancelAttackIntentSchema>;
 export type SpawnIntent = z.infer<typeof SpawnIntentSchema>;
 export type BoatAttackIntent = z.infer<typeof BoatAttackIntentSchema>;
@@ -958,6 +960,12 @@ export const SetBorderPolicyIntentSchema = z.object({
   publicAirports: z.boolean().optional(),
 });
 
+/** Withdraw a bank's accrued reserve into your treasury. */
+export const WithdrawBankIntentSchema = z.object({
+  type: z.literal("withdraw_bank"),
+  unitId: zb.uint(),
+});
+
 /** Name or rename your capital. Empty string clears it. */
 export const RenameCapitalIntentSchema = z.object({
   type: z.literal("rename_capital"),
@@ -1019,6 +1027,7 @@ export const IntentSchema = z.discriminatedUnion("type", [
   SetBorderPolicyIntentSchema,
   MoveAircraftIntentSchema,
   RenameCapitalIntentSchema,
+  WithdrawBankIntentSchema,
 ]);
 
 // StampedIntent = Intent with server-stamped clientID (used in turns and execution)

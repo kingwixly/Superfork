@@ -1053,6 +1053,9 @@ export interface Player {
   /** Nations that answer to this one. */
   puppets(): Player[];
 
+  /** Owner of an enemy hull near a tile, for ASBM targeting (superfork). */
+  asbmTargetNear(tile: TileRef): Player | null;
+
   // Ceasefires (superfork).
   hasCeasefireWith(other: Player): boolean;
   addCeasefire(other: Player, durationTicks: number): void;

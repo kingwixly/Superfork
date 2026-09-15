@@ -142,6 +142,14 @@ export const EMBASSY_TROOP_PENALTY = 0.1; // -10% of the loser's troops
  */
 export const WARSHIP_INTERCEPT_RANGE = 45;
 
+/**
+ * How close an ASBM click must be to an enemy hull to target its nation.
+ *
+ * Deliberately loose. Ships move, and demanding a pixel-perfect click on a
+ * moving unit made the weapon effectively unusable.
+ */
+export const ASBM_TARGET_RADIUS = 30;
+
 export const SUPERFORK_UNITS: Record<string, SuperforkUnitSpec> = {
   // ------------------------------- Structures -------------------------------
 

@@ -11,6 +11,7 @@ import {
   RequestAssistanceExecution,
 } from "./AssistanceExecution";
 import { AttackExecution } from "./AttackExecution";
+import { WithdrawBankExecution } from "./BankExecution";
 import { BoatRetreatExecution } from "./BoatRetreatExecution";
 import {
   DemoteCapitalExecution,
@@ -224,6 +225,8 @@ export class Executor {
         return new SanctionExecution(player, intent.targetID, intent.action);
       case "promote_capital":
         return new PromoteCapitalExecution(player, intent.unitId);
+      case "withdraw_bank":
+        return new WithdrawBankExecution(player, intent.unitId);
       case "rename_capital":
         return new RenameCapitalExecution(player, intent.unitId, intent.name);
       case "demote_capital":

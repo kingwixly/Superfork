@@ -21,6 +21,7 @@ import {
   SendSpawnIntentEvent,
   SendTargetPlayerIntentEvent,
   SendTreatyCreateIntentEvent,
+  SendWithdrawBankIntentEvent,
 } from "../../Transport";
 import { UIState } from "../../UIState";
 import { PlayerView } from "../../view";
@@ -108,6 +109,10 @@ export class PlayerActionHandler {
 
   // ---------------------------- Diplomacy ----------------------------
   // Each verb had a working, tested execution and no way to reach it.
+
+  handleWithdrawBank(unitId: number) {
+    this.eventBus.emit(new SendWithdrawBankIntentEvent(unitId));
+  }
 
   handleCeasefire(recipient: PlayerView) {
     this.eventBus.emit(new SendCeasefireIntentEvent(recipient.id(), undefined));

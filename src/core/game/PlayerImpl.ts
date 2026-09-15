@@ -1,4 +1,5 @@
 import {
+  ASBM_TARGET_RADIUS,
   canStack,
   canUseSuperforkSystems,
   STACK_RADIUS,
@@ -1775,12 +1776,22 @@ export class PlayerImpl implements Player {
         return base ?? false;
       }
 
-      // ASBM picks a nation the way MIRV does, so it needs an owned target.
-      case UnitType.ASBM:
-        if (!this.mg.hasOwner(targetTile)) {
+      // ASBM is an ANTI-SHIP weapon, so the natural thing to click is an
+      // enemy hull on open water - where hasOwner() is false. Requiring owned
+      // land meant clicking a ship did nothing at all, silently, which is
+      // exactly what testers hit.
+      //
+      // It now accepts either: a tile someone owns, or open water with an
+      // enemy hull near it. The nation is resolved the same way at launch.
+      case UnitType.ASBM: {
+        if (
+          !this.mg.hasOwner(targetTile) &&
+          this.asbmTargetNear(targetTile) === null
+        ) {
           return false;
         }
         return this.nukeSpawn(targetTile, unitType);
+      }
       case UnitType.NeutronBomb:
       case UnitType.EMPBomb:
         return this.nukeSpawn(targetTile, unitType);
@@ -1917,6 +1928,31 @@ export class PlayerImpl implements Player {
       return false;
     }
     return tiles[0];
+  }
+
+  /**
+   * The owner of an enemy hull near `tile`, for ASBM targeting.
+   *
+   * Generous radius on purpose: picking a single moving ship pixel-perfectly
+   * is not a reasonable thing to ask of a player, and testers reported it as
+   * impossible.
+   */
+  asbmTargetNear(tile: TileRef): Player | null {
+    for (const { unit } of this.mg.nearbyUnits(tile, ASBM_TARGET_RADIUS, [
+      UnitType.Warship,
+      UnitType.Destroyer,
+      UnitType.Corvette,
+      UnitType.Carrier,
+      UnitType.TradeShip,
+      UnitType.TransportShip,
+    ])) {
+      const owner = unit.owner();
+      if (!owner.isPlayer()) continue;
+      const p = owner as Player;
+      if (p.id() === this.id() || this.isFriendly(p)) continue;
+      return p;
+    }
+    return null;
   }
 
   /**

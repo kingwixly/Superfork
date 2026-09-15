@@ -42,6 +42,7 @@ const targetIcon = assetUrl("images/TargetIconWhite.svg");
 const traitorIcon = assetUrl("images/TraitorIconWhite.svg");
 const xIcon = assetUrl("images/XIcon.svg");
 const crownIcon = assetUrl("images/CrownIcon.svg");
+const bankIcon = assetUrl("images/BankIconWhite.svg");
 // Distinct icons per diplomacy verb. Four identical handshakes meant the only
 // way to tell the buttons apart was memorising their positions.
 const ceasefireIcon = assetUrl("images/AllianceIconFaded.svg");
@@ -138,6 +139,7 @@ export enum Slot {
   Delete = "delete",
   Capital = "capital",
   Diplomacy = "diplomacy",
+  Bank = "bank",
 }
 
 function isFriendlyTarget(params: MenuElementParams): boolean {
@@ -743,6 +745,51 @@ function capitalCandidate(params: MenuElementParams) {
   return closest ? { unit: closest, isCapital: false } : null;
 }
 
+/** Radius, in tiles, within which the radial menu picks up a bank. */
+const BANK_SELECTION_RADIUS = 5;
+
+/**
+ * Withdraw from the nearest owned bank.
+ *
+ * Without this the reserve could only ever be collected by whoever captured
+ * the bank - the owner watched the number grow and could not touch it.
+ */
+export const bankWithdrawElement: MenuElement = {
+  id: Slot.Bank,
+  name: "bank",
+  icon: bankIcon,
+  color: COLORS.build,
+  tooltipItems: [
+    { text: translateText("radial_menu.withdraw_title"), className: "title" },
+    {
+      text: translateText("radial_menu.withdraw_description"),
+      className: "description",
+    },
+  ],
+  disabled: (params: MenuElementParams) => nearestBank(params) === null,
+  action: (params: MenuElementParams) => {
+    const bank = nearestBank(params);
+    if (bank !== null) {
+      params.playerActionHandler.handleWithdrawBank(bank.id());
+    }
+    params.closeMenu();
+  },
+};
+
+function nearestBank(params: MenuElementParams) {
+  const banks = params.myPlayer
+    .units(UnitType.Bank)
+    .filter(
+      (u) =>
+        !u.isUnderConstruction() &&
+        params.game.manhattanDist(u.tile(), params.tile) <=
+          BANK_SELECTION_RADIUS,
+    );
+  return findClosestBy(banks, (u) =>
+    params.game.manhattanDist(u.tile(), params.tile),
+  );
+}
+
 export const capitalElement: MenuElement = {
   id: Slot.Capital,
   name: "capital",
@@ -1068,6 +1115,7 @@ export const rootMenuElement: MenuElement = {
       ...(isOwnTerritory
         ? [
             deleteUnitElement,
+            bankWithdrawElement,
             capitalElement,
             allyRequestElement,
             buildMenuElement,

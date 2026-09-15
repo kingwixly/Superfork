@@ -143,13 +143,15 @@ export class ConstructionExecution implements Execution {
         );
         break;
       case UnitType.ASBM: {
-        // ASBM picks a nation, not a tile: it targets whoever owns the tile
-        // you aimed at, then hunts that nation's hulls wherever they are.
+        // ASBM picks a NATION, not a tile: whoever owns the tile you aimed at,
+        // or - when you aimed at open water, which is where ships are - the
+        // owner of the nearest enemy hull.
         const owner = this.mg.owner(this.tile);
-        if (owner.isPlayer()) {
-          this.mg.addExecution(
-            new ASBMExecution(player, (owner as Player).id()),
-          );
+        const target = owner.isPlayer()
+          ? (owner as Player)
+          : player.asbmTargetNear(this.tile);
+        if (target !== null && target !== undefined) {
+          this.mg.addExecution(new ASBMExecution(player, target.id()));
         }
         break;
       }

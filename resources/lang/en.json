@@ -1732,7 +1732,9 @@
     "delete_unit_title": "Delete Unit",
     "diplomacy_description": "Alliances, ceasefires, sanctions and treaties",
     "diplomacy_title": "Diplomacy",
-    "upgrade_x": "Upgrade x{amount}"
+    "upgrade_x": "Upgrade x{amount}",
+    "withdraw_description": "Take the gold stored in your nearest bank",
+    "withdraw_title": "Withdraw"
   },
   "relation": {
     "default": "Default",

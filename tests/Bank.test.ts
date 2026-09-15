@@ -111,3 +111,50 @@ describe("Bank", () => {
     expect(city.bankReserve()).toBe(0n);
   });
 });
+
+describe("Bank withdrawal", () => {
+  test("the owner can take their own reserve", async () => {
+    const { WithdrawBankExecution } =
+      await import("../src/core/execution/BankExecution");
+    player.conquer(game.ref(7, 10));
+    const bank = player.buildUnit(UnitType.Bank, game.ref(7, 10), {});
+    bank.addBankReserve(3_000_000n);
+    const before = player.gold();
+
+    const exec = new WithdrawBankExecution(player, bank.id());
+    exec.init(game, 0);
+
+    // Previously only a CAPTOR could ever collect this - the owner watched the
+    // number grow and could not touch it.
+    expect(player.gold() - before).toBe(3_000_000n);
+    expect(bank.bankReserve()).toBe(0n);
+  });
+
+  test("withdrawing twice yields nothing the second time", async () => {
+    const { WithdrawBankExecution } =
+      await import("../src/core/execution/BankExecution");
+    player.conquer(game.ref(7, 10));
+    const bank = player.buildUnit(UnitType.Bank, game.ref(7, 10), {});
+    bank.addBankReserve(1_000_000n);
+
+    new WithdrawBankExecution(player, bank.id()).init(game, 0);
+    const after = player.gold();
+    new WithdrawBankExecution(player, bank.id()).init(game, 0);
+
+    expect(player.gold()).toBe(after);
+  });
+
+  test("you cannot withdraw from a bank you do not own", async () => {
+    const { WithdrawBankExecution } =
+      await import("../src/core/execution/BankExecution");
+    player.conquer(game.ref(7, 10));
+    const bank = player.buildUnit(UnitType.Bank, game.ref(7, 10), {});
+    bank.addBankReserve(2_000_000n);
+    const before = other.gold();
+
+    new WithdrawBankExecution(other, bank.id()).init(game, 0);
+
+    expect(other.gold()).toBe(before);
+    expect(bank.bankReserve()).toBe(2_000_000n);
+  });
+});

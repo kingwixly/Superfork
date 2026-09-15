@@ -163,6 +163,11 @@ export class SendPromoteCapitalIntentEvent implements GameEvent {
   constructor(public readonly unitId: number) {}
 }
 
+/** Superfork: withdraw a bank's accrued reserve. */
+export class SendWithdrawBankIntentEvent implements GameEvent {
+  constructor(public readonly unitId: number) {}
+}
+
 /** Superfork diplomacy: propose a ceasefire. */
 export class SendCeasefireIntentEvent implements GameEvent {
   constructor(
@@ -395,6 +400,10 @@ export class Transport {
 
     this.eventBus.on(SendDemoteCapitalIntentEvent, (e) =>
       this.onSendDemoteCapitalIntent(e),
+    );
+
+    this.eventBus.on(SendWithdrawBankIntentEvent, (e) =>
+      this.sendIntent({ type: "withdraw_bank", unitId: e.unitId }),
     );
 
     this.eventBus.on(SendCeasefireIntentEvent, (e) =>
