@@ -4,6 +4,7 @@ import {
 } from "../configuration/SuperforkUnits";
 import { Execution, Game, Player, Unit, UnitType } from "../game/Game";
 import { MAX_USERNAME_LENGTH, validateUsername } from "../validations/username";
+import { TrainStationExecution } from "./TrainStationExecution";
 
 /**
  * Returns the structures stacked on a capital's site — anything of a stacking
@@ -88,6 +89,19 @@ export class PromoteCapitalExecution implements Execution {
     const capital = this.player.buildUnit(UnitType.Capital, tile, {});
     for (let i = 1; i < level; i++) {
       capital.increaseLevel();
+    }
+
+    // A capital is still a city for rail purposes. Without this, promoting
+    // DELETED the city's train station and never replaced it - so promoting
+    // tore up the track and left the capital disconnected from ports,
+    // factories and other cities.
+    const nearbyFactory = this.mg.hasUnitNearby(
+      tile,
+      this.mg.config().trainStationMaxRange(),
+      UnitType.Factory,
+    );
+    if (nearbyFactory) {
+      this.mg.addExecution(new TrainStationExecution(capital));
     }
   }
 
@@ -197,6 +211,16 @@ export class DemoteCapitalExecution implements Execution {
     const city = this.player.buildUnit(UnitType.City, tile, {});
     for (let i = 1; i < level; i++) {
       city.increaseLevel();
+    }
+
+    // Same on the way back down.
+    const nearbyFactory = this.mg.hasUnitNearby(
+      tile,
+      this.mg.config().trainStationMaxRange(),
+      UnitType.Factory,
+    );
+    if (nearbyFactory) {
+      this.mg.addExecution(new TrainStationExecution(city));
     }
   }
 
