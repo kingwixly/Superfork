@@ -8,6 +8,9 @@ const COMBAT_TARGETS = [UnitType.FighterJet, UnitType.Interceptor];
 /** Everything a fighter looks for, in one list so it needs one query. */
 const HUNTED: UnitType[] = [...CivilianAircraft.types, ...COMBAT_TARGETS];
 
+/** Radius of the patrol circuit, in tiles. */
+const PATROL_RADIUS = 12;
+
 /**
  * Fighter jet.
  *
@@ -24,6 +27,7 @@ const HUNTED: UnitType[] = [...CivilianAircraft.types, ...COMBAT_TARGETS];
  */
 export class FighterJetExecution extends AircraftExecution {
   private patrolTile: TileRef;
+  private patrolLeg = 0;
 
   constructor(unit: Unit, home: Unit | undefined, patrolTile: TileRef) {
     super(unit, home);
@@ -102,7 +106,30 @@ export class FighterJetExecution extends AircraftExecution {
   }
 
   protected onArrived(): void {
-    // Hold station over the patrol point until something worth chasing shows up.
-    this.destination = undefined;
+    // Actually PATROL rather than hover. Clearing the destination made
+    // fighters stop dead over the patrol point and sit there, which is what
+    // testers saw - a circuit around it reads as an aircraft doing a job, and
+    // sweeps a wider area for targets.
+    this.patrolLeg = (this.patrolLeg + 1) % 4;
+    this.destination = this.patrolPointFor(this.patrolLeg);
+  }
+
+  /** A corner of a square circuit centred on the patrol tile. */
+  private patrolPointFor(leg: number): TileRef {
+    const map = this.mg.map();
+    const w = map.width();
+    const cx = this.patrolTile % w;
+    const cy = (this.patrolTile / w) | 0;
+    const r = PATROL_RADIUS;
+    const offsets = [
+      [r, 0],
+      [0, r],
+      [-r, 0],
+      [0, -r],
+    ];
+    const [dx, dy] = offsets[leg];
+    const x = Math.min(map.width() - 1, Math.max(0, cx + dx));
+    const y = Math.min(map.height() - 1, Math.max(0, cy + dy));
+    return map.ref(x, y);
   }
 }

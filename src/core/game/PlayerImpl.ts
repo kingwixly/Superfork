@@ -1759,8 +1759,15 @@ export class PlayerImpl implements Player {
       // clicked tile here - which is what shipped - meant the build menu had
       // no way to express "launch from a base", so aircraft were never made
       // buildable at all and the whole air layer was unreachable for players.
+      case UnitType.TransportJet: {
+        // Troops land on GROUND. Aiming one at ocean used to reach
+        // onArrived -> conquer(water), which throws and takes the worker
+        // down with it: a server crash any player could trigger.
+        if (!this.mg.isLand(targetTile)) return false;
+        const base = this.launchBaseFor(unitType, targetTile);
+        return base ?? false;
+      }
       case UnitType.FighterJet:
-      case UnitType.TransportJet:
       case UnitType.CargoJet:
       case UnitType.Airliner:
       case UnitType.Interceptor: {

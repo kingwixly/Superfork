@@ -34,8 +34,12 @@ const INTERCEPT_TARGETS = [
  * a strong air-defence net is therefore to sweep it with fighters first, which
  * is the trade-off the whole layer balances on.
  */
+/** Radius of the interceptor's patrol circuit, in tiles. */
+const INTERCEPTOR_PATROL_RADIUS = 16;
+
 export class InterceptorExecution extends AircraftExecution {
   private patrolTile: TileRef;
+  private patrolLeg = 0;
 
   constructor(unit: Unit, home: Unit | undefined, patrolTile: TileRef) {
     super(unit, home);
@@ -101,6 +105,23 @@ export class InterceptorExecution extends AircraftExecution {
   }
 
   protected onArrived(): void {
-    this.destination = undefined;
+    // Same as the fighter: circuit rather than hover. An interceptor parked
+    // on one tile covers far less sky than one that moves.
+    this.patrolLeg = (this.patrolLeg + 1) % 4;
+    const map = this.mg.map();
+    const w = map.width();
+    const cx = this.patrolTile % w;
+    const cy = (this.patrolTile / w) | 0;
+    const offsets = [
+      [INTERCEPTOR_PATROL_RADIUS, 0],
+      [0, INTERCEPTOR_PATROL_RADIUS],
+      [-INTERCEPTOR_PATROL_RADIUS, 0],
+      [0, -INTERCEPTOR_PATROL_RADIUS],
+    ];
+    const [dx, dy] = offsets[this.patrolLeg];
+    this.destination = map.ref(
+      Math.min(map.width() - 1, Math.max(0, cx + dx)),
+      Math.min(map.height() - 1, Math.max(0, cy + dy)),
+    );
   }
 }

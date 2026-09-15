@@ -1,4 +1,3 @@
-import { translateText } from "../../client/Utils";
 import { canUseSuperforkSystems } from "../configuration/SuperforkUnits";
 import { Execution, Game, MessageType, Player } from "../game/Game";
 
@@ -54,16 +53,20 @@ export class SanctionExecution implements Execution {
         ? "events_display.sanction_started"
         : "events_display.sanction_lifted";
     mg.displayMessage(
-      translateText(key, { player: target.displayName() }),
+      key,
       MessageType.ALLIANCE_BROKEN,
       this.sanctioner.id(),
+      undefined,
+      {
+        player: target.displayName(),
+      },
     );
     mg.displayMessage(
-      translateText(key + "_against", {
-        player: this.sanctioner.displayName(),
-      }),
+      key + "_against",
       MessageType.ALLIANCE_BROKEN,
       target.id(),
+      undefined,
+      { player: this.sanctioner.displayName() },
     );
   }
 

@@ -1,4 +1,3 @@
-import { translateText } from "../../client/Utils";
 import { canUseSuperforkSystems } from "../configuration/SuperforkUnits";
 import { Execution, Game, MessageType, Player } from "../game/Game";
 import { AttackExecution } from "./AttackExecution";
@@ -145,11 +144,11 @@ export class PuppetLiberateExecution implements Execution {
       [puppet, this.liberator],
     ] as const) {
       mg.displayMessage(
-        translateText("events_display.puppet_freed", {
-          player: other.displayName(),
-        }),
+        "events_display.puppet_freed",
         MessageType.ALLIANCE_ACCEPTED,
         who.id(),
+        undefined,
+        { player: other.displayName() },
       );
     }
   }

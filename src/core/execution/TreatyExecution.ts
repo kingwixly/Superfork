@@ -1,4 +1,3 @@
-import { translateText } from "../../client/Utils";
 import { canUseSuperforkSystems } from "../configuration/SuperforkUnits";
 import { Execution, Game, MessageType, Player } from "../game/Game";
 
@@ -126,11 +125,11 @@ export class TreatyCreateExecution implements Execution {
 
     for (const m of treaty.getMembers()) {
       mg.displayMessage(
-        translateText("events_display.treaty_formed", {
-          count: treaty.getMembers().length,
-        }),
+        "events_display.treaty_formed",
         MessageType.ALLIANCE_ACCEPTED,
         m.id(),
+        undefined,
+        { count: treaty.getMembers().length },
       );
     }
   }

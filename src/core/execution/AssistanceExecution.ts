@@ -1,4 +1,3 @@
-import { translateText } from "../../client/Utils";
 import { canUseSuperforkSystems } from "../configuration/SuperforkUnits";
 import { Execution, Game, MessageType, Player } from "../game/Game";
 import { AttackExecution } from "./AttackExecution";
@@ -80,18 +79,18 @@ export class RequestAssistanceExecution implements Execution {
     });
 
     mg.displayMessage(
-      translateText("events_display.aid_requested", {
-        player: helper.displayName(),
-      }),
+      "events_display.aid_requested",
       MessageType.ALLIANCE_REQUEST,
       this.requestor.id(),
+      undefined,
+      { player: helper.displayName() },
     );
     mg.displayMessage(
-      translateText("events_display.aid_asked_of_you", {
-        player: this.requestor.displayName(),
-      }),
+      "events_display.aid_asked_of_you",
       MessageType.ALLIANCE_REQUEST,
       helper.id(),
+      undefined,
+      { player: this.requestor.displayName() },
     );
   }
 

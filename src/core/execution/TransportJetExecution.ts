@@ -22,6 +22,15 @@ import { AttackExecution } from "./AttackExecution";
  * answers to "what happens when troops arrive", which is a balance problem
  * rather than a feature.
  */
+/**
+ * Beachhead size for an air assault, in tiles.
+ *
+ * Small enough that it is not a free conquest, large enough that the defender
+ * cannot erase it with a single tick of border pressure.
+ */
+const LANDING_RADIUS = 4;
+const MAX_LANDING_TILES = 40;
+
 export class TransportJetExecution extends AircraftExecution {
   private landed = false;
 
@@ -43,6 +52,15 @@ export class TransportJetExecution extends AircraftExecution {
     if (this.landed) return;
     this.landed = true;
 
+    // Second guard, independent of canBuild. conquer() throws on water and
+    // that exception kills the worker, so this must never be reachable by any
+    // route - not just the one the build menu uses.
+    if (!this.mg.isLand(this.target)) {
+      this.unit.delete(false);
+      this.active = false;
+      return;
+    }
+
     const troops = this.unit.troops();
     const owner = this.mg.owner(this.target);
 
@@ -52,7 +70,26 @@ export class TransportJetExecution extends AircraftExecution {
     } else if (owner === this.attacker) {
       this.attacker.addTroops(troops);
     } else {
-      this.attacker.conquer(this.target);
+      // Seize a BEACHHEAD, not a single tile. Landing on one tile meant the
+      // defender retook it instantly and the assault achieved nothing but a
+      // declaration of war - testers had to spam-click to get anywhere.
+      // A boat landing gets a whole coastline; an air assault should get
+      // comparable ground.
+      let seized = 0;
+      for (const tile of this.mg.bfs(
+        this.target,
+        (_, t) =>
+          this.mg.isLand(t) &&
+          this.mg.euclideanDistSquared(this.target, t) <=
+            LANDING_RADIUS * LANDING_RADIUS,
+      )) {
+        const tileOwner = this.mg.owner(tile);
+        if (tileOwner === this.attacker) continue;
+        this.attacker.conquer(tile);
+        seized++;
+        if (seized >= MAX_LANDING_TILES) break;
+      }
+
       this.mg.addExecution(
         new AttackExecution(
           troops,

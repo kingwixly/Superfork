@@ -1,4 +1,3 @@
-import { translateText } from "../../client/Utils";
 import { canUseSuperforkSystems } from "../configuration/SuperforkUnits";
 import { Execution, Game, MessageType, Player } from "../game/Game";
 
@@ -49,18 +48,18 @@ export class CeasefireProposeExecution implements Execution {
     // The recipient must be told an offer exists or it can never be answered,
     // and the proposer must be told it was sent.
     mg.displayMessage(
-      translateText("events_display.ceasefire_offered", {
-        player: recipient.displayName(),
-      }),
+      "events_display.ceasefire_offered",
       MessageType.ALLIANCE_REQUEST,
       this.proposer.id(),
+      undefined,
+      { player: recipient.displayName() },
     );
     mg.displayMessage(
-      translateText("events_display.ceasefire_received", {
-        player: this.proposer.displayName(),
-      }),
+      "events_display.ceasefire_received",
       MessageType.ALLIANCE_REQUEST,
       recipient.id(),
+      undefined,
+      { player: this.proposer.displayName() },
     );
   }
 
@@ -109,11 +108,11 @@ export class CeasefireResponseExecution implements Execution {
       [this.recipient, proposer],
     ] as const) {
       mg.displayMessage(
-        translateText("events_display.ceasefire_agreed", {
-          player: other.displayName(),
-        }),
+        "events_display.ceasefire_agreed",
         MessageType.ALLIANCE_ACCEPTED,
         who.id(),
+        undefined,
+        { player: other.displayName() },
       );
     }
   }
