@@ -70,6 +70,7 @@ function unitStateFromUpdate(u: UnitUpdate): UnitState {
     veterancy: u.warshipState?.veterancy ?? 0,
     hasTrainStation: u.hasTrainStation,
     trainType: trainTypeToNum(u.trainType),
+    capitalName: u.capitalName ?? "",
     loaded: u.loaded ?? null,
     constructionStartTick: null, // GameView fills in createdAt when underConstruction
     samUpgradeStartTick: u.samUpgrade?.upgradeStartTick ?? null,
@@ -316,6 +317,18 @@ export class UnitView {
   hasTrainStation(): boolean {
     return this.state.hasTrainStation;
   }
+  /**
+   * Player-given capital name (superfork), or "" when unnamed.
+   *
+   * This accessor did not exist, so PlayerPanel calling capitalName() on a
+   * UnitView threw - and because that render path backs the nation-info
+   * panel, the 'i' button stopped working for every player including
+   * yourself.
+   */
+  capitalName(): string {
+    return this.state.capitalName ?? "";
+  }
+
   trainType(): TrainType | undefined {
     return numToTrainType(this.state.trainType);
   }

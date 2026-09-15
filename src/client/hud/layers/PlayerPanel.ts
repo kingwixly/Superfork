@@ -480,7 +480,17 @@ export class PlayerPanel extends LitElement implements Controller {
    * placeholder.
    */
   private renderCapitalName(other: PlayerView) {
-    const name = capitalDisplayName(other as unknown as Player);
+    // Defensive on purpose. This render path backs the nation-info panel, so
+    // anything that throws here takes the 'i' button down for EVERY player,
+    // including yourself - which is exactly what happened when capitalName()
+    // existed on UnitImpl but not on UnitView. One optional field should not
+    // be able to disable a core panel.
+    let name: string | null;
+    try {
+      name = capitalDisplayName(other as unknown as Player);
+    } catch {
+      return null;
+    }
     if (name === null) return null;
     return html`
       <div class="mt-1 flex items-center gap-2 text-sm text-white/80">

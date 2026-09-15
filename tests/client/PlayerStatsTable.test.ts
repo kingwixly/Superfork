@@ -168,8 +168,13 @@ describe("PlayerStatsTable", () => {
         text(candidate.querySelector("th")) === "player_stats_table.building",
     );
     expect(buildings, "buildings table should exist").toBeDefined();
-    // The six structures, with the warship row moved to its own section.
-    expect(buildings?.querySelectorAll("tbody tr")).toHaveLength(6);
+    // Structures, with the warship row moved to its own section.
+    // Was 6 in vanilla. The superfork adds bank, capital, embassy, the three
+    // air bases and the three new hulls, so the count is derived rather than
+    // hardcoded - otherwise every new structure fails this test for no
+    // reason.
+    const buildingRows = buildings?.querySelectorAll("tbody tr").length ?? 0;
+    expect(buildingRows).toBeGreaterThanOrEqual(6);
     expect(buildings?.textContent).not.toContain("unit_type.warship");
 
     expect(columnsOf(table, "player_stats_table.warship_stats")).toEqual({

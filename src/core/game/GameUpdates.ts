@@ -201,6 +201,8 @@ export interface UnitUpdate {
   level: number;
   hasTrainStation: boolean;
   trainType?: TrainType; // Only for trains
+  /** Player-given capital name (superfork). Only for Capital units. */
+  capitalName?: string;
   loaded?: boolean; // Only for trains
   samUpgrade?: SamLauncherState;
 }

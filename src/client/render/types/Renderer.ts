@@ -118,6 +118,12 @@ export interface UnitState {
   veterancy: number;
   hasTrainStation: boolean;
   trainType: number | null; // 0=Engine, 1=TailEngine, 2=Carriage
+  /**
+   * Player-given capital name (superfork). Optional so the many UnitState
+   * fixtures across the render tests do not all need updating for a field
+   * only Capital units ever carry.
+   */
+  capitalName?: string;
   loaded: boolean | null;
   constructionStartTick: number | null;
   samUpgradeStartTick: number | null;

@@ -253,6 +253,7 @@ export class UnitImpl implements Unit {
       level: this.level(),
       hasTrainStation: this._hasTrainStation,
       trainType: this._trainType,
+      capitalName: this._capitalName.length > 0 ? this._capitalName : undefined,
       loaded: this._loaded,
     };
     return update;
