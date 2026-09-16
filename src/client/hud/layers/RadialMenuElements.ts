@@ -43,6 +43,7 @@ const traitorIcon = assetUrl("images/TraitorIconWhite.svg");
 const xIcon = assetUrl("images/XIcon.svg");
 const crownIcon = assetUrl("images/CrownIcon.svg");
 const bankIcon = assetUrl("images/BankIconWhite.svg");
+const corvetteIcon = assetUrl("images/CorvetteIconWhite.svg");
 // Distinct icons per diplomacy verb. Four identical handshakes meant the only
 // way to tell the buttons apart was memorising their positions.
 const ceasefireIcon = assetUrl("images/AllianceIconFaded.svg");
@@ -140,6 +141,7 @@ export enum Slot {
   Capital = "capital",
   Diplomacy = "diplomacy",
   Bank = "bank",
+  Corvette = "corvette",
 }
 
 function isFriendlyTarget(params: MenuElementParams): boolean {
@@ -790,6 +792,63 @@ function nearestBank(params: MenuElementParams) {
   );
 }
 
+/** Radius, in tiles, within which the radial menu picks up a corvette. */
+const CORVETTE_SELECTION_RADIUS = 8;
+
+/**
+ * Corvette troop handling.
+ *
+ * Over your own water it LOADS a quarter of your army onto the nearest
+ * corvette; over anyone's land it LANDS whatever that corvette is carrying.
+ * Both verbs on one slot because they are never both meaningful at the same
+ * place, and the corvette's whole point is that the two are separated in
+ * time - load now, land where and when you choose.
+ */
+export const corvetteElement: MenuElement = {
+  id: Slot.Corvette,
+  name: "corvette",
+  icon: corvetteIcon,
+  color: COLORS.build,
+  tooltipItems: [
+    { text: translateText("radial_menu.corvette_title"), className: "title" },
+    {
+      text: translateText("radial_menu.corvette_description"),
+      className: "description",
+    },
+  ],
+  disabled: (params: MenuElementParams) => nearestCorvette(params) === null,
+  action: (params: MenuElementParams) => {
+    const corvette = nearestCorvette(params);
+    if (corvette !== null) {
+      if (params.game.isLand(params.tile)) {
+        params.playerActionHandler.handleLaunchCorvette(
+          corvette.id(),
+          params.tile,
+        );
+      } else {
+        params.playerActionHandler.handleLoadCorvette(
+          corvette.id(),
+          Math.floor(params.myPlayer.troops() / 4),
+        );
+      }
+    }
+    params.closeMenu();
+  },
+};
+
+function nearestCorvette(params: MenuElementParams) {
+  const mine = params.myPlayer
+    .units(UnitType.Corvette)
+    .filter(
+      (u) =>
+        params.game.manhattanDist(u.tile(), params.tile) <=
+        CORVETTE_SELECTION_RADIUS,
+    );
+  return findClosestBy(mine, (u) =>
+    params.game.manhattanDist(u.tile(), params.tile),
+  );
+}
+
 export const capitalElement: MenuElement = {
   id: Slot.Capital,
   name: "capital",
@@ -1116,6 +1175,7 @@ export const rootMenuElement: MenuElement = {
         ? [
             deleteUnitElement,
             bankWithdrawElement,
+            corvetteElement,
             capitalElement,
             allyRequestElement,
             buildMenuElement,

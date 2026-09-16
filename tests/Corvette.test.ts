@@ -73,7 +73,7 @@ describe("Corvette", () => {
     expect(moved).toBeLessThan(me.troops() + moved);
   });
 
-  test("it refuses to deploy when a port is closer to the target", () => {
+  test("it deploys even when a port is closer — the old rule is gone", () => {
     // Put a port right on the target; the corvette is far away.
     let shore = -1;
     for (const t of land) {
@@ -82,11 +82,16 @@ describe("Corvette", () => {
         break;
       }
     }
+    // The closest-staging rule was written when a corvette delivered troops
+    // in one shot, to stop it being a strictly better boat. But vanilla
+    // transport boats already have unlimited range, so it only ever blocked
+    // the common case and made corvettes useless. With a reserve the real
+    // constraint is that loaded troops sit exposed at sea until you land them.
     me.buildUnit(UnitType.Port, shore, {});
     const c = corvetteAt(me, water);
     CorvetteExecution.load(game, c, me, 300);
-    expect(CorvetteExecution.deploy(game, c, shore)).toBe(false);
-    expect(c.troops()).toBe(300);
+    expect(CorvetteExecution.deploy(game, c, shore)).toBe(true);
+    expect(c.troops()).toBe(0);
   });
 
   test("it deploys when it is the closest staging point", () => {

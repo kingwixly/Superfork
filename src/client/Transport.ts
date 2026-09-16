@@ -163,6 +163,22 @@ export class SendPromoteCapitalIntentEvent implements GameEvent {
   constructor(public readonly unitId: number) {}
 }
 
+/** Superfork: load troops onto a corvette. */
+export class SendLoadCorvetteIntentEvent implements GameEvent {
+  constructor(
+    public readonly unitId: number,
+    public readonly troops: number,
+  ) {}
+}
+
+/** Superfork: land a corvette's reserve. */
+export class SendLaunchCorvetteIntentEvent implements GameEvent {
+  constructor(
+    public readonly unitId: number,
+    public readonly tile: TileRef,
+  ) {}
+}
+
 /** Superfork: withdraw a bank's accrued reserve. */
 export class SendWithdrawBankIntentEvent implements GameEvent {
   constructor(public readonly unitId: number) {}
@@ -412,6 +428,22 @@ export class Transport {
 
     this.eventBus.on(SendDemoteCapitalIntentEvent, (e) =>
       this.onSendDemoteCapitalIntent(e),
+    );
+
+    this.eventBus.on(SendLoadCorvetteIntentEvent, (e) =>
+      this.sendIntent({
+        type: "load_corvette",
+        unitId: e.unitId,
+        troops: e.troops,
+      }),
+    );
+
+    this.eventBus.on(SendLaunchCorvetteIntentEvent, (e) =>
+      this.sendIntent({
+        type: "launch_corvette",
+        unitId: e.unitId,
+        tile: e.tile,
+      }),
     );
 
     this.eventBus.on(SendWithdrawBankIntentEvent, (e) =>

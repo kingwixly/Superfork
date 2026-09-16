@@ -24,6 +24,10 @@ import {
 } from "./CeasefireExecution";
 import { CedeLandExecution } from "./CedeLandExecution";
 import { ConstructionExecution } from "./ConstructionExecution";
+import {
+  LaunchCorvetteExecution,
+  LoadCorvetteExecution,
+} from "./CorvetteExecution";
 import { DeleteUnitExecution } from "./DeleteUnitExecution";
 import { DonateGoldExecution } from "./DonateGoldExecution";
 import { DonateTroopsExecution } from "./DonateTroopExecution";
@@ -228,6 +232,10 @@ export class Executor {
         return new SanctionExecution(player, intent.targetID, intent.action);
       case "promote_capital":
         return new PromoteCapitalExecution(player, intent.unitId);
+      case "load_corvette":
+        return new LoadCorvetteExecution(player, intent.unitId, intent.troops);
+      case "launch_corvette":
+        return new LaunchCorvetteExecution(player, intent.unitId, intent.tile);
       case "withdraw_bank":
         return new WithdrawBankExecution(player, intent.unitId);
       case "rename_capital":

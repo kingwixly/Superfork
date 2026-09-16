@@ -75,7 +75,9 @@ export type Intent =
   | SetBorderPolicyIntent
   | MoveAircraftIntent
   | RenameCapitalIntent
-  | WithdrawBankIntent;
+  | WithdrawBankIntent
+  | LoadCorvetteIntent
+  | LaunchCorvetteIntent;
 
 export type AttackIntent = z.infer<typeof AttackIntentSchema>;
 
@@ -108,6 +110,8 @@ export type SetBorderPolicyIntent = z.infer<typeof SetBorderPolicyIntentSchema>;
 export type MoveAircraftIntent = z.infer<typeof MoveAircraftIntentSchema>;
 export type RenameCapitalIntent = z.infer<typeof RenameCapitalIntentSchema>;
 export type WithdrawBankIntent = z.infer<typeof WithdrawBankIntentSchema>;
+export type LoadCorvetteIntent = z.infer<typeof LoadCorvetteIntentSchema>;
+export type LaunchCorvetteIntent = z.infer<typeof LaunchCorvetteIntentSchema>;
 export type CancelAttackIntent = z.infer<typeof CancelAttackIntentSchema>;
 export type SpawnIntent = z.infer<typeof SpawnIntentSchema>;
 export type BoatAttackIntent = z.infer<typeof BoatAttackIntentSchema>;
@@ -960,6 +964,20 @@ export const SetBorderPolicyIntentSchema = z.object({
   publicAirports: z.boolean().optional(),
 });
 
+/** Load troops onto a corvette you or an ally owns. */
+export const LoadCorvetteIntentSchema = z.object({
+  type: z.literal("load_corvette"),
+  unitId: zb.uint(),
+  troops: zb.uint(),
+});
+
+/** Launch a corvette's loaded troops at a tile. */
+export const LaunchCorvetteIntentSchema = z.object({
+  type: z.literal("launch_corvette"),
+  unitId: zb.uint(),
+  tile: zb.uint(),
+});
+
 /** Withdraw a bank's accrued reserve into your treasury. */
 export const WithdrawBankIntentSchema = z.object({
   type: z.literal("withdraw_bank"),
@@ -1028,6 +1046,8 @@ export const IntentSchema = z.discriminatedUnion("type", [
   MoveAircraftIntentSchema,
   RenameCapitalIntentSchema,
   WithdrawBankIntentSchema,
+  LoadCorvetteIntentSchema,
+  LaunchCorvetteIntentSchema,
 ]);
 
 // StampedIntent = Intent with server-stamped clientID (used in turns and execution)

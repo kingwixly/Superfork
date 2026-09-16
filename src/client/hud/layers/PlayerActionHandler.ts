@@ -14,6 +14,8 @@ import {
   SendDonateTroopsIntentEvent,
   SendEmbargoIntentEvent,
   SendEmojiIntentEvent,
+  SendLaunchCorvetteIntentEvent,
+  SendLoadCorvetteIntentEvent,
   SendPromoteCapitalIntentEvent,
   SendPuppetLiberateIntentEvent,
   SendRequestAssistanceIntentEvent,
@@ -109,6 +111,14 @@ export class PlayerActionHandler {
 
   // ---------------------------- Diplomacy ----------------------------
   // Each verb had a working, tested execution and no way to reach it.
+
+  handleLoadCorvette(unitId: number, troops: number) {
+    this.eventBus.emit(new SendLoadCorvetteIntentEvent(unitId, troops));
+  }
+
+  handleLaunchCorvette(unitId: number, tile: TileRef) {
+    this.eventBus.emit(new SendLaunchCorvetteIntentEvent(unitId, tile));
+  }
 
   handleWithdrawBank(unitId: number) {
     this.eventBus.emit(new SendWithdrawBankIntentEvent(unitId));

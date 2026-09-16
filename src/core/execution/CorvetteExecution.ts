@@ -23,6 +23,65 @@ import { AttackExecution } from "./AttackExecution";
  *    the three combat ships; the design intent is swarms, so a lone corvette
  *    losing to a destroyer is correct.
  */
+/** Load troops from the ordering player onto a corvette. */
+export class LoadCorvetteExecution implements Execution {
+  private active = true;
+
+  constructor(
+    private sender: Player,
+    private unitId: number,
+    private troops: number,
+  ) {}
+
+  init(mg: Game, ticks: number): void {
+    this.active = false;
+    const corvette = mg
+      .units(UnitType.Corvette)
+      .find((u) => u.id() === this.unitId);
+    if (corvette === undefined) return;
+    CorvetteExecution.load(mg, corvette, this.sender, this.troops);
+  }
+
+  tick(ticks: number): void {}
+  isActive(): boolean {
+    return this.active;
+  }
+  activeDuringSpawnPhase(): boolean {
+    return false;
+  }
+}
+
+/** Land a corvette's reserve on a tile. */
+export class LaunchCorvetteExecution implements Execution {
+  private active = true;
+
+  constructor(
+    private owner: Player,
+    private unitId: number,
+    private tile: TileRef,
+  ) {}
+
+  init(mg: Game, ticks: number): void {
+    this.active = false;
+    const corvette = this.owner
+      .units(UnitType.Corvette)
+      .find((u) => u.id() === this.unitId);
+    if (corvette === undefined) return;
+    // Troops land on ground. conquer() throws on water and that kills the
+    // worker - the same crash transport jets shipped with.
+    if (!mg.isLand(this.tile)) return;
+    CorvetteExecution.deploy(mg, corvette, this.tile);
+  }
+
+  tick(ticks: number): void {}
+  isActive(): boolean {
+    return this.active;
+  }
+  activeDuringSpawnPhase(): boolean {
+    return false;
+  }
+}
+
 export class CorvetteExecution implements Execution {
   private mg: Game;
   private active = true;
@@ -93,9 +152,15 @@ export class CorvetteExecution implements Execution {
   /**
    * Whether this corvette is closer to `target` than any land its owner holds.
    *
-   * This is the rule that stops corvettes from being strictly better boats. A
-   * corvette extends reach past your coastline; it does not replace launching
-   * from it.
+   * No longer gates deployment. It was written when a corvette delivered
+   * troops in one shot, to stop it being a strictly better boat - but vanilla
+   * transport boats already have unlimited range, so the rule only ever
+   * blocked the common case and made corvettes useless.
+   *
+   * With a RESERVE the interesting constraint is different: troops committed
+   * to a corvette are off the board and vulnerable at sea until you choose to
+   * land them. Kept for UI that wants to show whether a corvette is the
+   * nearest staging point.
    */
   static isClosestStagingPoint(
     mg: Game,
@@ -124,9 +189,6 @@ export class CorvetteExecution implements Execution {
    */
   static deploy(mg: Game, corvette: Unit, target: TileRef): boolean {
     if (!corvette.isActive() || corvette.troops() <= 0) return false;
-    if (!CorvetteExecution.isClosestStagingPoint(mg, corvette, target)) {
-      return false;
-    }
 
     const attacker = corvette.owner();
     const troops = corvette.troops();

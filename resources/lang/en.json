@@ -1734,6 +1734,8 @@
   "radial_menu": {
     "capital_description": "Promote the nearest city to your capital, or demote it",
     "capital_title": "Capital",
+    "corvette_description": "Load troops at sea, or land them on shore",
+    "corvette_title": "Corvette troops",
     "delete_unit_description": "Click to delete the nearest unit",
     "delete_unit_title": "Delete Unit",
     "diplomacy_description": "Alliances, ceasefires, sanctions and treaties",
