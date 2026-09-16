@@ -16,7 +16,7 @@ import {
 } from "../InputHandler";
 import { MapRenderer } from "../render/gl";
 import { TransformHandler } from "../TransformHandler";
-import { MoveWarshipIntentEvent } from "../Transport";
+import { MoveAircraftIntentEvent, MoveWarshipIntentEvent } from "../Transport";
 import { GameView, UnitView } from "../view";
 
 const WARSHIP_SELECTION_RADIUS = 10;
@@ -33,6 +33,30 @@ const WARSHIP_SELECTION_RADIUS = 10;
  * click controller. The "Controller" pattern: main-thread analog of the
  * worker's Execution (init + tick + event subscriptions).
  */
+/**
+ * Units this controller can select and order.
+ *
+ * Was Warship only, so every other hull and all aircraft spawned and then
+ * could never be told to go anywhere - testers reported them as
+ * uncontrollable. Aircraft are included because MoveAircraftExecution now
+ * handles them; civilian traffic is not, since it flies its own routes.
+ */
+const AIRCRAFT_SELECTABLE: string[] = [
+  UnitType.FighterJet,
+  UnitType.Interceptor,
+  UnitType.Bomber,
+];
+
+const SELECTABLE_TYPES = [
+  UnitType.Warship,
+  UnitType.Destroyer,
+  UnitType.Corvette,
+  UnitType.Carrier,
+  UnitType.FighterJet,
+  UnitType.Interceptor,
+  UnitType.Bomber,
+] as const;
+
 export class WarshipSelectionController implements Controller {
   // Currently selected single warship (game-logic readers use this; the
   // visual is drawn by WebGL SelectionBoxPass).
@@ -144,7 +168,7 @@ export class WarshipSelectionController implements Controller {
     const myPlayer = this.game.myPlayer();
     if (!myPlayer) return [];
     return this.game
-      .units(UnitType.Warship)
+      .units(...SELECTABLE_TYPES)
       .filter(
         (unit) =>
           unit.isActive() &&
@@ -165,6 +189,22 @@ export class WarshipSelectionController implements Controller {
    *  - single selected warship + clicked water → move it, then deselect
    *  - otherwise → if there's a nearby warship, select the closest one
    */
+  /** Send the right move intent for the kind of unit selected. */
+  private emitMoveFor(unitIds: number[], tile: TileRef): void {
+    if (this.selectionIsAircraft()) {
+      this.eventBus.emit(new MoveAircraftIntentEvent(unitIds, tile));
+    } else {
+      this.eventBus.emit(new MoveWarshipIntentEvent(unitIds, tile));
+    }
+  }
+
+  /** True when the current selection is aircraft rather than ships. */
+  private selectionIsAircraft(): boolean {
+    const unit =
+      this.selectedUnit ?? this.multiSelectedWarships[0] ?? undefined;
+    return unit !== undefined && AIRCRAFT_SELECTABLE.includes(unit.type());
+  }
+
   private onMouseUp(
     event: MouseUpEvent,
     clickRef?: TileRef,
@@ -178,7 +218,10 @@ export class WarshipSelectionController implements Controller {
       if (!this.game.isValidCoord(cell.x, cell.y)) return;
       clickRef = this.game.ref(cell.x, cell.y);
     }
-    if (!this.game.isWater(clickRef)) return;
+    // Ships need water; aircraft fly over anything. Keeping the old
+    // water-only guard would have made aircraft orders silently impossible
+    // over land, which is most of the map.
+    if (!this.game.isWater(clickRef) && !this.selectionIsAircraft()) return;
 
     if (this.multiSelectedWarships.length > 0) {
       const myPlayer = this.game.myPlayer();
@@ -187,16 +230,14 @@ export class WarshipSelectionController implements Controller {
         .map((u) => u.id());
 
       if (activeIds.length > 0) {
-        this.eventBus.emit(new MoveWarshipIntentEvent(activeIds, clickRef));
+        this.emitMoveFor(activeIds, clickRef);
       }
       this.eventBus.emit(new UnitSelectionEvent(null, false));
       return;
     }
 
     if (this.selectedUnit) {
-      this.eventBus.emit(
-        new MoveWarshipIntentEvent([this.selectedUnit.id()], clickRef),
-      );
+      this.emitMoveFor([this.selectedUnit.id()], clickRef);
       this.eventBus.emit(new UnitSelectionEvent(this.selectedUnit, false));
       return;
     }
@@ -258,7 +299,7 @@ export class WarshipSelectionController implements Controller {
     const myPlayer = this.game.myPlayer();
     if (!myPlayer) return;
 
-    const selected = this.game.units(UnitType.Warship).filter((unit) => {
+    const selected = this.game.units(...SELECTABLE_TYPES).filter((unit) => {
       if (!unit.isActive() || unit.owner() !== myPlayer) return false;
       const screen = this.transformHandler.worldToScreenCoordinates(
         new Cell(this.game.x(unit.tile()), this.game.y(unit.tile())),
@@ -279,7 +320,7 @@ export class WarshipSelectionController implements Controller {
     const myPlayer = this.game.myPlayer();
     if (!myPlayer) return [];
     return this.game
-      .units(UnitType.Warship)
+      .units(...SELECTABLE_TYPES)
       .filter((u) => u.isActive() && u.owner() === myPlayer);
   }
 

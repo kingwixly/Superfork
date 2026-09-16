@@ -37,6 +37,11 @@ export class BomberExecution extends AircraftExecution {
     super(unit, home);
   }
 
+  protected onOrdered(tile: TileRef): void {
+    this.target = tile;
+    this.destination = tile;
+  }
+
   protected decide(ticks: number): void {
     this.destination ??= this.target;
     this.maybeBomb(ticks);

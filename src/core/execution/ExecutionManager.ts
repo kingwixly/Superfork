@@ -35,6 +35,7 @@ import {
 } from "./EmbassyExecution";
 import { EmojiExecution } from "./EmojiExecution";
 import { MarkDisconnectedExecution } from "./MarkDisconnectedExecution";
+import { MoveAircraftExecution } from "./MoveAircraftExecution";
 import { MoveWarshipExecution } from "./MoveWarshipExecution";
 import { NationExecution } from "./NationExecution";
 import { NoOpExecution } from "./NoOpExecution";
@@ -99,6 +100,8 @@ export class Executor {
         return new RetreatExecution(player, intent.attackID);
       case "cancel_boat":
         return new BoatRetreatExecution(player, intent.unitID);
+      case "move_aircraft":
+        return new MoveAircraftExecution(player, intent.unitIds, intent.tile);
       case "move_warship":
         return new MoveWarshipExecution(player, intent.unitIds, intent.tile);
       case "spawn":
@@ -241,7 +244,6 @@ export class Executor {
       // Nothing emits these yet — the UI for them does not exist — so they
       // are unreachable in practice. Each arm is replaced by its real
       // execution in the phase named beside it.
-      case "move_aircraft": // Phase 3
       case "set_border_policy": // Phase 5
         console.warn(`superfork intent ${intent.type} not yet implemented`);
         return new NoOpExecution();

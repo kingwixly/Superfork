@@ -257,6 +257,14 @@ export class NewLobbyEvent implements GameEvent {
   constructor(public readonly gameID: string) {}
 }
 
+/** Superfork: order aircraft to a new patrol point. */
+export class MoveAircraftIntentEvent implements GameEvent {
+  constructor(
+    public readonly unitIds: number[],
+    public readonly tile: TileRef,
+  ) {}
+}
+
 export class MoveWarshipIntentEvent implements GameEvent {
   constructor(
     public readonly unitIds: number[],
@@ -388,6 +396,10 @@ export class Transport {
 
     this.eventBus.on(MoveWarshipIntentEvent, (e) => {
       this.onMoveWarshipEvent(e);
+    });
+
+    this.eventBus.on(MoveAircraftIntentEvent, (e) => {
+      this.onMoveAircraftEvent(e);
     });
 
     this.eventBus.on(SendDeleteUnitIntentEvent, (e) =>
@@ -981,6 +993,14 @@ export class Transport {
     this.sendIntent({
       type: "cancel_boat",
       unitID: event.unitID,
+    });
+  }
+
+  private onMoveAircraftEvent(event: MoveAircraftIntentEvent) {
+    this.sendIntent({
+      type: "move_aircraft",
+      unitIds: event.unitIds,
+      tile: event.tile,
     });
   }
 

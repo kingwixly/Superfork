@@ -16,8 +16,17 @@ export class MoveWarshipExecution implements Execution {
     // Get water component of new TargetTile for connectivity check
     const newPatrolTileWaterComponent = mg.getWaterComponent(this.position);
     // Cache warship list and build a lookup map — avoids repeated iteration
+    // Every surface hull, not just Warship. Destroyers, corvettes and
+    // carriers all run through WarshipExecution and carry warshipState, but
+    // this lookup only knew about Warship - so they spawned and then could
+    // never be ordered anywhere, which is exactly what testers reported.
     const warshipMap = new Map(
-      this.owner.units(UnitType.Warship).map((u) => [u.id(), u]),
+      [
+        ...this.owner.units(UnitType.Warship),
+        ...this.owner.units(UnitType.Destroyer),
+        ...this.owner.units(UnitType.Corvette),
+        ...this.owner.units(UnitType.Carrier),
+      ].map((u) => [u.id(), u]),
     );
     // Deduplicate ids so each warship is only moved once
     for (const unitId of new Set(this.unitIds)) {

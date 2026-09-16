@@ -24,6 +24,8 @@ export abstract class AircraftExecution implements Execution {
   protected pos: AirPosition;
   /** Where the aircraft is currently flying. Undefined means hold station. */
   protected destination: TileRef | undefined;
+  /** Last move order consumed, so the same one is not applied every tick. */
+  private lastOrder: TileRef | undefined;
 
   constructor(
     protected unit: Unit,
@@ -40,6 +42,15 @@ export abstract class AircraftExecution implements Execution {
     if (!this.unit.isActive()) {
       this.active = false;
       return;
+    }
+
+    // A move order arrives as the unit's target tile (see
+    // MoveAircraftExecution). Consumed here so every aircraft type honours a
+    // retarget without each subclass reimplementing it.
+    const ordered = this.unit.targetTile();
+    if (ordered !== undefined && ordered !== this.lastOrder) {
+      this.lastOrder = ordered;
+      this.onOrdered(ordered);
     }
 
     this.decide(ticks);
@@ -69,6 +80,15 @@ export abstract class AircraftExecution implements Execution {
 
   /** Called the tick the aircraft reaches its destination. */
   protected onArrived(): void {}
+
+  /**
+   * A player move order. Default is to fly there; patrol types override to
+   * also move the point they circle, so the order sticks rather than the
+   * aircraft wandering back.
+   */
+  protected onOrdered(tile: TileRef): void {
+    this.destination = tile;
+  }
 
   /**
    * An aircraft caught inside airspace closed to it is shot down.

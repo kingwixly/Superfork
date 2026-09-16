@@ -46,6 +46,14 @@ export class InterceptorExecution extends AircraftExecution {
     this.patrolTile = patrolTile;
   }
 
+  protected onOrdered(tile: TileRef): void {
+    // Move the circuit, not just the heading - otherwise the aircraft flies
+    // to the ordered tile and then drifts back to its original patrol.
+    this.patrolTile = tile;
+    this.patrolLeg = 0;
+    this.destination = tile;
+  }
+
   protected decide(ticks: number): void {
     if (!this.inRangeOfHome()) {
       this.returnToBase();
