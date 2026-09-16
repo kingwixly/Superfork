@@ -26,6 +26,7 @@ export class CedeLandExecution implements Execution {
     private sender: Player,
     private recipientID: string,
     private tiles: TileRef[],
+    private liberate = false,
   ) {}
 
   init(mg: Game, ticks: number): void {
@@ -40,9 +41,16 @@ export class CedeLandExecution implements Execution {
 
     if (!CedeLandExecution.canCedeTo(this.sender, recipient)) return;
 
+    // Liberation is cede with the tiles chosen by the ledger rather than by
+    // the player: everything the sender still holds that it took from the
+    // recipient. Same mechanic, different selection.
+    const tiles = this.liberate
+      ? mg.conquestLedger().takenFrom(recipient.id(), this.sender.id())
+      : this.tiles;
+
     const wasDead = !recipient.isAlive();
     let ceded = 0;
-    for (const tile of this.tiles) {
+    for (const tile of tiles) {
       // The map is the source of truth: silently skip anything the sender no
       // longer owns, rather than trusting the tile list that arrived on the
       // wire.

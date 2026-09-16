@@ -14,6 +14,7 @@ import {
 } from "../../../core/game/Game";
 import { TileRef } from "../../../core/game/GameMap";
 import { Emoji, findClosestBy, flattenedEmojiTable } from "../../../core/Util";
+import { BeginTerritorySelectionEvent } from "../../controllers/TerritorySelectionController";
 import { UIState } from "../../UIState";
 import { renderNumber, translateText } from "../../Utils";
 import { GameView, PlayerView } from "../../view";
@@ -50,6 +51,8 @@ const ceasefireIcon = assetUrl("images/AllianceIconFaded.svg");
 const sanctionIcon = assetUrl("images/DisabledIcon.svg");
 const treatyIcon = assetUrl("images/AllianceIconWhite.svg");
 const liberateIcon = assetUrl("images/ClaimIcon.svg");
+const cedeIcon = assetUrl("images/ClaimIcon.svg");
+const embassyIcon = assetUrl("images/EmbassyIconWhite.svg");
 
 export interface MenuElementParams {
   myPlayer: PlayerView;
@@ -1036,7 +1039,35 @@ export const diplomacyMenuElement: MenuElement = {
       },
     });
 
-    // Free a puppet. Only shown when the target actually is one.
+    // Cede land: enters a selection mode rather than acting immediately, so
+    // the player says WHICH tiles. See TerritorySelectionController.
+    items.push({
+      id: "dip_cede",
+      name: "cede",
+      icon: cedeIcon,
+      color: COLORS.ally,
+      tooltipItems: [
+        { text: translateText("diplomacy.cede"), className: "title" },
+        {
+          text: translateText("diplomacy.cede_desc"),
+          className: "description",
+        },
+      ],
+      disabled: () => false,
+      action: () => {
+        params.eventBus.emit(
+          new BeginTerritorySelectionEvent({
+            purpose: "cede",
+            targetID: target.id(),
+          }),
+        );
+        params.closeMenu();
+      },
+    });
+
+    // Liberate is CEDE with the selection pre-filled from the conquest
+    // ledger - every tile you still hold that you took from this nation.
+    // One mechanic rather than two, and the offer stays editable.
     items.push({
       id: "dip_liberate",
       name: "liberate",
@@ -1049,11 +1080,37 @@ export const diplomacyMenuElement: MenuElement = {
           className: "description",
         },
       ],
-      // No client-side view of puppet status yet, so this stays enabled and
-      // the execution rejects a non-puppet. Better a no-op than a hidden verb.
       disabled: () => false,
       action: () => {
-        params.playerActionHandler.handlePuppetLiberate(target);
+        // No selection step: the server picks the tiles from the conquest
+        // ledger, which the client has no view of.
+        params.playerActionHandler.handleLiberate(target);
+        params.closeMenu();
+      },
+    });
+
+    // Embassy: a single tile on THEIR land, so the same selection mode with a
+    // different purpose.
+    items.push({
+      id: "dip_embassy",
+      name: "embassy",
+      icon: embassyIcon,
+      color: COLORS.ally,
+      tooltipItems: [
+        { text: translateText("diplomacy.embassy"), className: "title" },
+        {
+          text: translateText("diplomacy.embassy_desc"),
+          className: "description",
+        },
+      ],
+      disabled: () => false,
+      action: () => {
+        params.eventBus.emit(
+          new BeginTerritorySelectionEvent({
+            purpose: "embassy",
+            targetID: target.id(),
+          }),
+        );
         params.closeMenu();
       },
     });

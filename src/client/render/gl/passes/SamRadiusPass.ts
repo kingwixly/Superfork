@@ -13,8 +13,9 @@
  *   enemy → red    (1, 0, 0)
  */
 
+import { WARSHIP_INTERCEPT_RANGE } from "../../../../core/configuration/SuperforkUnits";
 import type { UnitState } from "../../types";
-import { UT_SAM_LAUNCHER } from "../../types";
+import { UT_SAM_LAUNCHER, UT_WARSHIP } from "../../types";
 import { DynamicInstanceBuffer } from "../DynamicBuffer";
 import type { RenderSettings } from "../RenderSettings";
 import { createProgram } from "../utils/GlUtils";
@@ -26,6 +27,10 @@ import vertSrc from "../shaders/sam-radius/sam-radius.vert.glsl?raw";
 const TWO_PI = Math.PI * 2;
 const EPS = 1e-9;
 const TICK_INTERVAL_MS = 100;
+
+/** Warship interception rings draw fainter than SAM sites - there are more of
+ * them and they move, so a full-strength ring would dominate the map. */
+const WARSHIP_RADIUS_ALPHA = 0.1;
 
 // Per-instance: x, y, radius, r, g, b, alpha, arcStart, arcEnd, spin
 const FLOATS_PER_INSTANCE = 10;
@@ -371,6 +376,32 @@ export class SAMRadiusPass {
       }
     }
     this.hasUpgradingSAM = this.dirtyGroups.size > 0;
+
+    // Superfork: the reworked Warship carries a nuke-interception radius and
+    // nothing drew it, so players had no way to know it existed or where it
+    // covered - it read as a feature that did nothing.
+    //
+    // Safe to add here despite warships moving every tick: this pass is
+    // already called with EVERY unit once per frame and rebuilds its whole
+    // instance buffer, so a handful of extra circles is not new work of a
+    // different kind.
+    for (const u of structures.values()) {
+      if (u.unitType !== UT_WARSHIP || !u.isActive) continue;
+      const isFriendly =
+        u.ownerID === this.localPlayerID || this.allies.has(u.ownerID);
+      const c = this.getSAMColor(u.ownerID, isFriendly);
+      circles.push({
+        x: u.pos % w,
+        y: (u.pos / w) | 0,
+        radius: WARSHIP_INTERCEPT_RANGE,
+        r: c[0],
+        g: c[1],
+        b: c[2],
+        alpha: WARSHIP_RADIUS_ALPHA,
+        group: isFriendly ? 0 : 1,
+        spin: 0,
+      });
+    }
 
     for (const u of structures.values()) {
       if (u.unitType !== UT_SAM_LAUNCHER || !u.isActive) continue;

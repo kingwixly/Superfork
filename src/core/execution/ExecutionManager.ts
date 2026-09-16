@@ -186,7 +186,12 @@ export class Executor {
           intent.accept,
         );
       case "cede_land":
-        return new CedeLandExecution(player, intent.recipient, intent.tiles);
+        return new CedeLandExecution(
+          player,
+          intent.recipient,
+          intent.tiles,
+          intent.liberate ?? false,
+        );
       case "embassy_request":
         return new EmbassyRequestExecution(player, intent.host, intent.tile);
       case "embassy_response":

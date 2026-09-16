@@ -8,11 +8,13 @@ import {
   SendBreakAllianceIntentEvent,
   SendCeasefireIntentEvent,
   SendCeasefireResponseIntentEvent,
+  SendCedeLandIntentEvent,
   SendDeleteUnitIntentEvent,
   SendDemoteCapitalIntentEvent,
   SendDonateGoldIntentEvent,
   SendDonateTroopsIntentEvent,
   SendEmbargoIntentEvent,
+  SendEmbassyRequestIntentEvent,
   SendEmojiIntentEvent,
   SendLaunchCorvetteIntentEvent,
   SendLoadCorvetteIntentEvent,
@@ -111,6 +113,26 @@ export class PlayerActionHandler {
 
   // ---------------------------- Diplomacy ----------------------------
   // Each verb had a working, tested execution and no way to reach it.
+
+  /** Give `tiles` of your own territory to another nation. */
+  handleCedeLand(recipientID: string, tiles: TileRef[]) {
+    this.eventBus.emit(new SendCedeLandIntentEvent(recipientID, tiles));
+  }
+
+  /**
+   * Liberate: cede back everything you took from this nation.
+   *
+   * Sends a single placeholder tile because the schema requires a non-empty
+   * list; the server discards it and fills from the ledger.
+   */
+  handleLiberate(recipient: PlayerView) {
+    this.eventBus.emit(new SendCedeLandIntentEvent(recipient.id(), [0], true));
+  }
+
+  /** Ask a nation for permission to open an embassy on `tile` of their land. */
+  handleEmbassyRequest(hostID: string, tile: TileRef) {
+    this.eventBus.emit(new SendEmbassyRequestIntentEvent(hostID, tile));
+  }
 
   handleLoadCorvette(unitId: number, troops: number) {
     this.eventBus.emit(new SendLoadCorvetteIntentEvent(unitId, troops));

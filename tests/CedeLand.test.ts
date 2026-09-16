@@ -101,3 +101,52 @@ describe("Cede land", () => {
     expect(me.isFriendly(dead)).toBe(false);
   });
 });
+
+describe("Liberation via cede", () => {
+  test("the server fills the tiles from the conquest ledger", async () => {
+    const g: Game = await setup("half_land_half_ocean", {}, [
+      new PlayerInfo("victim", PlayerType.Human, null, "v2"),
+      new PlayerInfo("aggressor", PlayerType.Human, null, "a2"),
+    ]);
+    const victim = g.player("v2");
+    const aggressor = g.player("a2");
+    const tiles: number[] = [];
+    for (let x = 0; x < g.width(); x++) {
+      for (let y = 0; y < g.height(); y++) {
+        const t = g.ref(x, y);
+        if (g.isLand(t)) tiles.push(t);
+      }
+    }
+    for (const t of tiles.slice(0, 12)) victim.conquer(t);
+    for (const t of tiles.slice(0, 5)) aggressor.conquer(t);
+    expect(victim.numTilesOwned()).toBe(7);
+
+    // The client sends a placeholder tile and the liberate flag; the server
+    // discards it and uses the ledger, because the client has no ledger.
+    const exec = new CedeLandExecution(aggressor, victim.id(), [0], true);
+    exec.init(g, 0);
+
+    expect(victim.numTilesOwned()).toBe(12);
+    expect(aggressor.numTilesOwned()).toBe(0);
+  });
+
+  test("without the flag, the given tiles are used verbatim", async () => {
+    const g: Game = await setup("half_land_half_ocean", {}, [
+      new PlayerInfo("a", PlayerType.Human, null, "a3"),
+      new PlayerInfo("b", PlayerType.Human, null, "b3"),
+    ]);
+    const a = g.player("a3");
+    const b = g.player("b3");
+    const tiles: number[] = [];
+    for (let x = 0; x < g.width(); x++) {
+      for (let y = 0; y < g.height(); y++) {
+        const t = g.ref(x, y);
+        if (g.isLand(t)) tiles.push(t);
+      }
+    }
+    for (const t of tiles.slice(0, 10)) a.conquer(t);
+
+    new CedeLandExecution(a, b.id(), tiles.slice(0, 3), false).init(g, 0);
+    expect(b.numTilesOwned()).toBe(3);
+  });
+});

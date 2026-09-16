@@ -899,6 +899,13 @@ export const CedeLandIntentSchema = z.object({
   type: z.literal("cede_land"),
   recipient: MappedID,
   tiles: z.array(zb.uint()).nonempty().max(MAX_CEDE_TILES),
+  /**
+   * Liberation: when true the server REPLACES `tiles` with every tile the
+   * sender still holds that was taken from `recipient`. The conquest ledger is
+   * server state, so the client cannot compute this itself. Appended, never
+   * inserted - union order is the wire contract.
+   */
+  liberate: z.boolean().optional(),
 });
 
 /** Up to 3 at creation (self plus two), 5 total once others are invited. */

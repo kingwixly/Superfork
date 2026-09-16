@@ -163,6 +163,23 @@ export class SendPromoteCapitalIntentEvent implements GameEvent {
   constructor(public readonly unitId: number) {}
 }
 
+/** Superfork: cede tiles of your territory to another nation. */
+export class SendCedeLandIntentEvent implements GameEvent {
+  constructor(
+    public readonly recipient: string,
+    public readonly tiles: TileRef[],
+    public readonly liberate = false,
+  ) {}
+}
+
+/** Superfork: request an embassy on another nation's tile. */
+export class SendEmbassyRequestIntentEvent implements GameEvent {
+  constructor(
+    public readonly host: string,
+    public readonly tile: TileRef,
+  ) {}
+}
+
 /** Superfork: load troops onto a corvette. */
 export class SendLoadCorvetteIntentEvent implements GameEvent {
   constructor(
@@ -428,6 +445,23 @@ export class Transport {
 
     this.eventBus.on(SendDemoteCapitalIntentEvent, (e) =>
       this.onSendDemoteCapitalIntent(e),
+    );
+
+    this.eventBus.on(SendCedeLandIntentEvent, (e) =>
+      this.sendIntent({
+        type: "cede_land",
+        recipient: e.recipient,
+        tiles: e.tiles,
+        liberate: e.liberate,
+      }),
+    );
+
+    this.eventBus.on(SendEmbassyRequestIntentEvent, (e) =>
+      this.sendIntent({
+        type: "embassy_request",
+        host: e.host,
+        tile: e.tile,
+      }),
     );
 
     this.eventBus.on(SendLoadCorvetteIntentEvent, (e) =>
