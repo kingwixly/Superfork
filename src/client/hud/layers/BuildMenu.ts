@@ -224,6 +224,87 @@ export const buildTable: BuildItemDisplay[][] = [
 
 export const flattenedBuildTable = buildTable.flat();
 
+/** Items per row in the tabbed menu. */
+const BUILD_ROW_LENGTH = 5;
+
+/**
+ * Build menu categories.
+ *
+ * The fork roughly tripled the buildable roster, and a single flat grid made
+ * everything hard to find - testers were hunting for units in the radial menu
+ * because they could not see them anywhere else.
+ *
+ * Categorised by WHAT A THING IS, not by whether the fork added it. "Where do
+ * I find a destroyer" is answered by Naval; nobody thinks in terms of which
+ * units are modded.
+ */
+export interface BuildCategory {
+  key: string;
+  /** Translation key for the tab label. */
+  labelKey: string;
+  types: UnitType[];
+}
+
+export const buildCategories: BuildCategory[] = [
+  {
+    key: "buildings",
+    labelKey: "build_menu.tab.buildings",
+    types: [
+      UnitType.City,
+      UnitType.Capital,
+      UnitType.Port,
+      UnitType.Factory,
+      UnitType.Bank,
+      UnitType.Embassy,
+      UnitType.DefensePost,
+      UnitType.SAMLauncher,
+      UnitType.MissileSilo,
+    ],
+  },
+  {
+    key: "naval",
+    labelKey: "build_menu.tab.naval",
+    types: [
+      UnitType.Warship,
+      UnitType.Destroyer,
+      UnitType.Corvette,
+      UnitType.Carrier,
+    ],
+  },
+  {
+    key: "air",
+    labelKey: "build_menu.tab.air",
+    types: [
+      UnitType.Airstrip,
+      UnitType.Airfield,
+      UnitType.InternationalAirport,
+      UnitType.FighterJet,
+      UnitType.Interceptor,
+      UnitType.Bomber,
+      UnitType.TransportJet,
+    ],
+  },
+  {
+    key: "ordnance",
+    labelKey: "build_menu.tab.ordnance",
+    types: [
+      UnitType.AtomBomb,
+      UnitType.HydrogenBomb,
+      UnitType.MIRV,
+      UnitType.NeutronBomb,
+      UnitType.EMPBomb,
+      UnitType.ASBM,
+    ],
+  },
+];
+
+/** Items for a category, in declared order, skipping anything unknown. */
+export function categoryItems(cat: BuildCategory): BuildItemDisplay[] {
+  return cat.types
+    .map((t) => flattenedBuildTable.find((i) => i.unitType === t))
+    .filter((i): i is BuildItemDisplay => i !== undefined);
+}
+
 @customElement("build-menu")
 export class BuildMenu extends LitElement implements Controller {
   public game: GameView;
@@ -232,6 +313,9 @@ export class BuildMenu extends LitElement implements Controller {
   private clickedTile: TileRef;
   public playerBuildables: BuildableUnit[] | null = null;
   private filteredBuildTable: BuildItemDisplay[][] = buildTable;
+  /** Index into buildCategories for the active tab. */
+  @state()
+  private activeTab = 0;
   public transformHandler: TransformHandler;
 
   init() {
@@ -347,6 +431,25 @@ export class BuildMenu extends LitElement implements Controller {
     .build-cost {
       font-size: 14px;
     }
+    .build-tabs {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 6px;
+      justify-content: center;
+    }
+    .build-tab {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 6px;
+      color: #ddd;
+      cursor: pointer;
+      font-size: 13px;
+      padding: 4px 10px;
+    }
+    .build-tab.active {
+      background: rgba(255, 255, 255, 0.22);
+      color: #fff;
+    }
     .hidden {
       display: none !important;
     }
@@ -457,6 +560,46 @@ export class BuildMenu extends LitElement implements Controller {
   @state()
   private _hidden = true;
 
+  /**
+   * Items for the active tab, chunked into rows.
+   *
+   * Falls back to every enabled item when a category resolves to nothing, so a
+   * config that disables a whole category cannot produce an empty menu with no
+   * way out.
+   */
+  private visibleRows(): BuildItemDisplay[][] {
+    const cat = buildCategories[this.activeTab];
+    const enabled = (i: BuildItemDisplay) =>
+      !this.game?.config()?.isUnitDisabled(i.unitType);
+    let items = cat ? categoryItems(cat).filter(enabled) : [];
+    if (items.length === 0) items = flattenedBuildTable.filter(enabled);
+
+    const rows: BuildItemDisplay[][] = [];
+    for (let i = 0; i < items.length; i += BUILD_ROW_LENGTH) {
+      rows.push(items.slice(i, i + BUILD_ROW_LENGTH));
+    }
+    return rows;
+  }
+
+  /** Cycle tabs. Called from the arrow-key handler. */
+  public cycleTab(delta: number): void {
+    const n = buildCategories.length;
+    this.activeTab = (this.activeTab + delta + n) % n;
+    this.requestUpdate();
+  }
+
+  /** Select the nth item of the active tab, for number-key shortcuts. */
+  public selectIndex(index: number): void {
+    const items = this.visibleRows().flat();
+    const item = items[index];
+    if (item === undefined) return;
+    const buildable = this.playerBuildables?.find(
+      (bu) => bu.type === item.unitType,
+    );
+    if (buildable === undefined) return;
+    this.sendBuildOrUpgrade(buildable, this.clickedTile);
+  }
+
   public canBuildOrUpgrade(item: BuildItemDisplay): boolean {
     if (this.game?.myPlayer() === null || this.playerBuildables === null) {
       return false;
@@ -510,7 +653,22 @@ export class BuildMenu extends LitElement implements Controller {
         class="build-menu ${this._hidden ? "hidden" : ""}"
         @contextmenu=${(e: MouseEvent) => e.preventDefault()}
       >
-        ${this.filteredBuildTable.map(
+        <div class="build-tabs">
+          ${buildCategories.map(
+            (cat, i) => html`
+              <button
+                class="build-tab ${i === this.activeTab ? "active" : ""}"
+                @click=${() => {
+                  this.activeTab = i;
+                  this.requestUpdate();
+                }}
+              >
+                ${translateText(cat.labelKey)}
+              </button>
+            `,
+          )}
+        </div>
+        ${this.visibleRows().map(
           (row) => html`
             <div class="build-row">
               ${row.map((item) => {

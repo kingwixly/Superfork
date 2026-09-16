@@ -245,6 +245,16 @@ export const SUPERFORK_UNITS: Record<string, SuperforkUnitSpec> = {
     speed: 1.75,
   },
 
+  [UnitType.Bomber]: {
+    domain: UnitDomain.Air,
+    // Dearer than a fighter and far more fragile in practice, because unlike
+    // the interceptor it can be hit by every form of ground fire.
+    cost: (n) => Math.min(2_000_000, (n + 1) * 600_000),
+    maxHealth: 450,
+    speed: 1.4,
+    range: 90,
+  },
+
   [UnitType.Interceptor]: {
     domain: UnitDomain.Air,
     // Expensive and deliberately fragile. It is the only thing that can kill a

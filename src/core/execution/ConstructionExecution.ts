@@ -1,8 +1,10 @@
 import { Execution, Game, Player, Tick, Unit, UnitType } from "../game/Game";
 import { TileRef } from "../game/GameMap";
 import { AirBaseExecution } from "./AirBaseExecution";
+import { AntiAirExecution, DEFENSE_POST_AA_RANGE } from "./AntiAirExecution";
 import { ASBMExecution } from "./ASBMExecution";
 import { BankExecution } from "./BankExecution";
+import { BomberExecution } from "./BomberExecution";
 import { CityExecution } from "./CityExecution";
 import { CorvetteExecution } from "./CorvetteExecution";
 import { DefensePostExecution } from "./DefensePostExecution";
@@ -155,6 +157,21 @@ export class ConstructionExecution implements Execution {
         }
         break;
       }
+      case UnitType.Bomber: {
+        const spawn = player.canBuild(UnitType.Bomber, this.tile);
+        if (spawn !== false) {
+          const base = [
+            ...player.units(UnitType.Airfield),
+            ...player.units(UnitType.InternationalAirport),
+          ].find((b) => b.tile() === spawn);
+          const unit = player.buildUnit(UnitType.Bomber, spawn, {
+            targetTile: this.tile,
+            homeBase: base,
+          });
+          this.mg.addExecution(new BomberExecution(unit, base, this.tile));
+        }
+        break;
+      }
       case UnitType.Warship:
       case UnitType.Destroyer:
         // One execution drives both hulls - they share the whole
@@ -254,6 +271,11 @@ export class ConstructionExecution implements Execution {
         break;
       case UnitType.DefensePost:
         this.mg.addExecution(new DefensePostExecution(this.structure!));
+        // Defense posts gain anti-air, so aircraft are answerable from the
+        // ground by something other than a dedicated SAM site.
+        this.mg.addExecution(
+          new AntiAirExecution(this.structure!, DEFENSE_POST_AA_RANGE),
+        );
         break;
       case UnitType.SAMLauncher:
         this.mg.addExecution(

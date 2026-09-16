@@ -1769,6 +1769,7 @@ export class PlayerImpl implements Player {
         return base ?? false;
       }
       case UnitType.FighterJet:
+      case UnitType.Bomber:
       case UnitType.CargoJet:
       case UnitType.Airliner:
       case UnitType.Interceptor: {
@@ -1973,7 +1974,11 @@ export class PlayerImpl implements Player {
         case UnitType.Airstrip:
           return type === UnitType.FighterJet;
         case UnitType.Airfield:
-          return type === UnitType.TransportJet || type === UnitType.FighterJet;
+          return (
+            type === UnitType.TransportJet ||
+            type === UnitType.FighterJet ||
+            type === UnitType.Bomber
+          );
         case UnitType.Carrier:
           return type === UnitType.FighterJet || type === UnitType.Interceptor;
         case UnitType.InternationalAirport:

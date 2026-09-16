@@ -65,6 +65,15 @@ export class BarPass {
 
   private mapW: number;
   private warshipMaxHealth: number;
+  /**
+   * Max health per hull type.
+   *
+   * Every unit used to be scaled against the WARSHIP's max health, so a
+   * 500hp corvette showed a permanently 36%-full bar while undamaged - which
+   * is the health bar testers saw on healthy corvettes. Each hull now scales
+   * against its own maximum.
+   */
+  private hullMaxHealth = new Map<string, number>();
   private veterancyHealthBonus: number;
 
   constructor(
@@ -77,6 +86,15 @@ export class BarPass {
     this.settings = settings;
     this.mapW = header.mapWidth;
     this.warshipMaxHealth = config.unitInfo(UnitType.Warship).maxHealth ?? 0;
+    for (const t of [
+      UnitType.Warship,
+      UnitType.Destroyer,
+      UnitType.Corvette,
+      UnitType.Carrier,
+    ]) {
+      const max = config.unitInfo(t).maxHealth ?? 0;
+      if (max > 0) this.hullMaxHealth.set(t, max);
+    }
     this.veterancyHealthBonus = config.warshipVeterancyHealthBonus();
 
     // --- Shader program ---
@@ -151,7 +169,7 @@ export class BarPass {
       // Veteran warships have a higher effective max health, so a full veteran
       // ship reads as full. Shared with the engine's UnitImpl.maxHealth().
       const maxHealth = maxHealthWithVeterancy(
-        this.warshipMaxHealth,
+        this.hullMaxHealth.get(unit.unitType) ?? this.warshipMaxHealth,
         unit.veterancy,
         this.veterancyHealthBonus,
       );

@@ -236,6 +236,7 @@ export enum UnitType {
 
   // Aircraft
   FighterJet = "Fighter Jet",
+  Bomber = "Bomber",
   TransportJet = "Transport Jet",
   CargoJet = "Cargo Jet",
   Airliner = "Airliner",
@@ -348,6 +349,7 @@ export const AirBases = unitTypeGroup([
 /** Anything that moves through the air domain and ignores terrain. */
 export const Aircraft = unitTypeGroup([
   UnitType.FighterJet,
+  UnitType.Bomber,
   UnitType.TransportJet,
   UnitType.CargoJet,
   UnitType.Airliner,
@@ -490,6 +492,12 @@ export interface UnitParamsMap {
 
   [UnitType.FighterJet]: {
     patrolTile: TileRef;
+    homeBase?: Unit;
+  };
+
+  /** Bombers fly to a target and strike ground, unlike every other aircraft. */
+  [UnitType.Bomber]: {
+    targetTile?: TileRef;
     homeBase?: Unit;
   };
 

@@ -12,6 +12,7 @@ import { WaterPathFinder } from "../pathfinding/PathFinder";
 import { PathStatus } from "../pathfinding/types";
 import { PseudoRandom } from "../PseudoRandom";
 import { findMinimumBy } from "../Util";
+import { AntiAirExecution, DESTROYER_AA_RANGE } from "./AntiAirExecution";
 import { ShellExecution } from "./ShellExecution";
 import { WarshipInterceptExecution } from "./WarshipInterceptExecution";
 
@@ -81,6 +82,14 @@ export class WarshipExecution implements Execution {
     // simply a warship that never gets this.
     if (this.warship.type() === UnitType.Warship) {
       this.mg.addExecution(new WarshipInterceptExecution(this.warship));
+    }
+    // Destroyers get anti-air instead. That is what separates the two hulls
+    // by ROLE rather than by stat tier - previously a destroyer was just a
+    // cheaper warship with nothing of its own.
+    if (this.warship.type() === UnitType.Destroyer) {
+      this.mg.addExecution(
+        new AntiAirExecution(this.warship, DESTROYER_AA_RANGE),
+      );
     }
   }
 

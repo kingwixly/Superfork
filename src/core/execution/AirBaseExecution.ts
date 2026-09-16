@@ -2,16 +2,23 @@ import { Execution, Game, Player, Unit, UnitType } from "../game/Game";
 import { PseudoRandom } from "../PseudoRandom";
 import { CivilianAircraftExecution } from "./CivilianAircraftExecution";
 
-/** Ceiling on civilian aircraft a single nation can have aloft. */
-const MAX_CIVILIAN_AIRCRAFT = 6;
+/**
+ * Ceiling on civilian aircraft a single nation can have aloft.
+ *
+ * Raised back near the original after playtesting: the "too many planes"
+ * report was largely the HEALTH BARS, which rendered as a red dot on every
+ * aircraft and made a normal amount of traffic look like swarm. With those
+ * hidden, the earlier cap of 6 left civilian air too sparse to rival ports.
+ */
+const MAX_CIVILIAN_AIRCRAFT = 14;
 /**
  * Multiplier on the trade-ship spawn interval for air traffic.
  *
- * Higher is rarer. Aircraft cross the map several times faster than ships, so
- * an identical spawn rate yields far more completed trips - and far more
- * income - per minute.
+ * Higher is rarer. Kept slightly above 1 because aircraft cross the map faster
+ * than ships and so complete more trips per minute at the same spawn rate -
+ * but only slightly, so air remains a real alternative to sea trade.
  */
-const CIVILIAN_SPAWN_SLOWDOWN = 4;
+const CIVILIAN_SPAWN_SLOWDOWN = 1.25;
 
 /**
  * Lifecycle for the air bases: Airstrip, Airfield, International Airport, and
