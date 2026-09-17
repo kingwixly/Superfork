@@ -4,9 +4,17 @@ import {
   Game,
   MessageType,
   Player,
+  Unit,
   UnitType,
   Warships,
 } from "../game/Game";
+import { TileRef } from "../game/GameMap";
+import {
+  AirPosition,
+  airPositionOf,
+  stepToward,
+  tileOfAirPosition,
+} from "./utils/AirMotion";
 
 /** How many hulls one ASBM salvo can engage. */
 export const ASBM_WARHEAD_COUNT = 12;
@@ -50,6 +58,15 @@ export class ASBMExecution implements Execution {
     const target = this.mg.player(this.targetID);
     if (target.id() === this.player.id()) return;
 
+    // Firing on a nation is an act of war, exactly as a nuke is. Previously
+    // hulls simply vanished with no diplomatic consequence at all, so an ASBM
+    // was a free strike against an ally.
+    const alliance = this.player.allianceWith(target);
+    if (alliance !== null) {
+      this.player.breakAlliance(alliance);
+    }
+    target.updateRelation(this.player, -100);
+
     // Value order: a salvo should sink the carrier, not the escorts.
     const priority = [
       UnitType.Carrier,
@@ -60,13 +77,29 @@ export class ASBMExecution implements Execution {
       UnitType.TransportShip,
     ];
 
+    // Launched from a ready silo, like every other warhead.
+    const launchSite = this.player
+      .units(UnitType.MissileSilo)
+      .find((s) => s.isActive() && !s.isUnderConstruction());
+
     let remaining = ASBM_WARHEAD_COUNT;
     for (const type of priority) {
       if (remaining <= 0) break;
       for (const unit of target.units(type)) {
         if (remaining <= 0) break;
         if (!unit.isActive()) continue;
-        unit.delete(true, this.player);
+        const from = launchSite?.tile();
+        const to = unit.tile();
+        if (from !== undefined && to !== undefined) {
+          // A real warhead that FLIES, rather than hulls silently vanishing.
+          // Without this the weapon had no missile component at all - ships
+          // just died, so there was nothing to see, intercept or react to.
+          this.mg.addExecution(
+            new ASBMWarheadExecution(this.player, from, unit),
+          );
+        } else {
+          unit.delete(true, this.player);
+        }
         remaining--;
       }
     }
@@ -79,6 +112,82 @@ export class ASBMExecution implements Execution {
     return false;
   }
 }
+
+/**
+ * A single ASBM warhead in flight.
+ *
+ * Travels from the launch site to its assigned hull and kills it on arrival.
+ * Registered as a unit so it is visible, and so interceptors and warship
+ * interception can engage it like any other warhead.
+ */
+export class ASBMWarheadExecution implements Execution {
+  private mg: Game;
+  private active = true;
+  private warhead: Unit | undefined;
+  private pos: AirPosition | undefined;
+
+  constructor(
+    private player: Player,
+    private from: TileRef,
+    private target: Unit,
+  ) {}
+
+  init(mg: Game, ticks: number): void {
+    this.mg = mg;
+    this.warhead = this.player.buildUnit(UnitType.ASBMWarhead, this.from, {
+      targetUnit: this.target,
+      trajectory: [],
+    });
+    this.pos = airPositionOf(mg, this.from);
+  }
+
+  tick(ticks: number): void {
+    const warhead = this.warhead;
+    if (warhead === undefined || !warhead.isActive()) {
+      this.active = false;
+      return;
+    }
+    if (!this.target.isActive()) {
+      warhead.delete(false);
+      this.active = false;
+      return;
+    }
+
+    const dest = this.target.tile();
+    if (dest === undefined) {
+      warhead.delete(false);
+      this.active = false;
+      return;
+    }
+
+    // Straight-line run at a fixed rate. Ships move, so the destination is
+    // re-read every tick rather than baked at launch.
+    const pos = this.pos;
+    if (pos === undefined) return;
+    const arrived = stepToward(
+      pos,
+      airPositionOf(this.mg, dest),
+      ASBM_WARHEAD_SPEED,
+    );
+    warhead.move(tileOfAirPosition(this.mg, pos));
+
+    if (arrived) {
+      this.target.delete(true, this.player);
+      warhead.delete(false);
+      this.active = false;
+    }
+  }
+
+  isActive(): boolean {
+    return this.active;
+  }
+  activeDuringSpawnPhase(): boolean {
+    return false;
+  }
+}
+
+/** Tiles per tick for an ASBM warhead. */
+const ASBM_WARHEAD_SPEED = 6;
 
 /** Hull types an ASBM will engage, for UI and targeting checks. */
 export const ASBM_TARGETS = [...Warships.types, UnitType.TradeShip];

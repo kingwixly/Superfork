@@ -1,5 +1,5 @@
 import { html, LitElement } from "lit";
-import { customElement } from "lit/decorators.js";
+import { customElement, state } from "lit/decorators.js";
 import { EventBus } from "../../../core/EventBus";
 import {
   BuildableUnit,
@@ -15,22 +15,27 @@ import { UIState } from "../../UIState";
 import { renderNumber, translateText } from "../../Utils";
 import { GameView } from "../../view";
 import {
-  atomBombIcon,
-  cityIcon,
-  defensePostIcon,
-  factoryIcon,
-  goldCoinIcon,
-  hydrogenBombIcon,
-  mirvIcon,
-  missileSiloIcon,
-  portIcon,
-  samLauncherIcon,
-  warshipIcon,
-} from "../HotbarIcons";
+  buildCategories,
+  categoryItems,
+  flattenedBuildTable,
+} from "./BuildMenu";
+// Icons now come from the shared build table rather than this hand-kept list,
+// which is what let the bar drift out of sync with the build menu.
+import { goldCoinIcon } from "../HotbarIcons";
 import { TutorialHighlight, TutorialHighlightEvent } from "../Tutorial";
 
 @customElement("unit-display")
 export class UnitDisplay extends LitElement implements Controller {
+  /**
+   * Active category tab.
+   *
+   * The bar used to list SEVEN hardcoded units - city, silo, port, defense
+   * post, SAM, factory, warship - so every superfork addition was reachable
+   * only through the radial menu. It now renders from the same categories the
+   * build menu uses, so a new unit appears in both by construction.
+   */
+  @state()
+  private activeTab = 0;
   public game: GameView;
   public eventBus: EventBus;
   public uiState: UIState;
@@ -140,84 +145,53 @@ export class UnitDisplay extends LitElement implements Controller {
       return null;
     }
 
+    const cat = buildCategories[this.activeTab] ?? buildCategories[0];
+    const items = categoryItems(cat).filter(
+      (i) => !this.game.config().isUnitDisabled(i.unitType),
+    );
+
     return html`
       <div class="border-t border-white/10 p-0.5 w-full">
+        <div class="flex gap-1 justify-center pb-0.5">
+          ${buildCategories.map(
+            (c: (typeof buildCategories)[number], i: number) => html`
+              <button
+                class="px-2 py-0.5 text-xs rounded ${i === this.activeTab
+                  ? "bg-white/25 text-white"
+                  : "bg-white/5 text-white/70"}"
+                @click=${() => {
+                  this.activeTab = i;
+                  this.requestUpdate();
+                }}
+              >
+                ${translateText(c.labelKey)}
+              </button>
+            `,
+          )}
+        </div>
         <div class="grid grid-rows-1 grid-flow-col gap-0.5 w-fit mx-auto">
-          ${this.renderUnitItem(
-            cityIcon,
-            this._cities,
-            UnitType.City,
-            "city",
-            this.keybinds["buildCity"]?.key ?? "1",
-          )}
-          ${this.renderUnitItem(
-            factoryIcon,
-            this._factories,
-            UnitType.Factory,
-            "factory",
-            this.keybinds["buildFactory"]?.key ?? "2",
-          )}
-          ${this.renderUnitItem(
-            portIcon,
-            this._port,
-            UnitType.Port,
-            "port",
-            this.keybinds["buildPort"]?.key ?? "3",
-          )}
-          ${this.renderUnitItem(
-            defensePostIcon,
-            this._defensePost,
-            UnitType.DefensePost,
-            "defense_post",
-            this.keybinds["buildDefensePost"]?.key ?? "4",
-          )}
-          ${this.renderUnitItem(
-            missileSiloIcon,
-            this._missileSilo,
-            UnitType.MissileSilo,
-            "missile_silo",
-            this.keybinds["buildMissileSilo"]?.key ?? "5",
-          )}
-          ${this.renderUnitItem(
-            samLauncherIcon,
-            this._samLauncher,
-            UnitType.SAMLauncher,
-            "sam_launcher",
-            this.keybinds["buildSamLauncher"]?.key ?? "6",
-          )}
-          ${this.renderUnitItem(
-            warshipIcon,
-            this._warships,
-            UnitType.Warship,
-            "warship",
-            this.keybinds["buildWarship"]?.key ?? "7",
-          )}
-          ${this.renderUnitItem(
-            atomBombIcon,
-            null,
-            UnitType.AtomBomb,
-            "atom_bomb",
-            this.keybinds["buildAtomBomb"]?.key ?? "8",
-          )}
-          ${this.renderUnitItem(
-            hydrogenBombIcon,
-            null,
-            UnitType.HydrogenBomb,
-            "hydrogen_bomb",
-            this.keybinds["buildHydrogenBomb"]?.key ?? "9",
-          )}
-          ${this.renderUnitItem(
-            mirvIcon,
-            null,
-            UnitType.MIRV,
-            "mirv",
-            this.keybinds["buildMIRV"]?.key ?? "0",
+          ${items.map((item, idx: number) =>
+            this.renderUnitItem(
+              item.icon,
+              this.countFor(item.unitType),
+              item.unitType as PlayerBuildableUnitType,
+              item.key ?? "",
+              idx < 9 ? String(idx + 1) : "",
+            ),
           )}
         </div>
       </div>
     `;
   }
 
+  /** Owned count for the bar, or null for types that are not countable. */
+  private countFor(unitType: UnitType): number | null {
+    const player = this.game?.myPlayer();
+    if (!player) return null;
+    const item = flattenedBuildTable.find((i) => i.unitType === unitType);
+    if (item?.countable === false) return null;
+    return player.totalUnitLevels(unitType as PlayerBuildableUnitType);
+  }
   private renderUnitItem(
     icon: string,
     number: number | null,

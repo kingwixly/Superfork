@@ -764,12 +764,9 @@ export const bankWithdrawElement: MenuElement = {
   name: "bank",
   icon: bankIcon,
   color: COLORS.build,
-  tooltipItems: [
-    { text: translateText("radial_menu.withdraw_title"), className: "title" },
-    {
-      text: translateText("radial_menu.withdraw_description"),
-      className: "description",
-    },
+  tooltipKeys: [
+    { key: "radial_menu.withdraw_title", className: "title" },
+    { key: "radial_menu.withdraw_description", className: "description" },
   ],
   disabled: (params: MenuElementParams) => nearestBank(params) === null,
   action: (params: MenuElementParams) => {
@@ -812,12 +809,9 @@ export const corvetteElement: MenuElement = {
   name: "corvette",
   icon: corvetteIcon,
   color: COLORS.build,
-  tooltipItems: [
-    { text: translateText("radial_menu.corvette_title"), className: "title" },
-    {
-      text: translateText("radial_menu.corvette_description"),
-      className: "description",
-    },
+  tooltipKeys: [
+    { key: "radial_menu.corvette_title", className: "title" },
+    { key: "radial_menu.corvette_description", className: "description" },
   ],
   disabled: (params: MenuElementParams) => nearestCorvette(params) === null,
   action: (params: MenuElementParams) => {
@@ -926,12 +920,9 @@ export const diplomacyMenuElement: MenuElement = {
       name: "alliance",
       icon: allianceIcon,
       color: COLORS.ally,
-      tooltipItems: [
-        { text: translateText("diplomacy.alliance"), className: "title" },
-        {
-          text: translateText("diplomacy.alliance_desc"),
-          className: "description",
-        },
+      tooltipKeys: [
+        { key: "diplomacy.alliance", className: "title" },
+        { key: "diplomacy.alliance_desc", className: "description" },
       ],
       disabled: () =>
         !params.playerActions?.interaction?.canSendAllianceRequest,
@@ -948,12 +939,9 @@ export const diplomacyMenuElement: MenuElement = {
       name: "ceasefire",
       icon: ceasefireIcon,
       color: COLORS.ally,
-      tooltipItems: [
-        { text: translateText("diplomacy.ceasefire"), className: "title" },
-        {
-          text: translateText("diplomacy.ceasefire_desc"),
-          className: "description",
-        },
+      tooltipKeys: [
+        { key: "diplomacy.ceasefire", className: "title" },
+        { key: "diplomacy.ceasefire_desc", className: "description" },
       ],
       disabled: () => friendly,
       action: () => {
@@ -968,12 +956,9 @@ export const diplomacyMenuElement: MenuElement = {
       name: "sanction",
       icon: sanctionIcon,
       color: COLORS.attack,
-      tooltipItems: [
-        { text: translateText("diplomacy.sanction"), className: "title" },
-        {
-          text: translateText("diplomacy.sanction_desc"),
-          className: "description",
-        },
+      tooltipKeys: [
+        { key: "diplomacy.sanction", className: "title" },
+        { key: "diplomacy.sanction_desc", className: "description" },
       ],
       disabled: () => friendly,
       action: () => {
@@ -988,12 +973,9 @@ export const diplomacyMenuElement: MenuElement = {
       name: "treaty",
       icon: treatyIcon,
       color: COLORS.ally,
-      tooltipItems: [
-        { text: translateText("diplomacy.treaty"), className: "title" },
-        {
-          text: translateText("diplomacy.treaty_desc"),
-          className: "description",
-        },
+      tooltipKeys: [
+        { key: "diplomacy.treaty", className: "title" },
+        { key: "diplomacy.treaty_desc", className: "description" },
       ],
       disabled: () => !friendly,
       action: () => {
@@ -1008,12 +990,9 @@ export const diplomacyMenuElement: MenuElement = {
       name: "aid",
       icon: donateTroopIcon,
       color: COLORS.ally,
-      tooltipItems: [
-        { text: translateText("diplomacy.aid"), className: "title" },
-        {
-          text: translateText("diplomacy.aid_desc"),
-          className: "description",
-        },
+      tooltipKeys: [
+        { key: "diplomacy.aid", className: "title" },
+        { key: "diplomacy.aid_desc", className: "description" },
       ],
       disabled: () => !friendly,
       action: () => {
@@ -1046,12 +1025,9 @@ export const diplomacyMenuElement: MenuElement = {
       name: "cede",
       icon: cedeIcon,
       color: COLORS.ally,
-      tooltipItems: [
-        { text: translateText("diplomacy.cede"), className: "title" },
-        {
-          text: translateText("diplomacy.cede_desc"),
-          className: "description",
-        },
+      tooltipKeys: [
+        { key: "diplomacy.cede", className: "title" },
+        { key: "diplomacy.cede_desc", className: "description" },
       ],
       disabled: () => false,
       action: () => {
@@ -1073,12 +1049,9 @@ export const diplomacyMenuElement: MenuElement = {
       name: "liberate",
       icon: liberateIcon,
       color: COLORS.ally,
-      tooltipItems: [
-        { text: translateText("diplomacy.liberate"), className: "title" },
-        {
-          text: translateText("diplomacy.liberate_desc"),
-          className: "description",
-        },
+      tooltipKeys: [
+        { key: "diplomacy.liberate", className: "title" },
+        { key: "diplomacy.liberate_desc", className: "description" },
       ],
       disabled: () => false,
       action: () => {
@@ -1096,12 +1069,9 @@ export const diplomacyMenuElement: MenuElement = {
       name: "embassy",
       icon: embassyIcon,
       color: COLORS.ally,
-      tooltipItems: [
-        { text: translateText("diplomacy.embassy"), className: "title" },
-        {
-          text: translateText("diplomacy.embassy_desc"),
-          className: "description",
-        },
+      tooltipKeys: [
+        { key: "diplomacy.embassy", className: "title" },
+        { key: "diplomacy.embassy_desc", className: "description" },
       ],
       disabled: () => false,
       action: () => {
