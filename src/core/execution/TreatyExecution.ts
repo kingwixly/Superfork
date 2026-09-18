@@ -115,8 +115,31 @@ export class TreatyCreateExecution implements Execution {
       .filter((p) => p.id() !== this.founder.id() && p.isAlive());
     if (invited.length === 0) return;
 
-    // Founder plus two. The schema caps the wire payload; this enforces the
-    // rule even if a client sends more.
+    // Already in a treaty? GROW it rather than founding a second one.
+    //
+    // Without this a player could only ever have a two-person bloc: the menu
+    // sends one target at a time, so every click made a fresh treaty instead
+    // of widening the one they had. That is why treaties were useless in play.
+    const existing = treatiesOf(this.founder)[0];
+    if (existing !== undefined) {
+      for (const p of invited) {
+        if (existing.isFull()) break;
+        existing.add(p);
+      }
+      for (const m of existing.getMembers()) {
+        mg.displayMessage(
+          "events_display.treaty_formed",
+          MessageType.ALLIANCE_ACCEPTED,
+          m.id(),
+          undefined,
+          { count: existing.getMembers().length },
+        );
+      }
+      return;
+    }
+
+    // Founder plus two at creation; further members join by invitation or by
+    // the growth path above.
     const seats = TREATY_FOUNDING_SIZE - 1;
     const id = `treaty_${this.founder.id()}_${ticks}`;
     const treaty = new Treaty(id, this.founder);

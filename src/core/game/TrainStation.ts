@@ -54,6 +54,13 @@ export function createTrainStopHandlers(
     [UnitType.City]: new TradeStationStopHandler(),
     [UnitType.Port]: new TradeStationStopHandler(),
     [UnitType.Factory]: new FactoryStopHandler(),
+    // Superfork. Registering a TrainStationExecution was never enough: a
+    // station with no stop handler joins the network and then does nothing,
+    // which is exactly how capitals and banks appeared "not to connect".
+    // A capital is a promoted city and a bank is an economic building, so
+    // both take the trade handler.
+    [UnitType.Capital]: new TradeStationStopHandler(),
+    [UnitType.Bank]: new TradeStationStopHandler(),
   };
 }
 
@@ -166,7 +173,14 @@ export class Cluster {
 
   private isTradeStation(station: TrainStation): boolean {
     const type = station.unit.type();
-    return type === UnitType.City || type === UnitType.Port;
+    return (
+      type === UnitType.City ||
+      type === UnitType.Port ||
+      // Superfork: without these, a capital or bank was never counted as a
+      // trade destination, so trains had no reason to route to one.
+      type === UnitType.Capital ||
+      type === UnitType.Bank
+    );
   }
 
   has(station: TrainStation) {

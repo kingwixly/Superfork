@@ -23,9 +23,12 @@ let land: number[];
 let water: number;
 
 function fire(type: UnitType.NeutronBomb | UnitType.EMPBomb, at: number) {
+  // These warheads FLY now - they launch from a silo and travel, so anything
+  // with an interception radius gets a chance at them. Detonation therefore
+  // takes many ticks, not one.
   const e = new SpecialWarheadExecution(me, type, at);
   e.init(game, 0);
-  e.tick(0);
+  for (let i = 0; i < 2000 && e.isActive(); i++) e.tick(i);
 }
 
 describe("Special warheads", () => {
@@ -153,5 +156,43 @@ describe("Special warheads", () => {
     e.tick(0);
 
     expect(carrier.isActive()).toBe(false);
+  });
+});
+
+describe("Superfork warheads are interceptable", () => {
+  test("a shot-down neutron bomb never detonates", () => {
+    foe.setTroops(10_000);
+    const e = new SpecialWarheadExecution(me, UnitType.NeutronBomb, land[0]);
+    e.init(game, 0);
+    e.tick(0); // launch only
+
+    // Kill it mid-flight, as a SAM or interceptor would.
+    const inFlight = me.units(UnitType.NeutronBomb)[0];
+    expect(inFlight).toBeDefined();
+    inFlight.delete(true, foe);
+
+    for (let i = 1; i < 2000 && e.isActive(); i++) e.tick(i);
+
+    // Troops survive: the payload never went off.
+    expect(foe.troops()).toBe(10_000);
+  });
+
+  test("a shot-down EMP leaves structures working", () => {
+    const sam = foe.buildUnit(UnitType.SAMLauncher, land[0], {});
+    const e = new SpecialWarheadExecution(me, UnitType.EMPBomb, land[0]);
+    e.init(game, 0);
+    e.tick(0);
+
+    me.units(UnitType.EMPBomb)[0].delete(true, foe);
+    for (let i = 1; i < 2000 && e.isActive(); i++) e.tick(i);
+
+    expect(sam.isDisabled()).toBe(false);
+  });
+
+  test("they exist as units while in flight, so something can engage them", () => {
+    const e = new SpecialWarheadExecution(me, UnitType.NeutronBomb, land[0]);
+    e.init(game, 0);
+    e.tick(0);
+    expect(me.units(UnitType.NeutronBomb).length).toBe(1);
   });
 });

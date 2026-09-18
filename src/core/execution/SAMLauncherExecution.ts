@@ -230,7 +230,16 @@ class SAMTargetingSystem {
     const nukes = this.mg.nearbyUnits(
       samTile,
       detectionRange,
-      [UnitType.AtomBomb, UnitType.HydrogenBomb, UnitType.MIRVWarhead],
+      [
+        UnitType.AtomBomb,
+        UnitType.HydrogenBomb,
+        UnitType.MIRVWarhead,
+        // Superfork warheads. These fly now, so a SAM site should be able to
+        // stop them - otherwise the flight time is decorative.
+        UnitType.NeutronBomb,
+        UnitType.EMPBomb,
+        UnitType.ASBMWarhead,
+      ],
       this.isTargetableNearbyUnit,
     );
 
@@ -383,6 +392,9 @@ export class SAMLauncherExecution implements Execution {
     // walk a tick, not one a launcher — and unlike units(type) a hit allocates nothing. A nuke's
     // level is always 1, so a zero count is exactly an empty list.
     if (
+      this.mg.unitCount(UnitType.NeutronBomb) === 0 &&
+      this.mg.unitCount(UnitType.EMPBomb) === 0 &&
+      this.mg.unitCount(UnitType.ASBMWarhead) === 0 &&
       this.mg.unitCount(UnitType.AtomBomb) === 0 &&
       this.mg.unitCount(UnitType.HydrogenBomb) === 0 &&
       this.mg.unitCount(UnitType.MIRVWarhead) === 0

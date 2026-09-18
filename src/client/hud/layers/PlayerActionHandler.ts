@@ -167,8 +167,18 @@ export class PlayerActionHandler {
     this.eventBus.emit(new SendSanctionIntentEvent(target.id(), action));
   }
 
-  handleTreatyCreate(member: PlayerView) {
-    this.eventBus.emit(new SendTreatyCreateIntentEvent([member.id()]));
+  /**
+   * Form or widen a treaty.
+   *
+   * Sends the clicked ally FIRST, then every other ally, so one click builds
+   * a real bloc. Previously only the clicked player was sent, which capped
+   * every treaty at two members and made the mechanic pointless.
+   *
+   * The server caps membership and grows an existing treaty rather than
+   * founding a second one.
+   */
+  handleTreatyCreate(memberIDs: string[]) {
+    this.eventBus.emit(new SendTreatyCreateIntentEvent(memberIDs));
   }
 
   handlePuppetLiberate(puppet: PlayerView) {

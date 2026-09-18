@@ -979,7 +979,21 @@ export const diplomacyMenuElement: MenuElement = {
       ],
       disabled: () => !friendly,
       action: () => {
-        params.playerActionHandler.handleTreatyCreate(target);
+        // Send the clicked ally FIRST, then every other ally, so one click
+        // builds a real bloc. Sending only the clicked player capped every
+        // treaty at two members, which is what made them pointless.
+        const me = params.myPlayer;
+        const others = params.game
+          .playerViews()
+          .filter(
+            (p: PlayerView) =>
+              p.isPlayer() &&
+              p.id() !== me.id() &&
+              p.id() !== target.id() &&
+              me.isFriendly(p),
+          )
+          .map((p: PlayerView) => p.id());
+        params.playerActionHandler.handleTreatyCreate([target.id(), ...others]);
         params.closeMenu();
       },
     });

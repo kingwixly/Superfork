@@ -9,6 +9,12 @@ import {
   UnitType,
 } from "../game/Game";
 import { TileRef } from "../game/GameMap";
+import {
+  AirPosition,
+  airPositionOf,
+  stepToward,
+  tileOfAirPosition,
+} from "./utils/AirMotion";
 
 /** How long an EMP burst leaves structures inert. */
 export const EMP_DISABLE_DURATION = 30 * 10; // 30s
@@ -17,6 +23,15 @@ export const NEUTRON_RADIUS = 40;
 export const EMP_RADIUS = 55;
 /** Share of troops a neutron bomb kills inside the radius. */
 export const NEUTRON_KILL_SHARE = 0.6;
+
+/**
+ * Tiles per tick in flight.
+ *
+ * Slower than an ASBM warhead: these are area weapons aimed at ground, and the
+ * flight time is what gives SAMs, interceptors and warships a chance to engage
+ * them. A weapon nothing can stop is not a weapon, it is a button.
+ */
+export const SPECIAL_WARHEAD_SPEED = 3;
 
 /**
  * Neutron bomb and EMP burst.
@@ -39,6 +54,8 @@ export const NEUTRON_KILL_SHARE = 0.6;
 export class SpecialWarheadExecution implements Execution {
   private mg: Game;
   private active = true;
+  private warhead: Unit | undefined;
+  private pos: AirPosition | undefined;
 
   constructor(
     private player: Player,
@@ -69,18 +86,50 @@ export class SpecialWarheadExecution implements Execution {
   }
 
   tick(ticks: number): void {
-    this.active = false;
+    const warhead = this.warhead;
 
-    // Spawn the warhead AT the target and immediately kill it, marked as
-    // having reached its target. The FX layer builds explosions from dead
-    // units, so a warhead that never existed as a unit produced no visual at
-    // all - which is why these detonations were silent.
-    const warhead = this.player.buildUnit(this.type, this.target, {
-      targetTile: this.target,
-      trajectory: [],
-    });
+    // Launched but not yet built: put it on the pad.
+    if (warhead === undefined) {
+      const silo = this.player
+        .units(UnitType.MissileSilo)
+        .find((u) => u.isActive() && !u.isUnderConstruction());
+      const from = silo?.tile() ?? this.target;
+      this.warhead = this.player.buildUnit(this.type, from, {
+        targetTile: this.target,
+        trajectory: [],
+      });
+      this.pos = airPositionOf(this.mg, from);
+      return;
+    }
+
+    // Shot down. No detonation - which is the whole point of making these
+    // FLY: spawning them at the target and killing them instantly, as the
+    // previous version did, meant nothing could ever intercept a neutron
+    // bomb or an EMP.
+    if (!warhead.isActive()) {
+      this.active = false;
+      return;
+    }
+
+    const pos = this.pos;
+    if (pos === undefined) {
+      this.active = false;
+      return;
+    }
+
+    const arrived = stepToward(
+      pos,
+      airPositionOf(this.mg, this.target),
+      SPECIAL_WARHEAD_SPEED,
+    );
+    warhead.move(tileOfAirPosition(this.mg, pos));
+    if (!arrived) return;
+
+    // Marked reached so the FX layer draws a detonation rather than the
+    // interception shockwave it uses for warheads killed in flight.
     warhead.setReachedTarget();
     warhead.delete(false);
+    this.active = false;
 
     if (this.type === UnitType.NeutronBomb) {
       this.detonateNeutron();
