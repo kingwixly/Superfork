@@ -173,6 +173,9 @@ export class ASBMWarheadExecution implements Execution {
 
     if (arrived) {
       this.target.delete(true, this.player);
+      // Marked reached so the FX layer draws a detonation rather than the
+      // SAM-interception shockwave it uses for warheads killed in flight.
+      warhead.setReachedTarget();
       warhead.delete(false);
       this.active = false;
     }

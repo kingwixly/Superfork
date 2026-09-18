@@ -311,6 +311,10 @@ export interface RenderSettings {
     nukeRadiusAtom: number;
     nukeRadiusHydro: number;
     nukeRadiusMirv: number;
+    /** Superfork warhead radii, sized to what each weapon actually does. */
+    nukeRadiusNeutron: number;
+    nukeRadiusEmp: number;
+    nukeRadiusAsbm: number;
     /** Multiplier on the nuke debris sprite count (1 = default scatter). */
     debrisDensity: number;
   };

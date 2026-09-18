@@ -43,9 +43,12 @@ import {
   parseEffectColors,
 } from "./render/gl/utils/EffectPalette";
 import {
+  UT_ASBM_WARHEAD,
   UT_ATOM_BOMB,
+  UT_EMP_BOMB,
   UT_HYDROGEN_BOMB,
   UT_MIRV_WARHEAD,
+  UT_NEUTRON_BOMB,
 } from "./render/types/UnitType";
 import type { GameView, PlayerView } from "./view";
 
@@ -95,6 +98,17 @@ const UNIT_TYPE_TO_NUKE_TYPE: Readonly<Record<string, NukeExplosionType>> = {
   [UT_ATOM_BOMB]: "atom",
   [UT_HYDROGEN_BOMB]: "hydro",
   [UT_MIRV_WARHEAD]: "mirvWarhead",
+  // Superfork warheads detonated with NO visual at all - troops died, ships
+  // vanished and nothing appeared on screen, which is why they felt fake.
+  //
+  // They reuse existing explosion slots rather than extending
+  // NUKE_EXPLOSION_TYPES, which is a cosmetics-store enum: adding to it
+  // changes schema validation for purchasable effects, and that is not worth
+  // destabilising for a visual. Each gets its own RADIUS below, so they read
+  // as different weapons even sharing a palette.
+  [UT_NEUTRON_BOMB]: "atom",
+  [UT_EMP_BOMB]: "mirvWarhead",
+  [UT_ASBM_WARHEAD]: "mirvWarhead",
 };
 
 function toRgb01(s: string): [number, number, number] | null {

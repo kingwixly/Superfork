@@ -70,6 +70,18 @@ export class SpecialWarheadExecution implements Execution {
 
   tick(ticks: number): void {
     this.active = false;
+
+    // Spawn the warhead AT the target and immediately kill it, marked as
+    // having reached its target. The FX layer builds explosions from dead
+    // units, so a warhead that never existed as a unit produced no visual at
+    // all - which is why these detonations were silent.
+    const warhead = this.player.buildUnit(this.type, this.target, {
+      targetTile: this.target,
+      trajectory: [],
+    });
+    warhead.setReachedTarget();
+    warhead.delete(false);
+
     if (this.type === UnitType.NeutronBomb) {
       this.detonateNeutron();
     } else {

@@ -36,6 +36,9 @@ export const UT_AIRSTRIP = "Airstrip" as const;
 export const UT_AIRFIELD = "Airfield" as const;
 export const UT_INTERNATIONAL_AIRPORT = "International Airport" as const;
 export const UT_EMBASSY = "Embassy" as const;
+export const UT_NEUTRON_BOMB = "Neutron Bomb" as const;
+export const UT_EMP_BOMB = "EMP Burst" as const;
+export const UT_ASBM_WARHEAD = "ASBM Warhead" as const;
 // Superfork aircraft.
 export const UT_FIGHTER_JET = "Fighter Jet" as const;
 export const UT_TRANSPORT_JET = "Transport Jet" as const;
