@@ -170,9 +170,11 @@
       "factory": "Creates railroads and spawns trains",
       "fighter_jet": "Launches from an airstrip; hunts aircraft",
       "hydrogen_bomb": "Large explosion",
+      "interceptor": "Launches from an airstrip; shoots down nukes",
       "international_airport": "Civilian flights and any military aircraft",
       "mirv": "Huge explosion, only targets selected player",
       "missile_silo": "Used to launch nukes",
+      "neutron_bomb": "Kills troops; leaves buildings standing",
       "port": "Sends trade ships to generate gold",
       "sam_launcher": "Defends against incoming nukes",
       "transport_jet": "Air assault from an airfield; twice boat speed",
@@ -2064,6 +2066,7 @@
     "neutron_bomb": "Neutron Bomb",
     "port": "Port",
     "sam_launcher": "SAM Launcher",
+    "transport_jet": "Transport Jet",
     "warship": "Warship"
   },
   "update_available": {

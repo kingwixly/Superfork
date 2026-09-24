@@ -48,10 +48,16 @@ export class SanctionExecution implements Execution {
     // Both sides are told. A sanction has no visual representation anywhere in
     // the UI, so without a message the player cannot tell a working button
     // from a dead one - which is exactly how this shipped.
+    // Literal keys, not concatenation: the i18n sync test scans source for
+    // key strings, and "key + '_against'" is invisible to it.
     const key =
       this.action === "start"
         ? "events_display.sanction_started"
         : "events_display.sanction_lifted";
+    const againstKey =
+      this.action === "start"
+        ? "events_display.sanction_started_against"
+        : "events_display.sanction_lifted_against";
     mg.displayMessage(
       key,
       MessageType.ALLIANCE_BROKEN,
@@ -62,7 +68,7 @@ export class SanctionExecution implements Execution {
       },
     );
     mg.displayMessage(
-      key + "_against",
+      againstKey,
       MessageType.ALLIANCE_BROKEN,
       target.id(),
       undefined,

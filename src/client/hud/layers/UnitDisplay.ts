@@ -175,7 +175,11 @@ export class UnitDisplay extends LitElement implements Controller {
               item.icon,
               this.countFor(item.unitType),
               item.unitType as PlayerBuildableUnitType,
-              item.key ?? "",
+              // BARE key: renderUnitItem prefixes it with "unit_type." and
+              // "build_menu.desc." itself, so passing item.key - which is
+              // already "unit_type.city" - produced "unit_type.unit_type.city"
+              // and every tooltip in the bar broke.
+              (item.key ?? "").replace(/^unit_type\./, ""),
               idx < 9 ? String(idx + 1) : "",
             ),
           )}
