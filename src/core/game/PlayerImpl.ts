@@ -1536,7 +1536,11 @@ export class PlayerImpl implements Player {
       this.mg.nearbyUnits(
         targetTile,
         this.mg.config().structureMinDist(),
-        type,
+        // Superfork: building a City onto a Capital levels the capital up,
+        // exactly as building a City onto a City does. This searched for the
+        // requested type only, so a Capital was never found and the build
+        // either failed or placed a separate city beside it.
+        type === UnitType.City ? [UnitType.City, UnitType.Capital] : type,
         undefined,
         true,
       ),

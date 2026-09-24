@@ -103,10 +103,14 @@ export const CAPITAL_CAPTURE_TROOP_LOSS = 0.4; // -40% troops when captured
 export const STACK_RADIUS = 2;
 
 const STACKABLE_PAIRS: ReadonlyArray<readonly [UnitType, UnitType]> = [
-  // A coastal capital can host a port, and any capital can host an
-  // international airport. Both directions are handled by canStack below.
+  // A coastal capital can host a port. Handled in both directions below.
+  //
+  // Capital + International Airport was removed after playtesting: stacking
+  // placed the airport ON the capital's tile, where it rendered underneath and
+  // appeared to vanish, and it gave the capital nothing in return. Airports
+  // upgrade by stacking onto THEMSELVES instead - see `upgradable` on the
+  // air base specs.
   [UnitType.Capital, UnitType.Port],
-  [UnitType.Capital, UnitType.InternationalAirport],
 ];
 
 /** True when the two types are allowed to occupy the same site. */
@@ -171,6 +175,9 @@ export const SUPERFORK_UNITS: Record<string, SuperforkUnitSpec> = {
     // removeGold regardless, and removeGold clamps to the balance, so any
     // non-zero cost here would silently drain a poor player.
     cost: () => 0,
+    // Upgradable like the city it was promoted from, so building a City onto
+    // it levels it up rather than being refused.
+    upgradable: true,
     constructionDuration: s(10),
   },
 
@@ -184,6 +191,8 @@ export const SUPERFORK_UNITS: Record<string, SuperforkUnitSpec> = {
 
   [UnitType.Airstrip]: {
     domain: UnitDomain.Structure,
+    // Builds onto an existing one to level it up, like cities and ports.
+    upgradable: true,
     cost: (n) => Math.min(2_000_000, (n + 1) * 750_000),
     constructionDuration: s(8),
     range: 180,
@@ -191,6 +200,8 @@ export const SUPERFORK_UNITS: Record<string, SuperforkUnitSpec> = {
 
   [UnitType.Airfield]: {
     domain: UnitDomain.Structure,
+    // Builds onto an existing one to level it up, like cities and ports.
+    upgradable: true,
     // Dearer than an airstrip: this is the "save up for it" gate on air
     // transport, which is twice as fast as boats and launches from cover.
     cost: (n) => Math.min(3_000_000, (n + 1) * 1_000_000),

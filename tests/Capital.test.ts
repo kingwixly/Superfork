@@ -134,19 +134,19 @@ describe("Capital", () => {
   });
 
   test("a capital raises the max troop ceiling", () => {
-    const withoutCapital = game.config().maxTroops(player);
-
+    // Compare the SAME city before and after promotion. This test used to
+    // measure against a baseline with no city at all, and its comment said
+    // "the city is consumed by promotion" - it was asserting the bug, where
+    // promoting dropped the city's level from the population sum and cost
+    // troops instead of granting a buff.
     const city = player.buildUnit(UnitType.City, game.ref(7, 10), {});
-    promote(player, city.id());
-    const withCapital = game.config().maxTroops(player);
+    const asCity = game.config().maxTroops(player);
 
-    expect(withCapital).toBeGreaterThan(withoutCapital);
-    // The city is consumed by promotion, so compare against the capital-less
-    // baseline scaled by the bonus rather than against a raw number.
-    expect(withCapital / withoutCapital).toBeCloseTo(
-      1 + CAPITAL_TROOP_CAP_BONUS,
-      5,
-    );
+    promote(player, city.id());
+    const asCapital = game.config().maxTroops(player);
+
+    expect(asCapital).toBeGreaterThan(asCity);
+    expect(asCapital / asCity).toBeCloseTo(1 + CAPITAL_TROOP_CAP_BONUS, 5);
   });
 
   test("losing a capital costs the previous owner 40% of their troops", () => {

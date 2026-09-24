@@ -1018,8 +1018,11 @@ export class Config {
       player.type() === PlayerType.Human && this.hasInfiniteTroopsFor(player)
         ? 1_000_000_000
         : 2 * (pow(player.numTilesOwned(), 0.6) * 1000 + 50000) +
-          player
-            .units(UnitType.City)
+          // Superfork: capitals count as cities here. A capital is a PROMOTED
+          // city, but this sum used to read UnitType.City only - so the moment
+          // a city was promoted its level dropped out of the population
+          // ceiling, and promoting cost you troops instead of granting a buff.
+          [...player.units(UnitType.City), ...player.units(UnitType.Capital)]
             .filter((u) => !u.isUnderConstruction())
             .map((city) => city.level())
             .reduce((a, b) => a + b, 0) *
