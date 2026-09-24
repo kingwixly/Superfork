@@ -26,3 +26,6 @@ tests/perf/output/
 # Locally built Go binary (gen-maps uses `go run .`)
 map-generator/map-generator
 map-generator/map-generator.exe
+
+# Access gate data (local runs; Docker uses the /data/gate volume)
+/data/
