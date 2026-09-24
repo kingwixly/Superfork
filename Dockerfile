@@ -88,6 +88,15 @@ RUN echo "$GIT_COMMIT" > static/commit.txt
 
 ENV GIT_COMMIT="$GIT_COMMIT"
 
+# Access gate (src/server/gate). Node listens on loopback only so every
+# request has to pass nginx's auth_request check; gate data lives in
+# /data/gate, which docker-compose mounts as a named volume. Creating the
+# directory here, owned by the unprivileged "node" user the server runs as,
+# means a fresh named volume inherits that ownership.
+ENV SERVER_BIND_HOST=127.0.0.1
+ENV GATE_DATA_DIR=/data/gate
+RUN mkdir -p /data/gate && chown node:node /data/gate && chmod 700 /data/gate
+
 RUN <<'EOF' tee /usr/local/bin/start.sh
 #!/bin/sh
 # Generate the create-game nginx upstream from CLUSTER_JSON before nginx starts.

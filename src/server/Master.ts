@@ -1,6 +1,6 @@
 import cluster from "cluster";
 import crypto from "crypto";
-import express from "express";
+import express, { type Router } from "express";
 import rateLimit from "express-rate-limit";
 import http from "http";
 import path from "path";
@@ -16,6 +16,7 @@ import { startPolling } from "./PollingLoop";
 import { renderAppShell } from "./RenderHtml";
 import { ServerEnv } from "./ServerEnv";
 import { applyStaticAssetCacheControl } from "./StaticAssetCache";
+import { createGateFromEnv } from "./gate/GateFromEnv";
 
 const playlist = new MapPlaylist();
 let lobbyService: MasterLobbyService;
@@ -27,6 +28,25 @@ const log = logger.child({ comp: "m" });
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// Proxy hops in front of us (cloudflared -> traefik -> nginx). Used for
+// req.ip by the gate's rate limits and by the general limiter below.
+app.set("trust proxy", 3);
+
+// Access gate: nginx auth_requests /__gate/check before every other route
+// (see nginx.conf and src/server/gate/Gate.ts). Mounted first so the gate's
+// own endpoints are never behind the general per-IP limiter and never touch
+// the app shell. Built in startMaster() so worker processes (which import
+// this module too) never open the gate's data file. Until then every check
+// fails closed.
+let gateRouter: Router | null = null;
+app.use("/__gate", (req, res, next) => {
+  if (gateRouter === null) {
+    res.status(503).end();
+    return;
+  }
+  gateRouter(req, res, next);
+});
 
 app.use(express.json());
 
@@ -98,7 +118,6 @@ app.use(
   }),
 );
 
-app.set("trust proxy", 3);
 app.use(
   rateLimit({
     windowMs: 1000, // 1 second
@@ -120,6 +139,12 @@ export async function startMaster() {
   }
 
   log.info(`Primary ${process.pid} is running`);
+
+  gateRouter = createGateFromEnv({
+    info: (m) => log.info(m),
+    warn: (m) => log.warn(m),
+    error: (m, e) => log.error(m, e),
+  }).router;
   log.info(`Setting up ${ServerEnv.numWorkers()} workers...`);
 
   lobbyService = new MasterLobbyService(playlist, log);
@@ -172,7 +197,9 @@ export async function startMaster() {
   });
 
   const PORT = 3000;
-  server.listen(PORT, () => {
+  // In the container everything must come through nginx (which enforces the
+  // access gate), so the image sets SERVER_BIND_HOST=127.0.0.1.
+  server.listen(PORT, ServerEnv.bindHost(), () => {
     log.info(`Master HTTP server listening on port ${PORT}`);
   });
 

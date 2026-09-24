@@ -785,7 +785,9 @@ export async function startWorker() {
 
   // The load balancer will handle routing to this server based on path
   const PORT = ServerEnv.workerPortByIndex(workerId);
-  server.listen(PORT, () => {
+  // Loopback-only in the container (SERVER_BIND_HOST) so workers can only
+  // be reached through nginx and its access gate.
+  server.listen(PORT, ServerEnv.bindHost(), () => {
     log.info(`running on http://localhost:${PORT}`);
     log.info(`Handling requests with path prefix /w${workerId}/`);
     // Signal to the master process that this worker is ready

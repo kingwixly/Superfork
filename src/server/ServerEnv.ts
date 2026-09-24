@@ -72,6 +72,12 @@ export class ServerEnv {
     if (raw === undefined) return undefined;
     return parseInt(raw, 10);
   }
+  /** Interface the master/worker HTTP servers bind to. Undefined = all. */
+  static bindHost(): string | undefined {
+    const v = process.env.SERVER_BIND_HOST;
+    if (v === undefined || v === "") return undefined;
+    return v;
+  }
   static hostname(): string {
     return process.env.HOSTNAME ?? "";
   }
