@@ -6,6 +6,7 @@ import {
   type PlayerProfile,
   type PlayerStatsTree,
 } from "../core/ApiSchemas";
+import { GAME_ROUTE } from "../core/GameRoute";
 import { fetchPublicPlayerProfile } from "./Api";
 import "./components/baseComponents/stats/PlayerGameHistoryView";
 import type { PlayerGameHistoryCache } from "./components/baseComponents/stats/PlayerGameHistoryView";
@@ -306,7 +307,7 @@ export class PlayerProfileModal extends BaseModal {
   private viewGame(gameId: string): void {
     this.close();
     const encodedGameId = encodeURIComponent(gameId);
-    const newUrl = `/${ClientEnv.workerPath(gameId)}/game/${encodedGameId}`;
+    const newUrl = `/${ClientEnv.workerPath(gameId)}/${GAME_ROUTE}/${encodedGameId}`;
 
     history.pushState({ join: gameId }, "", newUrl);
     window.dispatchEvent(

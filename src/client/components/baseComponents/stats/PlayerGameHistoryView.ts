@@ -12,6 +12,7 @@ import {
 } from "../../../../core/ApiSchemas";
 import { assetUrl } from "../../../../core/AssetUrls";
 import { GameMapType } from "../../../../core/game/Game";
+import { GAME_ROUTE } from "../../../../core/GameRoute";
 import { fetchPublicPlayerGames } from "../../../Api";
 import { ClientEnv } from "../../../ClientEnv";
 import { terrainMapFileLoader } from "../../../TerrainMapFileLoader";
@@ -267,7 +268,7 @@ export class PlayerGameHistoryView extends LitElement {
 
   private async copyGameLink(gameId: string) {
     const encodedGameId = encodeURIComponent(gameId);
-    const url = `${window.location.origin}/${ClientEnv.workerPath(gameId)}/game/${encodedGameId}`;
+    const url = `${window.location.origin}/${ClientEnv.workerPath(gameId)}/${GAME_ROUTE}/${encodedGameId}`;
 
     try {
       await void copyToClipboard(url);

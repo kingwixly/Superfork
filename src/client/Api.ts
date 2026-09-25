@@ -43,6 +43,7 @@ import {
   UserMeResponse,
   UserMeResponseSchema,
 } from "../core/ApiSchemas";
+import { GAME_ROUTE } from "../core/GameRoute";
 import {
   AnalyticsRecord,
   ArchivedAnalyticsRecordSchema,
@@ -1881,7 +1882,7 @@ export async function openSubscriptionPortal(): Promise<string | false> {
 export async function fetchLobbyListed(gameID: string): Promise<boolean> {
   try {
     const res = await fetch(
-      `${ClientEnv.gameHttpBase(gameID)}/${ClientEnv.gameWorkerPath(gameID)}/api/game/${gameID}`,
+      `${ClientEnv.gameHttpBase(gameID)}/${ClientEnv.gameWorkerPath(gameID)}/api/${GAME_ROUTE}/${gameID}`,
       { headers: { Accept: "application/json" } },
     );
     if (!res.ok) return false;
@@ -1905,7 +1906,7 @@ export async function setLobbyListed(
   try {
     const token = await getPlayToken();
     const response = await fetch(
-      `${ClientEnv.gameHttpBase(gameID)}/${ClientEnv.gameWorkerPath(gameID)}/api/game/${gameID}/listing`,
+      `${ClientEnv.gameHttpBase(gameID)}/${ClientEnv.gameWorkerPath(gameID)}/api/${GAME_ROUTE}/${gameID}/listing`,
       {
         method: "POST",
         headers: {
@@ -2016,7 +2017,7 @@ export async function fetchGameById(
   gameId: string,
 ): Promise<AnalyticsRecord | false> {
   try {
-    const url = `${getApiBase()}/game/${encodeURIComponent(gameId)}`;
+    const url = `${getApiBase()}/${GAME_ROUTE}/${encodeURIComponent(gameId)}`;
     const res = await fetch(url, {
       headers: {
         Accept: "application/json",

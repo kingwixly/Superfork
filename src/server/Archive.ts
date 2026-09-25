@@ -1,4 +1,5 @@
 import z from "zod";
+import { GAME_ROUTE } from "../core/GameRoute";
 import {
   GameID,
   GameRecord,
@@ -21,7 +22,7 @@ export async function archive(gameRecord: GameRecord) {
       });
       return;
     }
-    const url = `${ServerEnv.jwtIssuer()}/game/${gameRecord.info.gameID}`;
+    const url = `${ServerEnv.jwtIssuer()}/${GAME_ROUTE}/${gameRecord.info.gameID}`;
     const response = await fetch(url, {
       method: "POST",
       body: JSON.stringify(gameRecord, replacer),

@@ -12,6 +12,7 @@ import {
 } from "../client/Utils";
 import { assetUrl } from "../core/AssetUrls";
 import { EventBus } from "../core/EventBus";
+import { GAME_ROUTE, GAME_ROUTE_ALTERNATION } from "../core/GameRoute";
 import {
   ClientInfo,
   GAME_ID_REGEX,
@@ -1226,7 +1227,10 @@ export class JoinLobbyModal extends BaseModal {
 
     try {
       const url = new URL(input);
-      const match = url.pathname.match(/game\/([^/]+)/);
+      // Accepts both the current and legacy segment - see core/GameRoute.
+      const match = url.pathname.match(
+        new RegExp(`${GAME_ROUTE_ALTERNATION}/([^/]+)`),
+      );
       const candidate = match?.[1];
       if (candidate && GAME_ID_REGEX.test(candidate)) return candidate;
 
@@ -1324,7 +1328,7 @@ export class JoinLobbyModal extends BaseModal {
     lobbyId: string,
     spectator = false,
   ): Promise<boolean> {
-    const url = `${ClientEnv.gameHttpBase(lobbyId)}/${ClientEnv.gameWorkerPath(lobbyId)}/api/game/${lobbyId}/exists`;
+    const url = `${ClientEnv.gameHttpBase(lobbyId)}/${ClientEnv.gameWorkerPath(lobbyId)}/api/${GAME_ROUTE}/${lobbyId}/exists`;
 
     const response = await fetch(url, {
       method: "GET",

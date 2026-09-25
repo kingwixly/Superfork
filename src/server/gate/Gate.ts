@@ -190,7 +190,27 @@ export function createGate(opts: GateOptions): Gate {
     now,
   );
 
-  const ipOf = (req: Request) => req.ip ?? req.socket.remoteAddress ?? "?";
+  /**
+   * The real visitor's address.
+   *
+   * Traffic reaches Node through Cloudflare -> cloudflared -> Traefik ->
+   * nginx. req.ip depends on Express's 'trust proxy' hop count matching that
+   * chain exactly, and when it did not, EVERY visitor resolved to the same
+   * internal proxy address - so the per-IP limits became global, and one
+   * person's requests locked everyone else out.
+   *
+   * CF-Connecting-IP is set by Cloudflare to the true client and OVERWRITES
+   * any value a client sends, so it cannot be spoofed through Cloudflare. It
+   * is safe to trust here because Node binds 127.0.0.1 and nginx is reachable
+   * only via the tunnel - nothing arrives without passing Cloudflare first.
+   * Falls back to req.ip for local development, where there is no Cloudflare.
+   */
+  const ipOf = (req: Request): string => {
+    const cf = req.headers["cf-connecting-ip"];
+    const fromCf = Array.isArray(cf) ? cf[0] : cf;
+    if (typeof fromCf === "string" && fromCf.length > 0) return fromCf.trim();
+    return req.ip ?? req.socket.remoteAddress ?? "?";
+  };
 
   const cookiesOf = (req: Request) => parseCookies(req.headers.cookie);
 

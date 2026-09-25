@@ -2,6 +2,7 @@ import { html, LitElement } from "lit";
 import { customElement, state } from "lit/decorators.js";
 import { translateText } from "../../../client/Utils";
 import { EventBus } from "../../../core/EventBus";
+import { GAME_ROUTE } from "../../../core/GameRoute";
 import { ClientEnv } from "../../ClientEnv";
 import { Controller } from "../../Controller";
 import { crazyGamesSDK } from "../../CrazyGamesSDK";
@@ -45,7 +46,7 @@ export class NewLobbyPrompt extends LitElement implements Controller {
 
   private lobbyUrl(asHost: boolean): string {
     const id = this.gameID ?? "";
-    const url = `${window.location.origin}/${ClientEnv.workerPath(id)}/game/${id}`;
+    const url = `${window.location.origin}/${ClientEnv.workerPath(id)}/${GAME_ROUTE}/${id}`;
     return asHost ? `${url}?host` : url;
   }
 

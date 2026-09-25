@@ -1,6 +1,7 @@
 import { html, LitElement, nothing, type TemplateResult } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { assetUrl } from "../../../core/AssetUrls";
+import { GAME_ROUTE } from "../../../core/GameRoute";
 import { GameMapType } from "../../../core/game/Game";
 import {
   type ClanGame,
@@ -197,7 +198,7 @@ export class ClanGameHistoryView extends LitElement {
   private async watchReplay(gameId: string) {
     try {
       const encoded = encodeURIComponent(gameId);
-      const url = `/${ClientEnv.workerPath(gameId)}/game/${encoded}`;
+      const url = `/${ClientEnv.workerPath(gameId)}/${GAME_ROUTE}/${encoded}`;
       history.pushState({ join: gameId }, "", url);
       window.dispatchEvent(
         new CustomEvent("join-changed", { detail: { gameId: encoded } }),
@@ -222,7 +223,7 @@ export class ClanGameHistoryView extends LitElement {
 
   private async copyGameLink(gameId: string) {
     const encodedGameId = encodeURIComponent(gameId);
-    const url = `${window.location.origin}/${ClientEnv.workerPath(gameId)}/game/${encodedGameId}`;
+    const url = `${window.location.origin}/${ClientEnv.workerPath(gameId)}/${GAME_ROUTE}/${encodedGameId}`;
 
     try {
       await void copyToClipboard(url);

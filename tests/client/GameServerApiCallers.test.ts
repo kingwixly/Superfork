@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { GAME_ROUTE } from "../../src/core/GameRoute";
 
 vi.mock("../../src/client/Auth", async (importOriginal) => ({
   ...(await importOriginal<typeof import("../../src/client/Auth")>()),
@@ -84,7 +85,7 @@ describe("JoinLobbyModal.checkActiveLobby", () => {
       }
     ).checkActiveLobby("game-1");
     expect(lastUrl()).toBe(
-      `https://${SERVER_HOST}/${ClientEnv.workerPath("game-1")}/api/game/game-1/exists`,
+      `https://${SERVER_HOST}/${ClientEnv.workerPath("game-1")}/api/${GAME_ROUTE}/game-1/exists`,
     );
   });
 });
@@ -99,7 +100,7 @@ describe("MatchmakingModal.checkGame", () => {
     internals.gameID = "game-1";
     await internals.checkGame();
     expect(lastUrl()).toBe(
-      `https://${SERVER_HOST}/${ClientEnv.workerPath("game-1")}/api/game/game-1/exists`,
+      `https://${SERVER_HOST}/${ClientEnv.workerPath("game-1")}/api/${GAME_ROUTE}/game-1/exists`,
     );
   });
 });

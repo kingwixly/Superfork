@@ -10,6 +10,7 @@ import { z } from "zod";
 import { CloseCode, CloseReason } from "../core/CloseCodes";
 import { GameEnv } from "../core/configuration/Config";
 import { GameType } from "../core/game/Game";
+import { GAME_ROUTE, rewriteLegacyGameApi } from "../core/GameRoute";
 import {
   ClientMessage,
   ID,
@@ -107,6 +108,20 @@ export async function startWorker() {
   app.use(stripWorkerPrefix(workerId));
 
   app.set("trust proxy", 3);
+
+  // Legacy match URLs: /api/game/... is rewritten to /api/${GAME_ROUTE}/...
+  // before routing, so every route registers ONE path yet links shared before
+  // the rename keep working. Done here rather than by registering each route
+  // twice, which widened Express's param types and would have meant
+  // restructuring three large handlers. See core/GameRoute.
+  //
+  // Matches with or without a /wN prefix: nginx strips it in production, but
+  // the worker also receives it unstripped (dev, no nginx) - the CORS mount
+  // above handles both forms for the same reason.
+  app.use((req, _res, next) => {
+    req.url = rewriteLegacyGameApi(req.url);
+    next();
+  });
   app.use(compression());
 
   app.use(
@@ -250,7 +265,7 @@ export async function startWorker() {
   // Toggle whether a private lobby is visible in the public lobby browser.
   // Creator-only; listing requires an active subscription (checked fresh
   // against the API) and is limited to one listed lobby per creator.
-  app.post("/api/game/:id/listing", async (req, res) => {
+  app.post(`/api/${GAME_ROUTE}/:id/listing`, async (req, res) => {
     const authHeader = req.headers.authorization;
     if (!authHeader?.startsWith("Bearer ")) {
       return res.status(400).json({ error: "Authorization header required" });
@@ -341,14 +356,14 @@ export async function startWorker() {
     res.json({ listed });
   });
 
-  app.get("/api/game/:id/exists", async (req, res) => {
+  app.get(`/api/${GAME_ROUTE}/:id/exists`, async (req, res) => {
     const lobbyId = req.params.id;
     res.json({
       exists: gm.game(lobbyId) !== null,
     });
   });
 
-  app.get("/api/game/:id", async (req, res) => {
+  app.get(`/api/${GAME_ROUTE}/:id`, async (req, res) => {
     const game = gm.game(req.params.id);
     if (game === null) {
       log.info(`lobby ${req.params.id} not found`);

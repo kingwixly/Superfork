@@ -3,6 +3,7 @@ import { renderNavVersion } from "src/client/GameVersion";
 import { UserMeResponse } from "../core/ApiSchemas";
 import { assetUrl } from "../core/AssetUrls";
 import { EventBus } from "../core/EventBus";
+import { GAME_ROUTE, GAME_ROUTE_ALTERNATION } from "../core/GameRoute";
 import {
   GAME_ID_REGEX,
   GameInfo,
@@ -1042,8 +1043,10 @@ class Client {
       }
     }
 
+    // Accepts the current segment AND the legacy "game", so links shared
+    // before the rename still open. See core/GameRoute.
     const pathMatch = window.location.pathname.match(
-      /^\/(?:w\d+\/)?game\/([^/]+)/,
+      new RegExp(`^/(?:w\\d+/)?${GAME_ROUTE_ALTERNATION}/([^/]+)`),
     );
     const lobbyId =
       pathMatch && GAME_ID_REGEX.test(pathMatch[1]) ? pathMatch[1] : null;
@@ -1401,7 +1404,7 @@ class Client {
           "",
           lobbyIdHidden
             ? "/streamer-mode"
-            : `/${ClientEnv.workerPath(lobby.gameID)}/game/${lobby.gameID}?live`,
+            : `/${ClientEnv.workerPath(lobby.gameID)}/${GAME_ROUTE}/${lobby.gameID}?live`,
         );
       }
 
@@ -1490,7 +1493,7 @@ class Client {
       // on it. On the replay host, fall back to the in-place leave.
       if (!isReplayShellHost(window.location.hostname)) {
         this.resetPresenceToMenu();
-        window.location.href = `/${ClientEnv.workerPath(gameId)}/game/${gameId}`;
+        window.location.href = `/${ClientEnv.workerPath(gameId)}/${GAME_ROUTE}/${gameId}`;
         return;
       }
       await this.handleLeaveLobby();
@@ -1516,7 +1519,7 @@ class Client {
     } else if (lobbyIdHidden) {
       targetUrl = "/streamer-mode";
     } else {
-      targetUrl = `/${ClientEnv.workerPath(lobbyId)}/game/${lobbyId}`;
+      targetUrl = `/${ClientEnv.workerPath(lobbyId)}/${GAME_ROUTE}/${lobbyId}`;
     }
     const currentUrl = window.location.pathname;
 

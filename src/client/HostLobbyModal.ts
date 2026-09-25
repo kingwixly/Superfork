@@ -19,6 +19,7 @@ import {
   UnitType,
 } from "../core/game/Game";
 import { UserSettings } from "../core/game/UserSettings";
+import { GAME_ROUTE } from "../core/GameRoute";
 import {
   ClientInfo,
   GameConfig,
@@ -168,7 +169,7 @@ export class HostLobbyModal extends BaseModal {
         return link;
       }
     }
-    return `${window.location.origin}/${ClientEnv.workerPath(this.lobbyId)}/game/${this.lobbyId}?lobby&s=${encodeURIComponent(this.lobbyUrlSuffix)}`;
+    return `${window.location.origin}/${ClientEnv.workerPath(this.lobbyId)}/${GAME_ROUTE}/${this.lobbyId}?lobby&s=${encodeURIComponent(this.lobbyUrlSuffix)}`;
   }
 
   private async constructUrl(): Promise<string> {

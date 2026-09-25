@@ -16,6 +16,7 @@ import {
   UnitType,
 } from "../core/game/Game";
 import { TileRef } from "../core/game/GameMap";
+import { GAME_ROUTE } from "../core/GameRoute";
 import {
   AllPlayersStats,
   ClientHashMessage,
@@ -710,7 +711,7 @@ export class Transport {
       const latch = `wrong-worker-redirect:${gameID}`;
       if (sessionStorage.getItem(latch) === null) {
         sessionStorage.setItem(latch, "1");
-        window.location.href = `${ClientEnv.gameHttpBase(gameID)}/game/${gameID}${window.location.search}`;
+        window.location.href = `${ClientEnv.gameHttpBase(gameID)}/${GAME_ROUTE}/${gameID}${window.location.search}`;
         return;
       }
     }

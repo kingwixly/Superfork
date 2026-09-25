@@ -3,6 +3,7 @@ import { customElement, state } from "lit/decorators.js";
 import { ClientEnv } from "src/client/ClientEnv";
 import { UserMeResponse } from "../core/ApiSchemas";
 import { CloseCode, isTerminalClose } from "../core/CloseCodes";
+import { GAME_ROUTE } from "../core/GameRoute";
 import { responseHasLinkedIdentity } from "./AccountIdentity";
 import { getUserMe, invalidateUserMe } from "./Api";
 import { getPlayToken } from "./Auth";
@@ -457,7 +458,7 @@ export class MatchmakingModal extends BaseModal {
     if (this.gameID === null) {
       return;
     }
-    const url = `${ClientEnv.gameHttpBase(this.gameID)}/${ClientEnv.gameWorkerPath(this.gameID)}/api/game/${this.gameID}/exists`;
+    const url = `${ClientEnv.gameHttpBase(this.gameID)}/${ClientEnv.gameWorkerPath(this.gameID)}/api/${GAME_ROUTE}/${this.gameID}/exists`;
 
     const response = await fetch(url, {
       method: "GET",

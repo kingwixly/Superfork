@@ -3,6 +3,7 @@ import { customElement, state } from "lit/decorators.js";
 import { ClientEnv } from "src/client/ClientEnv";
 import { PlayerStatsTree, UserMeResponse } from "../core/ApiSchemas";
 import { assetUrl } from "../core/AssetUrls";
+import { GAME_ROUTE } from "../core/GameRoute";
 import { hasLinkedIdentity } from "./AccountIdentity";
 import { fetchPlayerById, getUserMe, invalidateUserMe } from "./Api";
 import {
@@ -613,7 +614,7 @@ export class AccountModal extends BaseModal {
   private async viewGame(gameId: string): Promise<void> {
     this.close();
     const encodedGameId = encodeURIComponent(gameId);
-    const newUrl = `/${ClientEnv.workerPath(gameId)}/game/${encodedGameId}`;
+    const newUrl = `/${ClientEnv.workerPath(gameId)}/${GAME_ROUTE}/${encodedGameId}`;
 
     history.pushState({ join: gameId }, "", newUrl);
     window.dispatchEvent(

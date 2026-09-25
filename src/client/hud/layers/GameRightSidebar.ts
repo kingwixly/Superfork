@@ -3,6 +3,7 @@ import { customElement, state } from "lit/decorators.js";
 import { assetUrl } from "../../../core/AssetUrls";
 import { EventBus } from "../../../core/EventBus";
 import { GameType } from "../../../core/game/Game";
+import { GAME_ROUTE } from "../../../core/GameRoute";
 import { createNextLobby } from "../../Api";
 import { ClientEnv } from "../../ClientEnv";
 import "../../components/DoomsdayClockPanel";
@@ -426,7 +427,7 @@ export class GameRightSidebar extends LitElement implements Controller {
       const lobby = await createNextLobby(this.game.gameID());
       const id = lobby.gameID;
       // ?host routes the creator back into the host view on load.
-      window.location.href = `${window.location.origin}/${ClientEnv.workerPath(id)}/game/${id}?host`;
+      window.location.href = `${window.location.origin}/${ClientEnv.workerPath(id)}/${GAME_ROUTE}/${id}?host`;
     } catch (error) {
       console.error("Failed to create successor lobby", error);
       this.newLobbyRequested = false;

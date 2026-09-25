@@ -2,6 +2,7 @@ import { Config } from "src/core/configuration/Config";
 import { ClientEnv } from "../client/ClientEnv";
 import { reloadForUpdate, translateText } from "../client/Utils";
 import { EventBus } from "../core/EventBus";
+import { GAME_ROUTE } from "../core/GameRoute";
 import {
   ClientID,
   GameID,
@@ -368,7 +369,7 @@ export function joinLobby(
         } else {
           const r = ClientEnv.resolveGame(lobbyConfig.gameID);
           if (r.kind === "cross") {
-            window.location.href = `https://${r.host}/game/${lobbyConfig.gameID}${window.location.search}`;
+            window.location.href = `https://${r.host}/${GAME_ROUTE}/${lobbyConfig.gameID}${window.location.search}`;
           } else {
             showInGameAlert(translateText("update_available.message")).then(
               () => {

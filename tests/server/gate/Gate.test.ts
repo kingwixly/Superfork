@@ -493,6 +493,42 @@ describe("access gate", () => {
       expect((await later.req("POST", "/__gate/request", {})).status).toBe(200);
     });
 
+    test("behind Cloudflare, visitors sharing a proxy IP get SEPARATE limits", async () => {
+      // Production shape: every request reaches Node from the same proxy
+      // address (Cloudflare -> cloudflared -> Traefik -> nginx), so
+      // x-forwarded-for is identical for everyone. Keying on that made the
+      // per-IP limit global - one person's requests locked out the rest.
+      // CF-Connecting-IP carries the real visitor and is what must be used.
+      await start({ requestsPerIpPerHour: 3 });
+      const results: number[] = [];
+      for (let i = 0; i < 6; i++) {
+        const b = new Browser(base, "172.18.0.5"); // the shared proxy
+        const realIp = { "cf-connecting-ip": `203.0.113.${i + 1}` };
+        await b.req("GET", "/__gate/status", undefined, realIp);
+        results.push(
+          (await b.req("POST", "/__gate/request", {}, realIp)).status,
+        );
+      }
+      // Six distinct visitors, each under their own limit of three.
+      expect(results).toEqual([200, 200, 200, 200, 200, 200]);
+    });
+
+    test("one real visitor is still limited, however the proxy looks", async () => {
+      // The fix must not turn the limit off - the same real client is still
+      // capped even though it now keys on CF-Connecting-IP.
+      await start({ requestsPerIpPerHour: 3 });
+      const results: number[] = [];
+      for (let i = 0; i < 5; i++) {
+        const b = new Browser(base, "172.18.0.5");
+        const realIp = { "cf-connecting-ip": "203.0.113.99" };
+        await b.req("GET", "/__gate/status", undefined, realIp);
+        results.push(
+          (await b.req("POST", "/__gate/request", {}, realIp)).status,
+        );
+      }
+      expect(results).toEqual([200, 200, 200, 429, 429]);
+    });
+
     test("per device: one device can't spam re-submits across IPs", async () => {
       await start({ requestsPerDevicePerHour: 2, requestsPerIpPerHour: 100 });
       const b = new Browser(base, "1.2.3.4");

@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { buildAssetUrl } from "../core/AssetUrls";
+import { GAME_ROUTE } from "../core/GameRoute";
 import { ClanTagSchema, GameInfo, UsernameSchema } from "../core/Schemas";
 import { formatPlayerDisplayName } from "../core/Util";
 import { GameMode, maps } from "../core/game/Game";
@@ -149,7 +150,7 @@ export async function buildPreview(
   const isPrivate = lobby?.gameConfig?.gameType === "Private";
 
   // route directly to the correct worker.
-  const joinUrl = `${origin}/${workerPath}/game/${gameID}`;
+  const joinUrl = `${origin}/${workerPath}/${GAME_ROUTE}/${gameID}`;
 
   const config = publicInfo?.info?.config ?? {};
   const players = publicInfo?.info?.players ?? [];

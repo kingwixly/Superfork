@@ -1,9 +1,10 @@
-import type { Express, Request } from "express";
+import type { Express, Request, RequestHandler } from "express";
 import fsPromises from "fs/promises";
 import { parse } from "node-html-parser";
 import path from "path";
 import type { Logger } from "winston";
 import { z } from "zod";
+import { GAME_ROUTE, LEGACY_GAME_ROUTE } from "../core/GameRoute";
 import { GAME_ID_REGEX, GameInfo } from "../core/Schemas";
 import { replacer } from "../core/Util";
 import type { GameManager } from "./GameManager";
@@ -79,7 +80,9 @@ export function registerGamePreviewRoute(opts: {
     }
   };
 
-  app.get("/game/:id", async (req, res) => {
+  // Both the current and legacy segment, so previews of links shared before
+  // the rename still render. See core/GameRoute.
+  const previewHandler: RequestHandler<{ id: string }> = async (req, res) => {
     const gameID = req.params.id;
 
     // Validate gameID format
@@ -162,5 +165,7 @@ export function registerGamePreviewRoute(opts: {
       log.error("failed to render join preview", { error });
       return res.status(500).send("Unable to render lobby preview");
     }
-  });
+  };
+  app.get(`/${GAME_ROUTE}/:id`, previewHandler);
+  app.get(`/${LEGACY_GAME_ROUTE}/:id`, previewHandler);
 }
