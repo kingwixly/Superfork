@@ -73,14 +73,14 @@ describe("game-server API URLs with an explicit serverHost", () => {
   it("fetchLobbyListed targets the configured game server", async () => {
     await fetchLobbyListed("game-1");
     expect(lastUrl()).toBe(
-      `https://main.openfront.dev/${ClientEnv.workerPath("game-1")}/api/game/game-1`,
+      `https://main.openfront.dev/${ClientEnv.workerPath("game-1")}/api/g/game-1`,
     );
   });
 
   it("setLobbyListed targets the configured game server", async () => {
     await setLobbyListed("game-1", true);
     expect(lastUrl()).toBe(
-      `https://main.openfront.dev/${ClientEnv.workerPath("game-1")}/api/game/game-1/listing`,
+      `https://main.openfront.dev/${ClientEnv.workerPath("game-1")}/api/g/game-1/listing`,
     );
   });
 
@@ -102,7 +102,7 @@ describe("game-server API URLs on the web build (no serverHost)", () => {
     await fetchLobbyListed("game-1");
     expect(new URL(lastUrl()).origin).toBe(window.location.origin);
     expect(new URL(lastUrl()).pathname).toBe(
-      `/${ClientEnv.workerPath("game-1")}/api/game/game-1`,
+      `/${ClientEnv.workerPath("game-1")}/api/g/game-1`,
     );
   });
 
@@ -110,7 +110,7 @@ describe("game-server API URLs on the web build (no serverHost)", () => {
     await setLobbyListed("game-1", true);
     expect(new URL(lastUrl()).origin).toBe(window.location.origin);
     expect(new URL(lastUrl()).pathname).toBe(
-      `/${ClientEnv.workerPath("game-1")}/api/game/game-1/listing`,
+      `/${ClientEnv.workerPath("game-1")}/api/g/game-1/listing`,
     );
   });
 

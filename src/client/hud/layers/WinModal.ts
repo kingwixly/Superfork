@@ -1,12 +1,6 @@
 import { html, LitElement, TemplateResult } from "lit";
 import { customElement, state } from "lit/decorators.js";
-import {
-  getGamesPlayed,
-  homeHref,
-  isInIframe,
-  translateText,
-  TUTORIAL_VIDEO_URL,
-} from "../../../client/Utils";
+import { homeHref, isInIframe, translateText } from "../../../client/Utils";
 import { Pattern } from "../../../core/CosmeticSchemas";
 import { EventBus } from "../../../core/EventBus";
 import { RankedType } from "../../../core/game/Game";
@@ -23,7 +17,6 @@ import {
   resolveCosmetics,
 } from "../../Cosmetics";
 import { crazyGamesSDK } from "../../CrazyGamesSDK";
-import { steamSDK } from "../../SteamSDK";
 import { SendWinnerEvent } from "../../Transport";
 import { GameView } from "../../view";
 
@@ -115,15 +108,13 @@ export class WinModal extends LitElement implements Controller {
   innerHtml() {
     // The Steam desktop build has nothing to wishlist — fall through to the
     // other promos so the box is never empty.
-    const canWishlist = !steamSDK.isOnSteam();
+    // Superfork: Steam wishlist embed removed.
+    const canWishlist = false;
 
     if (isInIframe()) {
       return canWishlist ? this.steamWishlist() : this.discordDisplay();
     }
 
-    if (!this.isWin && getGamesPlayed() < 3) {
-      return this.renderYoutubeTutorial();
-    }
     if (this.rand < 0.25 && canWishlist) {
       return this.steamWishlist();
     } else if (this.rand < 0.5) {
@@ -131,27 +122,6 @@ export class WinModal extends LitElement implements Controller {
     } else {
       return this.renderPatternButton();
     }
-  }
-
-  renderYoutubeTutorial() {
-    return html`
-      <div class="text-center mb-6 bg-black/30 p-2.5 rounded-sm">
-        <h3 class="text-xl font-semibold text-white mb-3">
-          ${translateText("win_modal.youtube_tutorial")}
-        </h3>
-        <!-- 56.25% = 9:16 -->
-        <div class="relative w-full pb-[56.25%]">
-          <iframe
-            class="absolute top-0 left-0 w-full h-full rounded-sm"
-            src="${this.isVisible ? TUTORIAL_VIDEO_URL : ""}"
-            title="YouTube video player"
-            frameborder="0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-            allowfullscreen
-          ></iframe>
-        </div>
-      </div>
-    `;
   }
 
   renderPatternButton() {

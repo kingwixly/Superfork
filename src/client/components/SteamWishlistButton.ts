@@ -27,6 +27,8 @@ export class SteamWishlistButton extends LitElement {
   }
 
   render() {
+    // Superfork: no Steam store embed/link.
+    return html``;
     if (steamSDK.isOnSteam()) return nothing;
 
     return html`

@@ -184,6 +184,9 @@ export class FeaturedStream extends LitElement {
   }
 
   async firstUpdated() {
+    // Superfork: no Twitch embed.
+    this.dismissed = true;
+    return;
     // Never on CrazyGames or the desktop (Steam) shell: a Twitch embed carries Twitch's own
     // ads and is third-party content, which breaks CrazyGames' "SDK ads only" policy and
     // Steam's no-in-game-ads rules (and can't satisfy Twitch's parent-domain check in the

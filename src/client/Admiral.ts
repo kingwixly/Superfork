@@ -58,6 +58,8 @@ let injected = false;
  * (its adblock popup fires autonomously once the payload runs).
  */
 export function loadAdmiral(): void {
+  // Superfork: never inject Admiral's remote payload.
+  return;
   if (injected) return;
   injected = true;
 

@@ -103,6 +103,8 @@ export class SteamWishlist extends LitElement {
   }
 
   render() {
+    // Superfork: no Steam store embed/link.
+    return html``;
     if (steamSDK.isOnSteam()) return nothing;
 
     const frameWidth = Math.min(

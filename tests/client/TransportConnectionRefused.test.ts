@@ -220,7 +220,7 @@ describe("Transport terminal connection refused", () => {
     connectTransport();
     sockets[0].serverClose(CloseCode.WrongWorker, CloseReason.WrongWorker);
 
-    expect(window.location.href).toBe("http://game.test/game/abcd1234");
+    expect(window.location.href).toBe("http://game.test/g/abcd1234");
     expect(modalMocks.showInGameConfirm).not.toHaveBeenCalled();
   });
 
