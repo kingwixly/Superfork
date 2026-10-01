@@ -637,10 +637,23 @@ export class Config {
         break;
       case UnitType.City:
         info = {
-          cost: this.costWrapper(
-            (numUnits: number) => Math.min(1_000_000, pow2(numUnits) * 125_000),
-            UnitType.City,
-          ),
+          // Superfork: capital levels are city levels. Every level was built
+          // (and recorded) as a City, so owned counts both types against the
+          // City construction record; otherwise promoting a city or levelling
+          // the capital made the next city cheaper instead of dearer.
+          cost: (game: Game, player: Player, extraUnits: number = 0) => {
+            if (
+              player.type() === PlayerType.Human &&
+              this.hasInfiniteGoldFor(player)
+            ) {
+              return 0n;
+            }
+            const owned =
+              player.unitsOwned(UnitType.City) +
+              player.unitsOwned(UnitType.Capital);
+            const n = Math.min(owned, player.unitsConstructed(UnitType.City));
+            return BigInt(Math.min(1_000_000, pow2(n + extraUnits) * 125_000));
+          },
           constructionDuration: this.instantBuild() ? 0 : 2 * 10,
           upgradable: true,
         };

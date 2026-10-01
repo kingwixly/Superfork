@@ -149,6 +149,12 @@ export class UnitDisplay extends LitElement implements Controller {
     const items = categoryItems(cat).filter(
       (i) => !this.game.config().isUnitDisabled(i.unitType),
     );
+    // Digit hotkeys follow the visible tab (see UIState.buildBarItems).
+    if (this.uiState) {
+      this.uiState.buildBarItems = items.map(
+        (i) => i.unitType as PlayerBuildableUnitType,
+      );
+    }
 
     return html`
       <div class="border-t border-white/10 p-0.5 w-full">

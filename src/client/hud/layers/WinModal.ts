@@ -106,6 +106,9 @@ export class WinModal extends LitElement implements Controller {
   }
 
   innerHtml() {
+    // Superfork: no upstream promos (store skins, Discord, Steam) on the
+    // result screen. There are no ads to buy your way out of here.
+    if (this.promosDisabled) return html``;
     // The Steam desktop build has nothing to wishlist — fall through to the
     // other promos so the box is never empty.
     // Superfork: Steam wishlist embed removed.
@@ -123,6 +126,8 @@ export class WinModal extends LitElement implements Controller {
       return this.renderPatternButton();
     }
   }
+
+  private readonly promosDisabled = true;
 
   renderPatternButton() {
     return html`

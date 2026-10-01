@@ -10,7 +10,14 @@ import { CivilianAircraftExecution } from "./CivilianAircraftExecution";
  * aircraft and made a normal amount of traffic look like swarm. With those
  * hidden, the earlier cap of 6 left civilian air too sparse to rival ports.
  */
-const MAX_CIVILIAN_AIRCRAFT = 14;
+const MAX_CIVILIAN_AIRCRAFT = 36;
+/** Civilian aircraft each base type adds to its nation's cap. */
+const CIVILIAN_SLOTS_PER_INTERNATIONAL = 5;
+const CIVILIAN_SLOTS_PER_AIRFIELD = 2;
+/** Airfields fly regional routes: rarer than an international airport. */
+const AIRFIELD_SPAWN_SLOWDOWN = 2.5;
+/** Bases that send and receive civilian flights. */
+const CIVILIAN_BASES = [UnitType.InternationalAirport, UnitType.Airfield];
 /**
  * Multiplier on the trade-ship spawn interval for air traffic.
  *
@@ -18,7 +25,7 @@ const MAX_CIVILIAN_AIRCRAFT = 14;
  * than ships and so complete more trips per minute at the same spawn rate -
  * but only slightly, so air remains a real alternative to sea trade.
  */
-const CIVILIAN_SPAWN_SLOWDOWN = 1.25;
+const CIVILIAN_SPAWN_SLOWDOWN = 1;
 
 /**
  * Lifecycle for the air bases: Airstrip, Airfield, International Airport, and
@@ -51,7 +58,7 @@ export class AirBaseExecution implements Execution {
       this.active = false;
       return;
     }
-    if (this.base.type() === UnitType.InternationalAirport) {
+    if (CIVILIAN_BASES.includes(this.base.type())) {
       this.maybeLaunchCivilian();
     }
   }
@@ -65,13 +72,15 @@ export class AirBaseExecution implements Execution {
     // Hard cap per airport first. Civilian traffic is flavour and income, not
     // a fleet - without a ceiling every airport kept minting until the sky was
     // full, which is what shipped.
+    const owner = this.base.owner();
     const mine =
-      this.base.owner().units(UnitType.CargoJet).length +
-      this.base.owner().units(UnitType.Airliner).length;
-    const airports = this.base
-      .owner()
-      .units(UnitType.InternationalAirport).length;
-    if (mine >= Math.min(MAX_CIVILIAN_AIRCRAFT, airports * 2)) return;
+      owner.units(UnitType.CargoJet).length +
+      owner.units(UnitType.Airliner).length;
+    const slots =
+      owner.units(UnitType.InternationalAirport).length *
+        CIVILIAN_SLOTS_PER_INTERNATIONAL +
+      owner.units(UnitType.Airfield).length * CIVILIAN_SLOTS_PER_AIRFIELD;
+    if (mine >= Math.min(MAX_CIVILIAN_AIRCRAFT, slots)) return;
 
     // Then the shared trade throttle, slowed further: the trade rate is tuned
     // for ports serving a whole nation, and aircraft fly far faster than
@@ -83,7 +92,9 @@ export class AirBaseExecution implements Execution {
           this.spawnRejections,
           this.mg.units(UnitType.CargoJet).length +
             this.mg.units(UnitType.Airliner).length,
-        ) * CIVILIAN_SPAWN_SLOWDOWN;
+        ) *
+      CIVILIAN_SPAWN_SLOWDOWN *
+      (this.base.type() === UnitType.Airfield ? AIRFIELD_SPAWN_SLOWDOWN : 1);
     if (!this.random.chance(rate)) {
       this.spawnRejections++;
       return;
@@ -117,7 +128,7 @@ export class AirBaseExecution implements Execution {
   private pickDestination(): Unit | undefined {
     const me: Player = this.base.owner();
     const candidates = this.mg
-      .units(UnitType.InternationalAirport)
+      .units(CIVILIAN_BASES)
       .filter(
         (a) =>
           a !== this.base &&

@@ -1167,6 +1167,14 @@ export class InputHandler {
       { key: "buildWarship", type: UnitType.Warship },
       { key: "buildMIRV", type: UnitType.MIRV },
     ];
+    // Superfork: plain digits pick slot N of the build bar's visible tab, so
+    // switching to Naval or Air rebinds 1-9 to what the bar is showing.
+    // Shifted digits and letter binds keep their fixed meanings below.
+    const barItems = this.uiState.buildBarItems;
+    const digit = shiftKey ? null : this.digitFromKeyCode(code);
+    if (barItems !== undefined && digit !== null && digit !== "0") {
+      return barItems[Number(digit) - 1] ?? null;
+    }
     for (const { key, type } of buildKeybinds) {
       if (this.keybindMatchesEvent({ code, shiftKey }, this.keybinds[key]))
         return type;

@@ -1,3 +1,4 @@
+import { AirBaseExecution } from "../src/core/execution/AirBaseExecution";
 import { CivilianAircraftExecution } from "../src/core/execution/CivilianAircraftExecution";
 import {
   Game,
@@ -116,5 +117,47 @@ describe("Civilian air traffic", () => {
     for (let i = 0; i < 800 && exec.isActive(); i++) exec.tick(i);
     // It is not paid, but it is not silently deleted either.
     expect(jet.owner()).toBe(me);
+  });
+});
+
+describe("Civilian air traffic volume", () => {
+  let g: Game;
+  let a: Player;
+  let land2: number[];
+
+  beforeEach(async () => {
+    g = await setup("half_land_half_ocean", { instantBuild: true }, [
+      new PlayerInfo("a", PlayerType.Human, null, "a_id"),
+      new PlayerInfo("ai", PlayerType.Nation, null, "ai_id"),
+    ]);
+    a = g.player("a_id");
+    g.config().structureMinDist = () => 1;
+    land2 = [];
+    for (let x = 0; x < g.width(); x++) {
+      for (let y = 0; y < g.height(); y++) {
+        const t = g.ref(x, y);
+        if (g.isLand(t)) land2.push(t);
+      }
+    }
+    for (const t of land2) a.conquer(t);
+  });
+
+  test("AI nations start open to civilian flights", () => {
+    // Nations never touch the policy controls; closed-by-default meant almost
+    // no foreign airport ever accepted a flight.
+    expect(g.player("ai_id").acceptsCivilianFlightsFrom(a)).toBe(true);
+  });
+
+  test("airfields fly regional routes, and one airport can launch several", () => {
+    const intl = a.buildUnit(UnitType.InternationalAirport, land2[0], {});
+    a.buildUnit(UnitType.Airfield, land2[land2.length - 1], {});
+    const exec = new AirBaseExecution(intl);
+    exec.init(g, 0);
+    for (let i = 0; i < 3000; i++) exec.tick(i);
+    const aloft =
+      a.units(UnitType.CargoJet).length + a.units(UnitType.Airliner).length;
+    // One airport plus an airfield used to cap traffic at 2 planes, and an
+    // airfield was never a destination, so a lone airport launched nothing.
+    expect(aloft).toBeGreaterThan(2);
   });
 });

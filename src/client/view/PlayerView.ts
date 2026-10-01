@@ -538,7 +538,10 @@ export class PlayerView {
   }
 
   totalUnitLevels(type: UnitType): number {
-    return this.units(type)
+    // Superfork: a Capital is a promoted City, so its levels count as cities.
+    const types =
+      type === UnitType.City ? [UnitType.City, UnitType.Capital] : [type];
+    return this.units(...types)
       .filter((unit) => !unit.isUnderConstruction())
       .map((unit) => unit.level())
       .reduce((a, b) => a + b, 0);

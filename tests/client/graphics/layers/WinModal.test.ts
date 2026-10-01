@@ -4,7 +4,6 @@ import {
   resolveCosmetics,
   type ResolvedCosmetic,
 } from "../../../../src/client/Cosmetics";
-import type { PurchaseButton } from "../../../../src/client/components/PurchaseButton";
 import "../../../../src/client/hud/layers/WinModal";
 import type { WinModal } from "../../../../src/client/hud/layers/WinModal";
 import { RankedType } from "../../../../src/core/game/Game";
@@ -134,7 +133,7 @@ describe("WinModal pattern promotion", () => {
     modal = undefined;
   });
 
-  it("renders three card-and-purchase promotions from four purchasable patterns", async () => {
+  it("shows no store, Discord or Steam promotions on the result screen", async () => {
     const purchasablePatterns: ResolvedCosmetic[] = [
       "aurora",
       "blaze",
@@ -168,22 +167,12 @@ describe("WinModal pattern promotion", () => {
     modal.requestUpdate();
     await modal.updateComplete;
 
-    const promotions = modal.querySelectorAll("[data-win-cosmetic-promo]");
-    expect(promotions).toHaveLength(3);
-    expect(modal.querySelectorAll("cosmetic-card")).toHaveLength(3);
-    expect(modal.querySelectorAll("purchase-button")).toHaveLength(3);
-    for (const button of modal.querySelectorAll<PurchaseButton>(
-      "purchase-button",
-    )) {
-      expect(button.rarity).toBe("rare");
-    }
-    for (const card of modal.querySelectorAll("cosmetic-card")) {
-      expect(card.querySelector("[data-cosmetic-main]")?.tagName).toBe("DIV");
-      expect(card.querySelectorAll("button")).toHaveLength(0);
-    }
-    const legacyButtonTag = ["cosmetic", "button"].join("-");
-    const legacyContainerTag = ["cosmetic", "container"].join("-");
-    expect(modal.querySelectorAll(legacyButtonTag)).toHaveLength(0);
-    expect(modal.querySelectorAll(legacyContainerTag)).toHaveLength(0);
+    // Superfork: the result screen carries no upstream promos at all.
+    expect(modal.querySelectorAll("[data-win-cosmetic-promo]")).toHaveLength(0);
+    expect(modal.querySelectorAll("purchase-button")).toHaveLength(0);
+    expect(modal.textContent ?? "").not.toContain(
+      "win_modal.support_openfront",
+    );
+    expect(modal.textContent ?? "").not.toContain("Support OpenFront");
   });
 });

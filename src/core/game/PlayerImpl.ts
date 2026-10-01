@@ -222,6 +222,14 @@ export class PlayerImpl implements Player {
     this._troops = toInt(startTroops);
     this._gold = mg.config().startingGold(playerInfo);
     this._pseudo_random = new PseudoRandom(simpleHash(this.playerInfo.id));
+    // Superfork: AI nations never touch the border-policy controls, so they
+    // start open to trade and civilian flights. Closed-by-default left almost
+    // every foreign airport refusing traffic and the sky nearly empty.
+    // Sanctions still close the door per nation.
+    if (playerInfo.playerType === PlayerType.Nation) {
+      this._borderTrade = true;
+      this._publicAirports = true;
+    }
   }
 
   largestClusterBoundingBox: { min: Cell; max: Cell } | null;
@@ -1584,11 +1592,20 @@ export class PlayerImpl implements Player {
     return true;
   }
 
+  /**
+   * The type whose price (and construction record) a level-up uses. A Capital
+   * is a promoted City and levels up by building a City onto it, so it costs
+   * and counts as one; the Capital's own price is zero (promotion is free).
+   */
+  private upgradeCostType(unit: Unit): UnitType {
+    return unit.type() === UnitType.Capital ? UnitType.City : unit.type();
+  }
+
   public canUpgradeUnit(unit: Unit): boolean {
     if (!this.canUpgradeUnitType(unit.type())) {
       return false;
     }
-    if (!this.canBuildUnitType(unit.type())) {
+    if (!this.canBuildUnitType(this.upgradeCostType(unit))) {
       return false;
     }
     if (!this.isUnitValidToUpgrade(unit)) {
@@ -1598,10 +1615,11 @@ export class PlayerImpl implements Player {
   }
 
   upgradeUnit(unit: Unit) {
-    const cost = this.mg.unitInfo(unit.type()).cost(this.mg, this);
+    const costType = this.upgradeCostType(unit);
+    const cost = this.mg.unitInfo(costType).cost(this.mg, this);
     this.removeGold(cost);
     unit.increaseLevel();
-    this.recordUnitConstructed(unit.type());
+    this.recordUnitConstructed(costType);
   }
 
   public buildableUnits(

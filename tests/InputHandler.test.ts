@@ -710,6 +710,48 @@ describe("InputHandler AutoUpgrade", () => {
     });
   });
 
+  describe("Digit keys follow the build bar's visible tab", () => {
+    let uiState: UIState;
+    beforeEach(() => {
+      inputHandler.destroy();
+      uiState = {
+        attackRatio: 20,
+        ghostStructure: null,
+        rocketDirectionUp: true,
+        buildBarItems: [UnitType.Port, UnitType.Warship],
+      } as UIState;
+      inputHandler = new InputHandler(
+        mockGameView,
+        uiState,
+        mockCanvas,
+        eventBus,
+      );
+      inputHandler.initialize();
+    });
+
+    test("Digit2 builds slot 2 of the active tab, not the fixed binding", () => {
+      window.dispatchEvent(
+        new KeyboardEvent("keyup", { code: "Digit2", key: "2" }),
+      );
+      expect(uiState.ghostStructure).toBe(UnitType.Warship);
+    });
+
+    test("switching tabs rebinds the same key", () => {
+      uiState.buildBarItems = [UnitType.MissileSilo];
+      window.dispatchEvent(
+        new KeyboardEvent("keyup", { code: "Numpad1", key: "1" }),
+      );
+      expect(uiState.ghostStructure).toBe(UnitType.MissileSilo);
+    });
+
+    test("a digit past the end of the tab does nothing", () => {
+      window.dispatchEvent(
+        new KeyboardEvent("keyup", { code: "Digit5", key: "5" }),
+      );
+      expect(uiState.ghostStructure).toBeNull();
+    });
+  });
+
   describe("Digit keys still set ghost structure when bound to Numpad", () => {
     beforeEach(() => {
       inputHandler.destroy();

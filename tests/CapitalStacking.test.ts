@@ -101,4 +101,38 @@ describe("Capital stacking and population", () => {
     const cap = promote(shore);
     expect(me.canBuild(UnitType.Port, cap.tile()!)).toBe(cap.tile());
   });
+  test("levelling a capital charges the City price and counts as a city", () => {
+    const cap = promote(land[0]);
+    const cityPrice = game.unitInfo(UnitType.City).cost(game, me);
+    expect(cityPrice).toBeGreaterThan(0n);
+    const goldBefore = me.gold();
+    const builtBefore = me.unitsConstructed(UnitType.City);
+
+    expect(me.canUpgradeUnit(cap)).toBe(true);
+    me.upgradeUnit(cap);
+
+    // Used to charge the Capital's own price (zero) and record a Capital, so
+    // levelling the capital was free and never raised the next city's price.
+    expect(goldBefore - me.gold()).toBe(cityPrice);
+    expect(me.unitsConstructed(UnitType.City)).toBe(builtBefore + 1);
+    expect(game.unitInfo(UnitType.City).cost(game, me)).toBeGreaterThan(
+      cityPrice,
+    );
+  });
+
+  test("a broke player cannot level the capital for free", () => {
+    const cap = promote(land[0]);
+    me.removeGold(me.gold());
+    expect(me.canUpgradeUnit(cap)).toBe(false);
+  });
+
+  test("promoting a city does not make the next city cheaper", () => {
+    const city = me.buildUnit(UnitType.City, land[0], {});
+    city.increaseLevel();
+    const before = game.unitInfo(UnitType.City).cost(game, me);
+    const e = new PromoteCapitalExecution(me, city.id());
+    e.init(game, 0);
+    e.tick(0);
+    expect(game.unitInfo(UnitType.City).cost(game, me)).toBe(before);
+  });
 });
