@@ -284,6 +284,18 @@ export class EventsDisplay extends LitElement implements Controller {
       return;
     }
 
+    // Superfork offers with Accept / Decline buttons live in actionable-events
+    // (see ActionableEvents.onDiplomaticOffer); listing them here too doubled
+    // every offer.
+    if (
+      event.focusPlayerID !== undefined &&
+      (event.message === "events_display.ceasefire_received" ||
+        event.message === "events_display.embassy_requested" ||
+        event.message === "events_display.aid_asked_of_you")
+    ) {
+      return;
+    }
+
     let description: string = event.message;
     if (event.message.startsWith("events_display.")) {
       description = translateText(event.message, this.resolveParams(event));

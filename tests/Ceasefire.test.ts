@@ -1,3 +1,4 @@
+import { vi } from "vitest";
 import {
   CEASEFIRE_DURATION_TICKS,
   CeasefireProposeExecution,
@@ -49,6 +50,28 @@ describe("Ceasefire", () => {
     propose();
     expect(pendingCeasefireBetween(a, b)).toBeDefined();
     expect(a.canAttackPlayer(b)).toBe(true);
+  });
+
+  test("the offer names its proposer so the client can answer it", () => {
+    const spy = vi.spyOn(game, "displayMessage");
+    propose();
+    const call = spy.mock.calls.find(
+      (c) => c[0] === "events_display.ceasefire_received",
+    );
+    expect(call).toBeDefined();
+    // focusPlayerID is what the Accept / Decline buttons answer.
+    expect(call?.[6]).toBe(a.id());
+  });
+
+  test("the proposer is told when an offer is declined", () => {
+    propose();
+    const spy = vi.spyOn(game, "displayMessage");
+    respond(false);
+    expect(
+      spy.mock.calls.some(
+        (c) => c[0] === "events_display.ceasefire_declined" && c[2] === a.id(),
+      ),
+    ).toBe(true);
   });
 
   test("accepting suppresses land attacks both ways", () => {

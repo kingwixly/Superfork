@@ -316,7 +316,7 @@ export function createRenderer(
 
   const layers: Controller[] = [
     new WarshipSelectionController(game, eventBus, transformHandler, view),
-    new TerritorySelectionController(eventBus, game, transformHandler),
+    new TerritorySelectionController(eventBus, game, transformHandler, uiState),
     new BuildPreviewController(
       game,
       eventBus,

@@ -3,7 +3,14 @@ import {
   EMBASSY_SLOW_DURATION,
   EMBASSY_TROOP_PENALTY,
 } from "../configuration/SuperforkUnits";
-import { Execution, Game, Player, Unit, UnitType } from "../game/Game";
+import {
+  Execution,
+  Game,
+  MessageType,
+  Player,
+  Unit,
+  UnitType,
+} from "../game/Game";
 import { TileRef } from "../game/GameMap";
 
 interface PendingEmbassy {
@@ -59,11 +66,33 @@ export class EmbassyRequestExecution implements Execution {
     // definition, and the wire payload is not trusted.
     if (mg.owner(this.tile) !== host) return;
 
+    // The guest pays on opening, so refuse up front rather than letting a
+    // host approve something that then silently fails.
+    const cost = mg.unitInfo(UnitType.Embassy).cost(mg, this.guest);
+    if (this.guest.gold() < cost) return;
     pending.set(key(this.guest, host), {
       guest: this.guest,
       host,
       tile: this.tile,
     });
+    // Nothing told the host a request existed, so it could never be
+    // answered. focusPlayerID carries the guest for the Accept button.
+    mg.displayMessage(
+      "events_display.embassy_request_sent",
+      MessageType.ALLIANCE_REQUEST,
+      this.guest.id(),
+      undefined,
+      { player: host.displayName() },
+    );
+    mg.displayMessage(
+      "events_display.embassy_requested",
+      MessageType.ALLIANCE_REQUEST,
+      host.id(),
+      undefined,
+      { player: this.guest.displayName() },
+      undefined,
+      this.guest.id(),
+    );
   }
 
   tick(ticks: number): void {}
@@ -94,14 +123,39 @@ export class EmbassyResponseExecution implements Execution {
     const req = pending.get(k);
     if (req === undefined) return;
     pending.delete(k);
-    if (!this.accept) return;
+    if (!this.accept) {
+      mg.displayMessage(
+        "events_display.embassy_declined",
+        MessageType.ALLIANCE_REJECTED,
+        guest.id(),
+        undefined,
+        { player: this.host.displayName() },
+      );
+      return;
+    }
 
     // Re-checked: the tile may have changed hands between request and answer.
     if (mg.owner(req.tile) !== this.host) return;
+    // Re-checked too: removeGold clamps, so a guest who spent the money in
+    // the meantime would otherwise get the embassy free.
+    const cost = mg.unitInfo(UnitType.Embassy).cost(mg, guest);
+    if (guest.gold() < cost) return;
 
     // Owned by the GUEST while standing on the HOST's land - that foreign
     // ownership inside another nation's borders is the whole mechanic.
     guest.buildUnit(UnitType.Embassy, req.tile, { host: this.host });
+    for (const [who, other] of [
+      [guest, this.host],
+      [this.host, guest],
+    ] as const) {
+      mg.displayMessage(
+        "events_display.embassy_opened",
+        MessageType.ALLIANCE_ACCEPTED,
+        who.id(),
+        undefined,
+        { player: other.displayName() },
+      );
+    }
   }
 
   tick(ticks: number): void {}

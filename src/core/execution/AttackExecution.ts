@@ -348,10 +348,12 @@ export class AttackExecution implements Execution {
     // attack on the map.
     const defenderHasDefensePost =
       defender !== null &&
-      this.mg.hasUnitNearby(
+      this.mg.anyUnitNearby(
         tile,
         this.mg.config().defensePostRange(),
-        UnitType.DefensePost,
+        [UnitType.DefensePost],
+        // Superfork: an EMP'd post gives no defence bonus.
+        (u) => !u.isDisabled(),
         defender.id(),
       );
     return {

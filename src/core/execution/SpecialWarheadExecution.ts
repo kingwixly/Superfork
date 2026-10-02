@@ -5,6 +5,7 @@ import {
   Game,
   MessageType,
   Player,
+  Structures,
   Unit,
   UnitType,
 } from "../game/Game";
@@ -167,16 +168,21 @@ export class SpecialWarheadExecution implements Execution {
     const until = this.mg.ticks() + EMP_DISABLE_DURATION;
     const radius = EMP_RADIUS;
 
+    // Every structure, not a short list: the list skipped cities, ports,
+    // factories and banks, so an EMP on an economy did nothing visible.
+    const hit: Unit[] = [];
     for (const { unit } of this.mg.nearbyUnits(this.target, radius, [
-      UnitType.SAMLauncher,
-      UnitType.MissileSilo,
-      UnitType.InternationalAirport,
-      UnitType.Airstrip,
-      UnitType.Airfield,
-      UnitType.DefensePost,
+      ...Structures.types,
+      UnitType.Carrier,
     ])) {
       if (unit.owner().id() === this.player.id()) continue;
       unit.disable(until);
+      hit.push(unit);
+    }
+    // isDisabled() is computed from the clock, but clients only learn about a
+    // unit when it changes - so nudge each one again when the burst wears off.
+    if (hit.length > 0) {
+      this.mg.addExecution(new EmpRecoveryExecution(hit, until));
     }
 
     // Aircraft do not survive losing avionics mid-flight.
@@ -188,6 +194,32 @@ export class SpecialWarheadExecution implements Execution {
     }
   }
 
+  isActive(): boolean {
+    return this.active;
+  }
+  activeDuringSpawnPhase(): boolean {
+    return false;
+  }
+}
+
+/** Re-sends EMP'd units to clients on the tick they come back online. */
+class EmpRecoveryExecution implements Execution {
+  private mg: Game;
+  private active = true;
+  constructor(
+    private units: Unit[],
+    private until: number,
+  ) {}
+  init(mg: Game): void {
+    this.mg = mg;
+  }
+  tick(): void {
+    if (this.mg.ticks() < this.until) return;
+    for (const u of this.units) {
+      if (u.isActive()) u.disable(0);
+    }
+    this.active = false;
+  }
   isActive(): boolean {
     return this.active;
   }

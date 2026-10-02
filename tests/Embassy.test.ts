@@ -8,6 +8,7 @@ import {
   EmbassyResponseExecution,
   pendingEmbassyBetween,
 } from "../src/core/execution/EmbassyExecution";
+import { NationDiplomacyBehavior } from "../src/core/execution/nation/NationDiplomacyBehavior";
 import {
   Game,
   Player,
@@ -15,6 +16,7 @@ import {
   PlayerType,
   UnitType,
 } from "../src/core/game/Game";
+import { PseudoRandom } from "../src/core/PseudoRandom";
 import { setup } from "./util/Setup";
 
 let game: Game;
@@ -49,6 +51,21 @@ describe("Embassy", () => {
     for (const t of land.slice(0, half)) guest.conquer(t);
     for (const t of land.slice(half)) host.conquer(t);
     hostTile = land[half];
+    guest.addGold(10_000_000n);
+  });
+
+  test("a guest who cannot pay cannot ask", () => {
+    guest.removeGold(guest.gold());
+    request();
+    expect(pendingEmbassyBetween(guest, host)).toBeUndefined();
+  });
+
+  test("opening charges the guest", () => {
+    const before = guest.gold();
+    request();
+    respond(true);
+    expect(guest.units(UnitType.Embassy).length).toBe(1);
+    expect(guest.gold()).toBeLessThan(before);
   });
 
   test("placement requires the host's consent", () => {
@@ -135,5 +152,38 @@ describe("Embassy", () => {
     request();
     respond(true);
     expect(guest.units(UnitType.Embassy)[0].troops()).toBe(0);
+  });
+});
+
+describe("Embassy requests to AI nations", () => {
+  test("a nation answers instead of leaving the request hanging", async () => {
+    clearPendingEmbassies();
+    const g = await setup("half_land_half_ocean", { instantBuild: true }, [
+      new PlayerInfo("guest", PlayerType.Human, null, "g_id"),
+      new PlayerInfo("ai", PlayerType.Nation, null, "ai_id"),
+    ]);
+    const gst = g.player("g_id");
+    const ai = g.player("ai_id");
+    const land: number[] = [];
+    for (let x = 0; x < g.width(); x++) {
+      for (let y = 0; y < g.height(); y++) {
+        const t = g.ref(x, y);
+        if (g.isLand(t)) land.push(t);
+      }
+    }
+    const half = Math.floor(land.length / 2);
+    for (const t of land.slice(0, half)) gst.conquer(t);
+    for (const t of land.slice(half)) ai.conquer(t);
+    gst.addGold(10_000_000n);
+
+    new EmbassyRequestExecution(gst, ai.id(), land[half]).init(g, 0);
+    expect(pendingEmbassyBetween(gst, ai)).toBeDefined();
+
+    const brain = new NationDiplomacyBehavior(new PseudoRandom(1), g, ai);
+    for (let i = 0; i < 400 && pendingEmbassyBetween(gst, ai); i++) {
+      brain.tick();
+      g.executeNextTick();
+    }
+    expect(pendingEmbassyBetween(gst, ai)).toBeUndefined();
   });
 });

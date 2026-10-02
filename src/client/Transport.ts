@@ -218,6 +218,22 @@ export class SendCeasefireResponseIntentEvent implements GameEvent {
   ) {}
 }
 
+/** Superfork diplomacy: answer an embassy request on your land. */
+export class SendEmbassyResponseIntentEvent implements GameEvent {
+  constructor(
+    public readonly requestor: string,
+    public readonly accept: boolean,
+  ) {}
+}
+
+/** Superfork diplomacy: answer an ally's call for help. */
+export class SendAssistanceResponseIntentEvent implements GameEvent {
+  constructor(
+    public readonly requestor: string,
+    public readonly accept: boolean,
+  ) {}
+}
+
 /** Superfork diplomacy: start or lift a sanction. */
 export class SendSanctionIntentEvent implements GameEvent {
   constructor(
@@ -495,6 +511,20 @@ export class Transport {
     this.eventBus.on(SendCeasefireResponseIntentEvent, (e) =>
       this.sendIntent({
         type: "ceasefire_response",
+        requestor: e.requestor,
+        accept: e.accept,
+      }),
+    );
+    this.eventBus.on(SendEmbassyResponseIntentEvent, (e) =>
+      this.sendIntent({
+        type: "embassy_response",
+        requestor: e.requestor,
+        accept: e.accept,
+      }),
+    );
+    this.eventBus.on(SendAssistanceResponseIntentEvent, (e) =>
+      this.sendIntent({
+        type: "assistance_response",
         requestor: e.requestor,
         accept: e.accept,
       }),

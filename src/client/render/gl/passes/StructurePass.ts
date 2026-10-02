@@ -336,7 +336,12 @@ export class StructurePass {
       this.instanceBuf.float32[off + 0] = x;
       this.instanceBuf.float32[off + 1] = y;
       this.instanceBuf.float32[off + 2] = unit.ownerID;
-      this.instanceBuf.float32[off + 3] = unit.underConstruction ? 1 : 0;
+      // 0 normal, 1 under construction (grey), 2 EMP-disabled (electric blue).
+      this.instanceBuf.float32[off + 3] = unit.underConstruction
+        ? 1
+        : unit.disabled
+          ? 2
+          : 0;
       this.instanceBuf.float32[off + 4] = atlasIdx;
       this.instanceBuf.float32[off + 5] =
         unit.markedForDeletion !== false ? 1 : 0;

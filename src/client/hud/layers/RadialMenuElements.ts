@@ -892,9 +892,8 @@ export const capitalElement: MenuElement = {
  * per Dani, so all negotiation lives in one place rather than alliance sitting
  * alone on the root ring.
  *
- * Only PLAYER-TARGETED verbs are here. Cede-land and embassies need map
- * selection (an area, a tile) rather than a target, which is a different
- * interaction and is not built yet.
+ * Cede-land and embassies start a map selection (TerritorySelectionController);
+ * offers that need an answer get Accept / Decline in actionable-events.
  */
 export const diplomacyMenuElement: MenuElement = {
   id: Slot.Diplomacy,
@@ -1008,7 +1007,13 @@ export const diplomacyMenuElement: MenuElement = {
         { key: "diplomacy.aid", className: "title" },
         { key: "diplomacy.aid_desc", className: "description" },
       ],
-      disabled: () => !friendly,
+      // Aid is asked against whoever you are attacking; with no attack under
+      // way the request had no enemy and silently went nowhere.
+      disabled: () =>
+        !friendly ||
+        !me
+          .outgoingAttacks()
+          .some((a) => a.targetID !== undefined && a.targetID !== null),
       action: () => {
         // Whoever we are currently attacking. Troops rather than an attack:
         // it works at any distance, where an attack needs a shared border the
@@ -1043,7 +1048,9 @@ export const diplomacyMenuElement: MenuElement = {
         { key: "diplomacy.cede", className: "title" },
         { key: "diplomacy.cede_desc", className: "description" },
       ],
-      disabled: () => false,
+      // Mirrors CedeLandExecution.canCedeTo: allies are refused server-side,
+      // so offering the button there only produced a click that did nothing.
+      disabled: () => friendly && target.isAlive(),
       action: () => {
         params.eventBus.emit(
           new BeginTerritorySelectionEvent({

@@ -18,6 +18,8 @@ class TradeStationStopHandler implements TrainStopHandler {
     station: TrainStation,
     trainExecution: TrainExecution,
   ): void {
+    // Superfork: an EMP'd station pays nothing while it is down.
+    if (station.unit.isDisabled()) return;
     const stationOwner = station.unit.owner();
     const trainOwner = trainExecution.owner();
     const gold = mg

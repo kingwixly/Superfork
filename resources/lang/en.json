@@ -730,6 +730,7 @@
     "about_to_expire": "Your alliance with {name} is about to expire!",
     "accept_alliance": "Accept",
     "aid_asked_of_you": "{player} has asked you for military aid",
+    "aid_declined": "{player} declined your call for aid",
     "aid_requested": "You asked {player} for military aid",
     "alliance_accepted": "accepted",
     "alliance_expired": "Your alliance with {name} expired",
@@ -747,11 +748,16 @@
     "betrayal_description": "You broke your alliance with {name}, making you a TRAITOR ({malusPercent}% defense debuff for {durationText})",
     "betrayed_you": "{name} broke their alliance with you",
     "ceasefire_agreed": "Ceasefire agreed with {player}",
+    "ceasefire_declined": "{player} declined your ceasefire",
     "ceasefire_offered": "You offered {player} a ceasefire",
     "ceasefire_received": "{player} has offered you a ceasefire",
     "conquered_no_gold": "Conquered {name} (didn't play, no gold awarded)",
     "duration_second": "1 second",
     "duration_seconds_plural": "{seconds} seconds",
+    "embassy_declined": "{player} declined your embassy",
+    "embassy_opened": "Embassy opened with {player}",
+    "embassy_request_sent": "You asked {player} to host an embassy",
+    "embassy_requested": "{player} wants to open an embassy in your territory",
     "emp_inbound": "{player} - EMP burst inbound",
     "focus": "Focus",
     "hydrogen_bomb_detonated": "{name} - hydrogen bomb detonated",
@@ -1951,6 +1957,15 @@
       "default": "Default"
     },
     "select_skin": "Skin"
+  },
+  "territory_select": {
+    "cancel": "Cancel",
+    "cede_hint": "Click your land to mark it for {player}. Click again to unmark.",
+    "cede_title": "Cede land to {player}",
+    "confirm": "Send",
+    "embassy_hint": "Click a tile inside {player}'s territory",
+    "embassy_title": "Open an embassy with {player}",
+    "tiles": "{count} tiles marked"
   },
   "token_login_modal": {
     "success": "Successfully logged in as {email}!",

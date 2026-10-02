@@ -103,7 +103,7 @@ export class PlayerExecution implements Execution {
         (goldFromWorkers * BANK_ACCRUAL_NUMERATOR) / BANK_ACCRUAL_DENOMINATOR;
       if (perBank > 0n) {
         for (const bank of this.player.units(UnitType.Bank)) {
-          if (!bank.isUnderConstruction()) {
+          if (!bank.isUnderConstruction() && !bank.isDisabled()) {
             bank.addBankReserve(perBank);
           }
         }

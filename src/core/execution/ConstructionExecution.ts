@@ -152,9 +152,15 @@ export class ConstructionExecution implements Execution {
         const target = owner.isPlayer()
           ? (owner as Player)
           : player.asbmTargetNear(this.tile);
-        if (target !== null && target !== undefined) {
-          this.mg.addExecution(new ASBMExecution(player, target.id()));
-        }
+        if (target === null || target === undefined) break;
+        // The salvo is never a unit (only its warheads are), so nothing went
+        // through buildUnit and the ASBM was free. Gate and charge it here,
+        // the way every other purchase is: affordable, with a ready silo.
+        if (player.canBuild(UnitType.ASBM, this.tile) === false) break;
+        player.removeGold(
+          this.mg.unitInfo(UnitType.ASBM).cost(this.mg, player),
+        );
+        this.mg.addExecution(new ASBMExecution(player, target.id()));
         break;
       }
       case UnitType.Bomber: {

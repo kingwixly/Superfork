@@ -8,6 +8,19 @@ export const BOMB_INTERVAL = 25;
 export const BOMB_RADIUS = 6;
 /** Share of the defender's troops a bomb kills inside that radius. */
 export const BOMB_TROOP_KILL = 0.03;
+/** Explosions drawn per bomb run (visual only). */
+const BOMB_IMPACTS = 3;
+/** Impact offsets within the bomb radius, cycled through per run. */
+const IMPACT_PATTERN: readonly [number, number][] = [
+  [0, 0],
+  [4, 1],
+  [-3, 3],
+  [2, -4],
+  [-5, -1],
+  [1, 5],
+  [-2, -5],
+  [5, -3],
+];
 
 /**
  * Bomber.
@@ -63,6 +76,33 @@ export class BomberExecution extends AircraftExecution {
     const killed = Math.floor(victim.troops() * BOMB_TROOP_KILL);
     if (killed > 0) victim.removeTroops(killed);
     this.lastBomb = ticks;
+    this.showImpacts(tile, ticks);
+  }
+
+  /**
+   * Bomb runs had no visual at all - troops just ticked down. The FX layer
+   * draws explosions from units that die having reached their target, so
+   * drop a few shells across the bomb radius and detonate them at once.
+   * Offsets come from the tick so every client draws the same pattern.
+   */
+  private showImpacts(center: TileRef, ticks: number): void {
+    const cx = this.mg.x(center);
+    const cy = this.mg.y(center);
+    for (let i = 0; i < BOMB_IMPACTS; i++) {
+      // Integer offsets only: the simulation must stay deterministic, and
+      // trig differs between JS engines.
+      const [ox, oy] = IMPACT_PATTERN[(ticks + i * 3) % IMPACT_PATTERN.length];
+      const x = cx + ox;
+      const y = cy + oy;
+      if (!this.mg.isValidCoord(x, y)) continue;
+      const shell = this.owner().buildUnit(
+        UnitType.Shell,
+        this.mg.ref(x, y),
+        {},
+      );
+      shell.setReachedTarget();
+      shell.delete(false);
+    }
   }
 
   protected onArrived(): void {

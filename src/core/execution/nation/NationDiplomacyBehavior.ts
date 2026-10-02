@@ -1,11 +1,19 @@
 import { PseudoRandom } from "../../PseudoRandom";
 import { Game, Player, PlayerType, Relation } from "../../game/Game";
 import {
+  AssistanceResponseExecution,
+  pendingAssistanceFrom,
+} from "../AssistanceExecution";
+import {
   CEASEFIRE_DURATION_TICKS,
   CeasefireProposeExecution,
   CeasefireResponseExecution,
   pendingCeasefireBetween,
 } from "../CeasefireExecution";
+import {
+  EmbassyResponseExecution,
+  pendingEmbassyBetween,
+} from "../EmbassyExecution";
 import { SanctionExecution } from "../SanctionExecution";
 
 /** Troop ratio below which a nation considers suing for peace. */
@@ -43,7 +51,13 @@ export class NationDiplomacyBehavior {
     // nations an unthrottled call was ~2500 lookups per tick across the
     // fleet before any other behaviour ran. A truce offer waiting a few
     // ticks for an answer is invisible in play.
-    if (this.random.chance(20)) this.answerCeasefires();
+    // Embassy and aid answers ride the ceasefire throttle rather than drawing
+    // their own random number: an extra draw shifts every later decision this
+    // nation makes, which reshuffled whole benchmark games.
+    if (this.random.chance(20)) {
+      this.answerCeasefires();
+      this.answerEmbassiesAndAid();
+    }
     if (this.random.chance(200)) this.maybeSanction();
     if (this.random.chance(300)) this.maybeSueForPeace();
   }
@@ -61,6 +75,37 @@ export class NationDiplomacyBehavior {
       this.game.addExecution(
         new CeasefireResponseExecution(this.player, other.id(), accept),
       );
+    }
+  }
+
+  /**
+   * Answer embassy requests and calls for help. Without this, asking a nation
+   * for either waited forever: only humans could ever answer.
+   */
+  private answerEmbassiesAndAid(): void {
+    for (const other of this.game.players()) {
+      if (other.id() === this.player.id()) continue;
+
+      // Host an embassy for anyone we are not hostile to; an embassy is a
+      // foothold, so a nation that distrusts you says no.
+      if (pendingEmbassyBetween(other, this.player) !== undefined) {
+        const accept =
+          this.player.isFriendly(other) ||
+          this.player.relation(other) >= Relation.Neutral;
+        this.game.addExecution(
+          new EmbassyResponseExecution(this.player, other.id(), accept),
+        );
+      }
+
+      // Help an ally unless we are fighting for our own life.
+      if (pendingAssistanceFrom(other, this.player) !== undefined) {
+        const accept =
+          this.player.isFriendly(other) &&
+          this.player.troops() > other.troops() * LOSING_RATIO;
+        this.game.addExecution(
+          new AssistanceResponseExecution(this.player, other.id(), accept),
+        );
+      }
     }
   }
 

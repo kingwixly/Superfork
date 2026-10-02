@@ -247,6 +247,7 @@ export class UnitImpl implements Unit {
       lastPos: this._lastTile,
       health: this.hasHealth() ? Number(this._health) : undefined,
       underConstruction: this._underConstruction,
+      disabled: this.isDisabled() ? true : undefined,
       targetUnitId: this._targetUnit?.id() ?? undefined,
       targetTile: this.targetTile() ?? undefined,
       missileTimerQueue: this._missileTimerQueue,

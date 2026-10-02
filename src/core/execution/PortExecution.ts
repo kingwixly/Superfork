@@ -34,6 +34,10 @@ export class PortExecution implements Execution {
     if (this.port.isUnderConstruction()) {
       return;
     }
+    // Superfork: an EMP'd port launches no trade.
+    if (this.port.isDisabled()) {
+      return;
+    }
 
     if (!this.port.hasTrainStation()) {
       this.createStation();

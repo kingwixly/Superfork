@@ -197,6 +197,8 @@ export interface UnitUpdate {
   targetTile?: TileRef; // Only for nukes
   health?: number;
   underConstruction?: boolean;
+  /** Superfork: knocked out by an EMP burst right now. */
+  disabled?: boolean;
   missileTimerQueue: number[];
   level: number;
   hasTrainStation: boolean;

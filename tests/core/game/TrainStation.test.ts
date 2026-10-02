@@ -63,6 +63,7 @@ describe("TrainStation", () => {
       tile: vi.fn().mockReturnValue({ x: 0, y: 0 }),
       type: vi.fn(),
       isActive: vi.fn().mockReturnValue(true),
+      isDisabled: vi.fn().mockReturnValue(false),
     } as any;
 
     trainExecution = {

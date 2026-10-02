@@ -91,6 +91,8 @@ export class RequestAssistanceExecution implements Execution {
       helper.id(),
       undefined,
       { player: this.requestor.displayName() },
+      undefined,
+      this.requestor.id(),
     );
   }
 
@@ -133,7 +135,16 @@ export class AssistanceResponseExecution implements Execution {
     const req = pendingRequests.get(k);
     if (req === undefined) return;
     pendingRequests.delete(k);
-    if (!this.accept) return;
+    if (!this.accept) {
+      mg.displayMessage(
+        "events_display.aid_declined",
+        MessageType.ALLIANCE_REJECTED,
+        requestor.id(),
+        undefined,
+        { player: this.helper.displayName() },
+      );
+      return;
+    }
 
     const committed = Math.floor(this.helper.troops() * ASSISTANCE_COMMITMENT);
     if (committed <= 0) return;

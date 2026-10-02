@@ -2,6 +2,7 @@ import {
   ASBM_WARHEAD_COUNT,
   ASBMExecution,
 } from "../src/core/execution/ASBMExecution";
+import { ConstructionExecution } from "../src/core/execution/ConstructionExecution";
 import {
   EMP_DISABLE_DURATION,
   NEUTRON_KILL_SHARE,
@@ -112,6 +113,48 @@ describe("Special warheads", () => {
     const mine = me.buildUnit(UnitType.SAMLauncher, land[0], {});
     fire(UnitType.EMPBomb, land[0]);
     expect(mine.isDisabled()).toBe(false);
+  });
+
+  test("an EMP knocks out the economy too, not just defences", () => {
+    const city = foe.buildUnit(UnitType.City, land[0], {});
+    const port = foe.buildUnit(UnitType.Port, land[1], {});
+    const bank = foe.buildUnit(UnitType.Bank, land[2], {});
+    fire(UnitType.EMPBomb, land[0]);
+    // The burst used to hit only SAMs, silos, airports and posts, so an EMP
+    // dropped on cities and ports visibly did nothing.
+    for (const u of [city, port, bank]) {
+      expect(u.isActive()).toBe(true);
+      expect(u.isDisabled()).toBe(true);
+    }
+  });
+
+  test("clients are told a structure is disabled, and when it recovers", () => {
+    const city = foe.buildUnit(UnitType.City, land[0], {});
+    fire(UnitType.EMPBomb, land[0]);
+    expect(city.toUpdate().disabled).toBe(true);
+    for (let i = 0; i <= EMP_DISABLE_DURATION + 1; i++) game.executeNextTick();
+    expect(city.toUpdate().disabled).toBeUndefined();
+  });
+
+  test("buying an ASBM costs its price and needs the money", () => {
+    for (const t of land.slice(0, 20)) me.conquer(t);
+    me.buildUnit(UnitType.MissileSilo, land[0], {});
+    foe.buildUnit(UnitType.Warship, water, { patrolTile: water });
+    const price = game.unitInfo(UnitType.ASBM).cost(game, me);
+    const target = land[land.length - 1];
+
+    const before = me.gold();
+    const buy = new ConstructionExecution(me, UnitType.ASBM, target);
+    buy.init(game, 0);
+    buy.tick(0);
+    // The salvo never went through buildUnit, so it used to be free.
+    expect(before - me.gold()).toBe(price);
+
+    me.removeGold(me.gold());
+    const broke = new ConstructionExecution(me, UnitType.ASBM, target);
+    broke.init(game, 0);
+    broke.tick(0);
+    expect(me.gold()).toBe(0n);
   });
 
   test("an ASBM sinks ships and ignores everything else", () => {

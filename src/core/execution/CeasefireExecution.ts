@@ -54,12 +54,16 @@ export class CeasefireProposeExecution implements Execution {
       undefined,
       { player: recipient.displayName() },
     );
+    // focusPlayerID names the proposer so the client can attach
+    // Accept / Decline buttons that answer the right offer.
     mg.displayMessage(
       "events_display.ceasefire_received",
       MessageType.ALLIANCE_REQUEST,
       recipient.id(),
       undefined,
       { player: this.proposer.displayName() },
+      undefined,
+      this.proposer.id(),
     );
   }
 
@@ -91,7 +95,16 @@ export class CeasefireResponseExecution implements Execution {
     const offer = pendingCeasefires.get(k);
     if (offer === undefined) return;
     pendingCeasefires.delete(k);
-    if (!this.accept) return;
+    if (!this.accept) {
+      mg.displayMessage(
+        "events_display.ceasefire_declined",
+        MessageType.ALLIANCE_REJECTED,
+        proposer.id(),
+        undefined,
+        { player: this.recipient.displayName() },
+      );
+      return;
+    }
 
     // Recorded on both sides. canAttackPlayer checks both directions anyway,
     // but storing it symmetrically means either party can see and reason

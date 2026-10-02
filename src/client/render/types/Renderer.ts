@@ -110,6 +110,8 @@ export interface UnitState {
   markedForDeletion: number | false; // -1 -> false, else tick
   health: number | null;
   underConstruction: boolean;
+  /** Superfork: knocked out by an EMP. Optional so test fixtures can omit it. */
+  disabled?: boolean;
   targetUnitId: number | null;
   targetTile: number | null;
   troops: number;

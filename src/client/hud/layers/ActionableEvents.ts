@@ -7,6 +7,7 @@ import {
   AllianceRequestReplyUpdate,
   AllianceRequestUpdate,
   BrokeAllianceUpdate,
+  DisplayMessageUpdate,
   GameUpdateType,
 } from "../../../core/game/GameUpdates";
 import { Controller } from "../../Controller";
@@ -16,6 +17,9 @@ import {
   SendAllianceExtensionIntentEvent,
   SendAllianceRejectIntentEvent,
   SendAllianceRequestIntentEvent,
+  SendAssistanceResponseIntentEvent,
+  SendCeasefireResponseIntentEvent,
+  SendEmbassyResponseIntentEvent,
 } from "../../Transport";
 import { UIState } from "../../UIState";
 import { getMessageTypeClasses, translateText } from "../../Utils";
@@ -61,6 +65,7 @@ export class ActionableEvents extends LitElement implements Controller {
       GameUpdateType.AllianceExtension,
       this.onAllianceExtensionEvent.bind(this),
     ],
+    [GameUpdateType.DisplayEvent, this.onDiplomaticOffer.bind(this)],
   ] as const;
 
   createRenderRoot() {
@@ -204,6 +209,87 @@ export class ActionableEvents extends LitElement implements Controller {
         this.requestUpdate();
       }
     }
+  }
+
+  /**
+   * Superfork offers that need an answer: ceasefires, embassy requests and
+   * calls for help. The server only ever sent these as plain messages, so
+   * there was nothing to click and every offer waited forever.
+   */
+  private onDiplomaticOffer(update: DisplayMessageUpdate) {
+    const myPlayer = this.game.myPlayer();
+    if (!myPlayer || update.playerID !== myPlayer.smallID()) return;
+    if (update.focusPlayerID === undefined) return;
+
+    let respond: (accept: boolean) => void;
+    let description: string;
+    const from = this.game.playerBySmallID(update.focusPlayerID);
+    if (!from.isPlayer()) return;
+    const requestor = from as PlayerView;
+    const name = requestor.displayName();
+    switch (update.message) {
+      case "events_display.ceasefire_received":
+        description = translateText("events_display.ceasefire_received", {
+          player: name,
+        });
+        respond = (accept) =>
+          this.eventBus.emit(
+            new SendCeasefireResponseIntentEvent(requestor.id(), accept),
+          );
+        break;
+      case "events_display.embassy_requested":
+        description = translateText("events_display.embassy_requested", {
+          player: name,
+        });
+        respond = (accept) =>
+          this.eventBus.emit(
+            new SendEmbassyResponseIntentEvent(requestor.id(), accept),
+          );
+        break;
+      case "events_display.aid_asked_of_you":
+        description = translateText("events_display.aid_asked_of_you", {
+          player: name,
+        });
+        respond = (accept) =>
+          this.eventBus.emit(
+            new SendAssistanceResponseIntentEvent(requestor.id(), accept),
+          );
+        break;
+      default:
+        return;
+    }
+    const answer = respond;
+
+    this.eventBus.emit(new PlaySoundEffectEvent("alliance-suggested"));
+    this.addEvent({
+      description,
+      buttons: [
+        {
+          text: translateText("events_display.focus"),
+          className: "btn-gray",
+          action: () => this.eventBus.emit(new GoToPlayerEvent(requestor)),
+          preventClose: true,
+        },
+        {
+          text: translateText("events_display.accept_alliance"),
+          className: "btn",
+          action: () => answer(true),
+        },
+        {
+          text: translateText("events_display.reject_alliance"),
+          className: "btn-info",
+          action: () => answer(false),
+        },
+      ],
+      // Not ALLIANCE_REQUEST: tick() drops those unless an alliance request
+      // is still pending, which would remove these offers immediately.
+      type: MessageType.RENEW_ALLIANCE,
+      createdAt: this.game.ticks(),
+      priority: 0,
+      duration: 60 * 10,
+      focusID: update.focusPlayerID,
+      requestorID: update.focusPlayerID,
+    });
   }
 
   onAllianceRequestEvent(update: AllianceRequestUpdate) {

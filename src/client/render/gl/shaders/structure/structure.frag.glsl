@@ -175,6 +175,10 @@ void main() {
     vec3 ac = texelFetch(uAffiliation, ivec2(int(vOwnerID), 1), 0).rgb;
     fillColor = vec4(darken(ac, uFillDarken), 1.0);
     borderColor = vec4(darken(ac, uBorderDarken), 1.0);
+  } else if (vUnderConstruction > 1.5) {
+    // Superfork: EMP-disabled. Dark steel with an electric-blue rim.
+    fillColor = vec4(60.0/255.0, 72.0/255.0, 96.0/255.0, 1.0);
+    borderColor = vec4(90.0/255.0, 200.0/255.0, 255.0/255.0, 1.0);
   } else if (vUnderConstruction > 0.5) {
     fillColor = vec4(198.0/255.0, 198.0/255.0, 198.0/255.0, 1.0);
     borderColor = vec4(127.0/255.0, 127.0/255.0, 127.0/255.0, 1.0);
