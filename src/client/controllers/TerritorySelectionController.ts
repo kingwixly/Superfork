@@ -188,7 +188,9 @@ export class TerritorySelectionController implements Controller {
     const banner = document.createElement("div");
     banner.setAttribute("data-territory-select", "");
     banner.style.cssText =
-      "position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:60;" +
+      // Below the hovered-nation info bar (which sits top-centre and covered
+      // this banner) and above every other HUD layer.
+      "position:fixed;top:84px;left:50%;transform:translateX(-50%);z-index:10000;" +
       "background:rgba(15,23,42,.92);color:#fff;border:1px solid rgba(255,255,255,.2);" +
       "border-radius:10px;padding:10px 14px;font:14px system-ui,sans-serif;" +
       "display:flex;gap:12px;align-items:center;max-width:calc(100vw - 32px);flex-wrap:wrap;";

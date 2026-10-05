@@ -61,6 +61,16 @@ export class PlayerExecution implements Execution {
       if (owner === this.player) {
         continue;
       }
+      // Superfork: an embassy stands on its HOST's land by design. Without
+      // this the host captured it on the very next tick, so opening one
+      // looked like nothing happened. Anyone else who takes the ground
+      // still seizes it.
+      if (
+        u.type() === UnitType.Embassy &&
+        u.embassyHost()?.id() === owner.id()
+      ) {
+        continue;
+      }
 
       const captor = this.mg!.player(owner.id());
       if (u.type() === UnitType.DefensePost) {

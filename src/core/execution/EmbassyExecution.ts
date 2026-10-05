@@ -33,6 +33,9 @@ export function pendingEmbassyBetween(
   return pending.get(key(guest, host));
 }
 
+export function hasPendingEmbassies(): boolean {
+  return pending.size > 0;
+}
 export function clearPendingEmbassies(): void {
   pending.clear();
 }

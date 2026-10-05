@@ -2,16 +2,19 @@ import { PseudoRandom } from "../../PseudoRandom";
 import { Game, Player, PlayerType, Relation } from "../../game/Game";
 import {
   AssistanceResponseExecution,
+  hasPendingAssistance,
   pendingAssistanceFrom,
 } from "../AssistanceExecution";
 import {
   CEASEFIRE_DURATION_TICKS,
   CeasefireProposeExecution,
   CeasefireResponseExecution,
+  hasPendingCeasefires,
   pendingCeasefireBetween,
 } from "../CeasefireExecution";
 import {
   EmbassyResponseExecution,
+  hasPendingEmbassies,
   pendingEmbassyBetween,
 } from "../EmbassyExecution";
 import { SanctionExecution } from "../SanctionExecution";
@@ -51,10 +54,18 @@ export class NationDiplomacyBehavior {
     // nations an unthrottled call was ~2500 lookups per tick across the
     // fleet before any other behaviour ran. A truce offer waiting a few
     // ticks for an answer is invisible in play.
-    // Embassy and aid answers ride the ceasefire throttle rather than drawing
-    // their own random number: an extra draw shifts every later decision this
-    // nation makes, which reshuffled whole benchmark games.
-    if (this.random.chance(20)) {
+    // Offers are answered on the next diplomacy tick whenever one is
+    // waiting. They used to need a 1-in-20 roll on top of the attack-rate
+    // cadence, so a nation took minutes to answer an embassy or ceasefire
+    // and players reasonably concluded it was broken. The roll is still
+    // drawn: skipping it would shift every later random decision.
+    const roll = this.random.chance(20);
+    if (
+      roll ||
+      hasPendingCeasefires() ||
+      hasPendingEmbassies() ||
+      hasPendingAssistance()
+    ) {
       this.answerCeasefires();
       this.answerEmbassiesAndAid();
     }

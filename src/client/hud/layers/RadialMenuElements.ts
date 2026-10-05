@@ -1048,9 +1048,7 @@ export const diplomacyMenuElement: MenuElement = {
         { key: "diplomacy.cede", className: "title" },
         { key: "diplomacy.cede_desc", className: "description" },
       ],
-      // Mirrors CedeLandExecution.canCedeTo: allies are refused server-side,
-      // so offering the button there only produced a click that did nothing.
-      disabled: () => friendly && target.isAlive(),
+      disabled: () => false,
       action: () => {
         params.eventBus.emit(
           new BeginTerritorySelectionEvent({

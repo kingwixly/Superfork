@@ -791,6 +791,32 @@ describe("GameView.frameData() — renderer contract", () => {
     expect(game.frameData().structuresDirty).toBe(false);
   });
 
+  it("an EMP'd structure re-uploads structures, and so does its recovery", () => {
+    const game = makeGameView();
+    const city = { id: 7, unitType: UnitType.City, pos: 5 };
+    const gu1 = makeEmptyGu(1);
+    gu1.updates[GameUpdateType.Unit] = [makeUnitUpdate(city)];
+    game.update(gu1);
+    game.update(makeEmptyGu(2));
+    expect(game.frameData().structuresDirty).toBe(false);
+
+    const gu3 = makeEmptyGu(3);
+    gu3.updates[GameUpdateType.Unit] = [
+      makeUnitUpdate({ ...city, disabled: true }),
+    ];
+    game.update(gu3);
+    // Disabling used to change nothing the structure pass watched, so the
+    // building never turned blue.
+    expect(game.frameData().structuresDirty).toBe(true);
+    expect(game.unit(7)?.state.disabled).toBe(true);
+
+    const gu4 = makeEmptyGu(4);
+    gu4.updates[GameUpdateType.Unit] = [makeUnitUpdate(city)];
+    game.update(gu4);
+    expect(game.frameData().structuresDirty).toBe(true);
+    expect(game.unit(7)?.state.disabled).toBe(false);
+  });
+
   it("frame.relationMatrix marks same-team players as friendly (team games)", () => {
     const RELATION_FRIENDLY = 1;
     const RELATION_NEUTRAL = 0;

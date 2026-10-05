@@ -70,6 +70,8 @@ export class UnitImpl implements Unit {
   private _disabledUntil = 0;
   /** Superfork: player-given capital name. See Unit.capitalName. */
   private _capitalName = "";
+  /** Superfork: the nation an embassy stands in. See Unit.embassyHost. */
+  private _embassyHost: Player | undefined;
 
   constructor(
     private _type: UnitType,
@@ -94,6 +96,7 @@ export class UnitImpl implements Unit {
       };
     }
     this._troops = "troops" in params ? (params.troops ?? 0) : 0;
+    this._embassyHost = "host" in params ? params.host : undefined;
     this._lastSetSafeFromPirates =
       "lastSetSafeFromPirates" in params
         ? (params.lastSetSafeFromPirates ?? 0)
@@ -149,6 +152,10 @@ export class UnitImpl implements Unit {
 
   capitalName(): string {
     return this._capitalName;
+  }
+
+  embassyHost(): Player | undefined {
+    return this._embassyHost;
   }
 
   setCapitalName(name: string): void {

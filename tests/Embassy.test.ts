@@ -9,6 +9,7 @@ import {
   pendingEmbassyBetween,
 } from "../src/core/execution/EmbassyExecution";
 import { NationDiplomacyBehavior } from "../src/core/execution/nation/NationDiplomacyBehavior";
+import { PlayerExecution } from "../src/core/execution/PlayerExecution";
 import {
   Game,
   Player,
@@ -84,6 +85,19 @@ describe("Embassy", () => {
     // Foreign ownership inside another nation's borders is the mechanic.
     expect(embassies[0].owner()).toBe(guest);
     expect(game.owner(hostTile)).toBe(host);
+  });
+
+  test("it survives on the host's land instead of being captured next tick", () => {
+    request();
+    respond(true);
+    // PlayerExecution hands any structure to whoever owns its tile, so the
+    // host used to capture the embassy immediately and it never appeared.
+    const pe = new PlayerExecution(host);
+    pe.init(game, game.ticks());
+    pe.tick(game.ticks());
+    const embassy = guest.units(UnitType.Embassy)[0];
+    expect(embassy?.owner()).toBe(guest);
+    expect(embassy?.embassyHost()).toBe(host);
   });
 
   test("declining builds nothing", () => {

@@ -486,6 +486,9 @@ export class GameView implements GameMap {
           (unit.state.ownerID !== update.ownerID ||
             unit.state.level !== update.level ||
             unit.state.isActive !== update.isActive ||
+            // Superfork: EMP'd / recovered. Without this the structure pass
+            // never re-uploaded, so a disabled building never changed colour.
+            (unit.state.disabled ?? false) !== (update.disabled ?? false) ||
             (unit.state.underConstruction &&
               !(update.underConstruction ?? false)))
         ) {

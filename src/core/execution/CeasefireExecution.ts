@@ -168,6 +168,11 @@ export function pendingCeasefireBetween(
   return pendingCeasefires.get(key(a, b));
 }
 
+/** Whether any offer is waiting anywhere. */
+export function hasPendingCeasefires(): boolean {
+  return pendingCeasefires.size > 0;
+}
+
 /** Clear all pending offers. Called when a game ends. */
 export function clearPendingCeasefires(): void {
   pendingCeasefires.clear();

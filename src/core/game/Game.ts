@@ -750,6 +750,8 @@ export interface Unit {
    */
   capitalName(): string;
   setCapitalName(name: string): void;
+  /** Superfork: the nation an Embassy stands in. Undefined for other units. */
+  embassyHost(): Player | undefined;
 
   // Disabled state (superfork). Set by an EMP burst: the unit still stands
   // but does nothing until the tick passes.
@@ -969,10 +971,16 @@ export interface Player {
     targetTile: TileRef,
     validTiles?: TileRef[] | null,
   ): TileRef | false;
+  /**
+   * `free` (superfork): a conversion of something the player already owns,
+   * such as demoting a capital back to a city. Charges nothing and is not
+   * counted as a new build for pricing.
+   */
   buildUnit<T extends UnitType>(
     type: T,
     spawnTile: TileRef,
     params: UnitParams<T>,
+    opts?: { free?: boolean },
   ): Unit;
 
   // Returns the existing unit that can be upgraded,

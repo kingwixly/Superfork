@@ -1501,6 +1501,7 @@ export class PlayerImpl implements Player {
     type: T,
     spawnTile: TileRef,
     params: UnitParams<T>,
+    opts?: { free?: boolean },
   ): Unit {
     if (this.mg.config().isUnitDisabled(type)) {
       throw new Error(
@@ -1508,7 +1509,8 @@ export class PlayerImpl implements Player {
       );
     }
 
-    const cost = this.mg.unitInfo(type).cost(this.mg, this);
+    const free = opts?.free === true;
+    const cost = free ? 0n : this.mg.unitInfo(type).cost(this.mg, this);
     const b = new UnitImpl(
       type,
       this.mg,
@@ -1519,7 +1521,7 @@ export class PlayerImpl implements Player {
     );
     this._units.push(b);
     this._myUnitsVersion++;
-    this.recordUnitConstructed(type);
+    if (!free) this.recordUnitConstructed(type);
     this.removeGold(cost);
     this.removeTroops("troops" in params ? (params.troops ?? 0) : 0);
     this.mg.addUpdate(b.toUpdate());

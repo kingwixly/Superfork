@@ -208,7 +208,9 @@ export class DemoteCapitalExecution implements Execution {
 
     const level = capital.level();
     capital.delete(false);
-    const city = this.player.buildUnit(UnitType.City, tile, {});
+    // Free: the city already exists and was paid for. buildUnit used to
+    // charge the full city price, so demoting cost money.
+    const city = this.player.buildUnit(UnitType.City, tile, {}, { free: true });
     for (let i = 1; i < level; i++) {
       city.increaseLevel();
     }

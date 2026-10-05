@@ -31,6 +31,10 @@ export function pendingAssistanceFrom(
   return pendingRequests.get(key(requestor, helper));
 }
 
+export function hasPendingAssistance(): boolean {
+  return pendingRequests.size > 0;
+}
+
 export function clearPendingAssistance(): void {
   pendingRequests.clear();
 }

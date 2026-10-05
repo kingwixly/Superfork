@@ -1,4 +1,7 @@
-import { PromoteCapitalExecution } from "../src/core/execution/CapitalExecution";
+import {
+  DemoteCapitalExecution,
+  PromoteCapitalExecution,
+} from "../src/core/execution/CapitalExecution";
 import {
   Game,
   Player,
@@ -134,5 +137,16 @@ describe("Capital stacking and population", () => {
     e.init(game, 0);
     e.tick(0);
     expect(game.unitInfo(UnitType.City).cost(game, me)).toBe(before);
+  });
+  test("demoting the capital back to a city is free", () => {
+    const cap = promote(land[0]);
+    cap.increaseLevel();
+    const gold = me.gold();
+    const e = new DemoteCapitalExecution(me, cap.id());
+    e.init(game, 0);
+    e.tick(0);
+    // buildUnit charged the full city price, so demoting cost money.
+    expect(me.gold()).toBe(gold);
+    expect(me.units(UnitType.City)[0]?.level()).toBe(2);
   });
 });

@@ -48,12 +48,10 @@ describe("Cede land", () => {
     expect(me.numTilesOwned()).toBe(16);
   });
 
-  test("you may not cede to an ally", () => {
-    // Allies coordinate freely already; allowing this makes territory
-    // fungible between them.
-    expect(CedeLandExecution.canCedeTo(me, ally)).toBe(false);
+  test("you may cede to an ally", () => {
+    expect(CedeLandExecution.canCedeTo(me, ally)).toBe(true);
     cede(ally, land.slice(0, 4));
-    expect(ally.numTilesOwned()).toBe(5);
+    expect(ally.numTilesOwned()).toBe(9);
   });
 
   test("you may cede to a dead nation", () => {
