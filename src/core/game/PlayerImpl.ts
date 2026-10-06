@@ -152,6 +152,8 @@ export class PlayerImpl implements Player {
    * and switch something off.
    */
   private _borderTrade = false;
+  /** Superfork: protected air-landing beachheads. See Player.addAirhead. */
+  private _airheads: { tile: TileRef; until: Tick }[] = [];
   private _publicAirports = false;
   /** Superfork: active ceasefires, keyed by the other party. */
   private ceasefires = new Map<PlayerID, Ceasefire>();
@@ -1244,6 +1246,18 @@ export class PlayerImpl implements Player {
     const sanction =
       other.hasSanctionAgainst(this) || this.hasSanctionAgainst(other);
     return !embargo && !sanction && other.id() !== this.id();
+  }
+
+  addAirhead(tile: TileRef, untilTick: Tick): void {
+    this._airheads.push({ tile, until: untilTick });
+  }
+
+  activeAirheads(): TileRef[] {
+    const now = this.mg.ticks();
+    if (this._airheads.length > 0) {
+      this._airheads = this._airheads.filter((a) => a.until > now);
+    }
+    return this._airheads.map((a) => a.tile);
   }
 
   applyTroopSlow(untilTick: Tick): void {

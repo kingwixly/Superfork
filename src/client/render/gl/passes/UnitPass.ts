@@ -48,16 +48,20 @@ import {
   SMOOTHED_NUKE_TYPES,
   TrainType,
   UT_AIRLINER,
+  UT_ASBM_WARHEAD,
   UT_ATOM_BOMB,
+  UT_BOMBER,
   UT_CARGO_JET,
   UT_CARRIER,
   UT_CORVETTE,
   UT_DESTROYER,
+  UT_EMP_BOMB,
   UT_FIGHTER_JET,
   UT_HYDROGEN_BOMB,
   UT_INTERCEPTOR,
   UT_MIRV,
   UT_MIRV_WARHEAD,
+  UT_NEUTRON_BOMB,
   UT_SAM_MISSILE,
   UT_SHELL,
   UT_TRADE_SHIP,
@@ -119,6 +123,18 @@ const UNIT_ORDER = [
 
 const ATLAS_COLS = UNIT_ORDER.length;
 
+/**
+ * Superfork types with no sprite column of their own, drawn with the nearest
+ * existing sprite. Without this they were invisible in flight: a neutron
+ * bomb or EMP showed only its blast, an ASBM salvo nothing, a bomber nothing.
+ */
+const SPRITE_ALIASES: Readonly<Record<string, (typeof UNIT_ORDER)[number]>> = {
+  [UT_NEUTRON_BOMB]: UT_ATOM_BOMB,
+  [UT_EMP_BOMB]: UT_ATOM_BOMB,
+  [UT_ASBM_WARHEAD]: UT_MIRV_WARHEAD,
+  [UT_BOMBER]: UT_TRANSPORT_JET,
+};
+
 /** Atlas column of the hydrogen bomb — drives the GPU glow halo. */
 const HYDROGEN_BOMB_COL = UNIT_ORDER.indexOf(UT_HYDROGEN_BOMB);
 
@@ -160,6 +176,9 @@ const TRAIN_CARRIAGE_LOADED_COL = UNIT_ORDER.indexOf("TrainCarriageLoaded");
 
 /** Nuke + warhead types — rendered with flickering hot colors */
 const FLICKER_TYPES: ReadonlySet<string> = new Set([
+  UT_NEUTRON_BOMB,
+  UT_EMP_BOMB,
+  UT_ASBM_WARHEAD,
   UT_ATOM_BOMB,
   UT_HYDROGEN_BOMB,
   UT_MIRV,
@@ -171,6 +190,9 @@ const FLICKER_TYPES: ReadonlySet<string> = new Set([
 /** Missile/projectile types — rendered on top of structures in the layer order.
  *  Ground/sea units (boats, trains) render below structures. */
 const MISSILE_TYPES: ReadonlySet<string> = new Set([
+  UT_NEUTRON_BOMB,
+  UT_EMP_BOMB,
+  UT_ASBM_WARHEAD,
   UT_ATOM_BOMB,
   UT_HYDROGEN_BOMB,
   UT_MIRV,
@@ -313,8 +335,9 @@ export class UnitPass {
 
     // Build unitType string → atlas column mapping
     for (let i = 0; i < header.unitTypes.length; i++) {
+      const name = header.unitTypes[i];
       const col = UNIT_ORDER.indexOf(
-        header.unitTypes[i] as (typeof UNIT_ORDER)[number],
+        (SPRITE_ALIASES[name] ?? name) as (typeof UNIT_ORDER)[number],
       );
       if (col >= 0) {
         this.typeToAtlasCol.set(header.unitTypes[i], col);

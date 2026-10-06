@@ -154,6 +154,10 @@ export const WARSHIP_INTERCEPT_RANGE = 45;
  */
 export const ASBM_TARGET_RADIUS = 30;
 
+/** Neutron bomb and EMP burst blast radii, in tiles. */
+export const NEUTRON_RADIUS = 40;
+export const EMP_RADIUS = 55;
+
 export const SUPERFORK_UNITS: Record<string, SuperforkUnitSpec> = {
   // ------------------------------- Structures -------------------------------
 

@@ -32,29 +32,41 @@ function fire(type: UnitType.NeutronBomb | UnitType.EMPBomb, at: number) {
   for (let i = 0; i < 2000 && e.isActive(); i++) e.tick(i);
 }
 
-describe("Special warheads", () => {
-  beforeEach(async () => {
-    game = await setup("half_land_half_ocean", { instantBuild: true }, [
-      new PlayerInfo("me", PlayerType.Human, null, "me_id"),
-      new PlayerInfo("foe", PlayerType.Human, null, "foe_id"),
-    ]);
-    me = game.player("me_id");
-    foe = game.player("foe_id");
-    me.addGold(100_000_000n);
-    foe.addGold(100_000_000n);
-    game.config().structureMinDist = () => 1;
+// ASBM warheads fly from the silo now that one exists; let them land.
+function flyWarheads() {
+  for (let i = 0; i < 400; i++) game.executeNextTick();
+}
 
-    land = [];
-    water = -1;
-    for (let x = 0; x < game.width(); x++) {
-      for (let y = 0; y < game.height(); y++) {
-        const t = game.ref(x, y);
-        if (game.isLand(t)) land.push(t);
-        else if (water < 0 && game.isWater(t)) water = t;
-      }
+async function setupGame() {
+  game = await setup("half_land_half_ocean", { instantBuild: true }, [
+    new PlayerInfo("me", PlayerType.Human, null, "me_id"),
+    new PlayerInfo("foe", PlayerType.Human, null, "foe_id"),
+  ]);
+  me = game.player("me_id");
+  foe = game.player("foe_id");
+  me.addGold(100_000_000n);
+  foe.addGold(100_000_000n);
+  game.config().structureMinDist = () => 1;
+
+  land = [];
+  water = -1;
+  for (let x = 0; x < game.width(); x++) {
+    for (let y = 0; y < game.height(); y++) {
+      const t = game.ref(x, y);
+      if (game.isLand(t)) land.push(t);
+      else if (water < 0 && game.isWater(t)) water = t;
     }
-    for (const t of land) foe.conquer(t);
-  });
+  }
+  // Superfork warheads launch from a silo now, exactly like nukes; with
+  // none they no longer fire at all.
+  const mine = land.slice(-30);
+  for (const t of land.slice(0, -30)) foe.conquer(t);
+  for (const t of mine) me.conquer(t);
+  me.buildUnit(UnitType.MissileSilo, mine[mine.length - 1], {});
+}
+
+describe("Special warheads", () => {
+  beforeEach(setupGame);
 
   test("a neutron bomb kills troops", () => {
     foe.setTroops(10_000);
@@ -164,6 +176,7 @@ describe("Special warheads", () => {
     const e = new ASBMExecution(me, foe.id());
     e.init(game, 0);
     e.tick(0);
+    flyWarheads();
 
     expect(ship.isActive()).toBe(false);
     expect(city.isActive()).toBe(true);
@@ -179,6 +192,7 @@ describe("Special warheads", () => {
     const e = new ASBMExecution(me, foe.id());
     e.init(game, 0);
     e.tick(0);
+    flyWarheads();
 
     const sunk = ships.filter((s) => !s.isActive()).length;
     expect(sunk).toBe(ASBM_WARHEAD_COUNT);
@@ -197,12 +211,15 @@ describe("Special warheads", () => {
     const e = new ASBMExecution(me, foe.id());
     e.init(game, 0);
     e.tick(0);
+    flyWarheads();
 
     expect(carrier.isActive()).toBe(false);
   });
 });
 
 describe("Superfork warheads are interceptable", () => {
+  beforeEach(setupGame);
+
   test("a shot-down neutron bomb never detonates", () => {
     foe.setTroops(10_000);
     const e = new SpecialWarheadExecution(me, UnitType.NeutronBomb, land[0]);
@@ -237,5 +254,25 @@ describe("Superfork warheads are interceptable", () => {
     e.init(game, 0);
     e.tick(0);
     expect(me.units(UnitType.NeutronBomb).length).toBe(1);
+  });
+  test("no silo, no launch - and no free blast at the target", () => {
+    for (const silo of me.units(UnitType.MissileSilo)) silo.delete(false);
+    foe.setTroops(10_000);
+    const e = new SpecialWarheadExecution(me, UnitType.NeutronBomb, land[0]);
+    e.init(game, 0);
+    for (let i = 0; i < 2000 && e.isActive(); i++) e.tick(i);
+    // It used to fall back to spawning AT the target: a blast with no
+    // missile, from a player with no silo at all.
+    expect(foe.troops()).toBe(10_000);
+    expect(me.units(UnitType.NeutronBomb).length).toBe(0);
+  });
+
+  test("it launches from the silo and puts it on cooldown", () => {
+    const silo = me.units(UnitType.MissileSilo)[0];
+    const e = new SpecialWarheadExecution(me, UnitType.EMPBomb, land[0]);
+    e.init(game, 0);
+    e.tick(0);
+    expect(me.units(UnitType.EMPBomb)[0]?.tile()).toBe(silo.tile());
+    expect(silo.isInCooldown()).toBe(true);
   });
 });

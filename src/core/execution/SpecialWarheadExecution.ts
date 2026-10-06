@@ -1,4 +1,5 @@
 import { translateText } from "../../client/Utils";
+import { EMP_RADIUS, NEUTRON_RADIUS } from "../configuration/SuperforkUnits";
 import {
   Aircraft,
   Execution,
@@ -6,33 +7,22 @@ import {
   MessageType,
   Player,
   Structures,
+  TrajectoryTile,
   Unit,
   UnitType,
 } from "../game/Game";
 import { TileRef } from "../game/GameMap";
-import {
-  AirPosition,
-  airPositionOf,
-  stepToward,
-  tileOfAirPosition,
-} from "./utils/AirMotion";
+import { UniversalPathFinding } from "../pathfinding/PathFinder";
+import { ParabolaUniversalPathFinder } from "../pathfinding/PathFinder.Parabola";
+import { PathStatus } from "../pathfinding/types";
 
 /** How long an EMP burst leaves structures inert. */
 export const EMP_DISABLE_DURATION = 30 * 10; // 30s
-/** Blast radii, in tiles. */
-export const NEUTRON_RADIUS = 40;
-export const EMP_RADIUS = 55;
+// Blast radii live in SuperforkUnits so Config (and the client) can read
+// them without importing an execution.
+export { EMP_RADIUS, NEUTRON_RADIUS };
 /** Share of troops a neutron bomb kills inside the radius. */
 export const NEUTRON_KILL_SHARE = 0.6;
-
-/**
- * Tiles per tick in flight.
- *
- * Slower than an ASBM warhead: these are area weapons aimed at ground, and the
- * flight time is what gives SAMs, interceptors and warships a chance to engage
- * them. A weapon nothing can stop is not a weapon, it is a button.
- */
-export const SPECIAL_WARHEAD_SPEED = 3;
 
 /**
  * Neutron bomb and EMP burst.
@@ -56,16 +46,26 @@ export class SpecialWarheadExecution implements Execution {
   private mg: Game;
   private active = true;
   private warhead: Unit | undefined;
-  private pos: AirPosition | undefined;
+  private src: TileRef | undefined;
+  private pathFinder: ParabolaUniversalPathFinder;
+  private speed = 0;
 
   constructor(
     private player: Player,
     private type: UnitType.NeutronBomb | UnitType.EMPBomb,
     private target: TileRef,
+    private rocketDirectionUp = true,
   ) {}
 
   init(mg: Game, ticks: number): void {
     this.mg = mg;
+    // Same arc and speed as an atom bomb, so they read as missiles from a
+    // silo rather than something that crawls across the map.
+    this.speed = mg.config().nukeSpeed(UnitType.AtomBomb);
+    this.pathFinder = UniversalPathFinding.Parabola(mg, {
+      increment: this.speed,
+      directionUp: this.rocketDirectionUp,
+    });
 
     // The alert is how a player identifies the weapon - the game announces
     // every inbound warhead by name - so a silent EMP or neutron strike would
@@ -87,44 +87,49 @@ export class SpecialWarheadExecution implements Execution {
   }
 
   tick(ticks: number): void {
-    const warhead = this.warhead;
-
-    // Launched but not yet built: put it on the pad.
-    if (warhead === undefined) {
-      const silo = this.player
-        .units(UnitType.MissileSilo)
-        .find((u) => u.isActive() && !u.isUnderConstruction());
-      const from = silo?.tile() ?? this.target;
-      this.warhead = this.player.buildUnit(this.type, from, {
+    // Launch: from a ready silo, exactly like a nuke. These used to fall
+    // back to spawning AT the target when there was no silo, so without one
+    // the player saw a blast and no missile at all.
+    if (this.warhead === undefined) {
+      const spawn = this.player.canBuild(this.type, this.target);
+      if (spawn === false) {
+        this.active = false;
+        return;
+      }
+      this.src = spawn;
+      this.warhead = this.player.buildUnit(this.type, spawn, {
         targetTile: this.target,
-        trajectory: [],
+        trajectory: this.trajectory(),
       });
-      this.pos = airPositionOf(this.mg, from);
+      this.player
+        .units(UnitType.MissileSilo)
+        .find((silo) => silo.tile() === spawn)
+        ?.launch();
       return;
     }
 
-    // Shot down. No detonation - which is the whole point of making these
-    // FLY: spawning them at the target and killing them instantly, as the
-    // previous version did, meant nothing could ever intercept a neutron
-    // bomb or an EMP.
+    // Shot down. No detonation - the point of making these fly is that SAMs,
+    // interceptors and warships get a chance at them.
+    const warhead = this.warhead;
     if (!warhead.isActive()) {
       this.active = false;
       return;
     }
 
-    const pos = this.pos;
-    if (pos === undefined) {
+    const result = this.pathFinder.next(this.src!, this.target, this.speed);
+    if (result.status === PathStatus.NEXT) {
+      warhead.move(result.node);
+      warhead.setTrajectoryIndex(this.pathFinder.currentIndex());
+      warhead.setTargetable(this.targetable(warhead.tile()));
+      return;
+    }
+    if (result.status !== PathStatus.COMPLETE) {
+      // No path: nothing sensible to do but fizzle.
+      warhead.delete(false);
       this.active = false;
       return;
     }
-
-    const arrived = stepToward(
-      pos,
-      airPositionOf(this.mg, this.target),
-      SPECIAL_WARHEAD_SPEED,
-    );
-    warhead.move(tileOfAirPosition(this.mg, pos));
-    if (!arrived) return;
+    warhead.move(result.node);
 
     // Marked reached so the FX layer draws a detonation rather than the
     // interception shockwave it uses for warheads killed in flight.
@@ -137,6 +142,21 @@ export class SpecialWarheadExecution implements Execution {
     } else {
       this.detonateEMP();
     }
+  }
+
+  /** Same targetable window as a nuke: near launch and near impact. */
+  private targetable(tile: TileRef): boolean {
+    const r2 = this.mg.config().defaultNukeTargetableRange() ** 2;
+    return (
+      this.mg.euclideanDistSquared(tile, this.target) < r2 ||
+      (this.src !== undefined &&
+        this.mg.euclideanDistSquared(this.src, tile) < r2)
+    );
+  }
+
+  private trajectory(): TrajectoryTile[] {
+    const tiles = this.pathFinder.findPath(this.src!, this.target) ?? [];
+    return tiles.map((tile) => ({ tile, targetable: this.targetable(tile) }));
   }
 
   /**

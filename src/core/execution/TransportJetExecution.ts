@@ -30,6 +30,8 @@ import { AttackExecution } from "./AttackExecution";
  */
 const LANDING_RADIUS = 4;
 const MAX_LANDING_TILES = 40;
+/** How long a landing is safe from being cut off and absorbed: 45s. */
+export const AIRHEAD_GRACE_TICKS = 45 * 10;
 
 export class TransportJetExecution extends AircraftExecution {
   private landed = false;
@@ -88,6 +90,15 @@ export class TransportJetExecution extends AircraftExecution {
         this.attacker.conquer(tile);
         seized++;
         if (seized >= MAX_LANDING_TILES) break;
+      }
+      // Every tile seized here is an island in enemy land, and the enclave
+      // rule absorbed it on the next cluster check - so a landing captured
+      // nothing. Protect it long enough for the attack to break out.
+      if (seized > 0) {
+        this.attacker.addAirhead(
+          this.target,
+          this.mg.ticks() + AIRHEAD_GRACE_TICKS,
+        );
       }
 
       this.mg.addExecution(

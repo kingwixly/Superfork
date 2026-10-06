@@ -14,6 +14,7 @@ import { ToggleStructureEvent } from "../../InputHandler";
 import { UIState } from "../../UIState";
 import { renderNumber, translateText } from "../../Utils";
 import { GameView } from "../../view";
+import { SILO_WEAPONS } from "../SiloWeapons";
 import {
   buildCategories,
   categoryItems,
@@ -97,6 +98,12 @@ export class UnitDisplay extends LitElement implements Controller {
   private canBuild(item: UnitType): boolean {
     if (this.game?.config().isUnitDisabled(item)) return false;
     const player = this.game?.myPlayer();
+    if (SILO_WEAPONS.has(item)) {
+      return (
+        this.cost(item) <= (player?.gold() ?? 0n) &&
+        (player?.units(UnitType.MissileSilo).length ?? 0) > 0
+      );
+    }
     switch (item) {
       case UnitType.AtomBomb:
       case UnitType.HydrogenBomb:
@@ -279,6 +286,9 @@ export class UnitDisplay extends LitElement implements Controller {
             switch (unitType) {
               case UnitType.AtomBomb:
               case UnitType.HydrogenBomb:
+              case UnitType.NeutronBomb:
+              case UnitType.EMPBomb:
+              case UnitType.ASBM:
                 this.eventBus?.emit(
                   new ToggleStructureEvent([
                     UnitType.MissileSilo,

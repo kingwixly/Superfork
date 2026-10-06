@@ -141,7 +141,12 @@ export class ConstructionExecution implements Execution {
       case UnitType.NeutronBomb:
       case UnitType.EMPBomb:
         this.mg.addExecution(
-          new SpecialWarheadExecution(player, this.constructionType, this.tile),
+          new SpecialWarheadExecution(
+            player,
+            this.constructionType,
+            this.tile,
+            this.rocketDirectionUp ?? true,
+          ),
         );
         break;
       case UnitType.ASBM: {

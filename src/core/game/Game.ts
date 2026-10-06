@@ -1056,6 +1056,17 @@ export interface Player {
    */
   acceptsCivilianFlightsFrom(from: Player): boolean;
 
+  // Air-landing beachheads (superfork).
+  /**
+   * Protect the territory around `tile` from being cut off and absorbed until
+   * `untilTick`. An air landing is, by design, an island inside enemy land;
+   * without this the enclave rule handed it straight back the next time
+   * clusters were checked, so transport jets captured nothing.
+   */
+  addAirhead(tile: TileRef, untilTick: Tick): void;
+  /** Airhead tiles still under protection. */
+  activeAirheads(): TileRef[];
+
   // Embassy seizure debuff (superfork).
   /** Slow the player's attacks until `untilTick`. */
   applyTroopSlow(untilTick: Tick): void;

@@ -21,6 +21,7 @@ import {
 import { TileRef } from "../../core/game/GameMap";
 import { UserSettings } from "../../core/game/UserSettings";
 import { Controller } from "../Controller";
+import { ARC_WEAPONS, SILO_WEAPONS } from "../hud/SiloWeapons";
 import {
   ConfirmGhostStructureEvent,
   MouseMoveEvent,
@@ -39,7 +40,7 @@ import { GameView } from "../view";
 
 /** True for nuke types (AtomBomb, HydrogenBomb): ghost is preserved after placement so user can place multiple or keep selection (Enter/key confirm). */
 export function shouldPreserveGhostAfterBuild(unitType: UnitType): boolean {
-  return unitType === UnitType.AtomBomb || unitType === UnitType.HydrogenBomb;
+  return ARC_WEAPONS.has(unitType);
 }
 
 // tSamIntercept value used to flag an untargetable (impassable) destination:
@@ -230,11 +231,7 @@ export class BuildPreviewController implements Controller {
     let targetingAlly = false;
     const myPlayer = this.game.myPlayer();
     const nukeType = this.ghostUnit.buildableUnit.type;
-    if (
-      tileRef &&
-      myPlayer &&
-      (nukeType === UnitType.AtomBomb || nukeType === UnitType.HydrogenBomb)
-    ) {
+    if (tileRef && myPlayer && ARC_WEAPONS.has(nukeType)) {
       this.connectedAllySmallIds.clear();
       const allies = myPlayer.allies();
       for (let i = 0; i < allies.length; i++) {
@@ -328,7 +325,7 @@ export class BuildPreviewController implements Controller {
       return;
     }
     const type = this.ghostUnit.buildableUnit.type;
-    if (type !== UnitType.AtomBomb && type !== UnitType.HydrogenBomb) {
+    if (!ARC_WEAPONS.has(type)) {
       this.clearNukeTrajectory();
       return;
     }
@@ -454,6 +451,8 @@ export class BuildPreviewController implements Controller {
       }
       case UnitType.AtomBomb:
       case UnitType.HydrogenBomb:
+      case UnitType.NeutronBomb:
+      case UnitType.EMPBomb:
         rangeRadius = this.game.config().nukeMagnitudes(u.type).outer;
         break;
       case UnitType.Factory:
@@ -550,10 +549,9 @@ export class BuildPreviewController implements Controller {
       }
 
       const isNuke = unitType === UnitType.AtomBomb;
-      const rocketDirectionUp =
-        unitType === UnitType.AtomBomb || unitType === UnitType.HydrogenBomb
-          ? this.uiState.rocketDirectionUp
-          : undefined;
+      const rocketDirectionUp = ARC_WEAPONS.has(unitType)
+        ? this.uiState.rocketDirectionUp
+        : undefined;
       this.eventBus.emit(
         new BuildUnitIntentEvent(
           unitType,
@@ -575,12 +573,7 @@ export class BuildPreviewController implements Controller {
     unitType: UnitType,
   ): boolean {
     const duration = this.userSettings.nukeAllianceSafetyDuration();
-    if (
-      duration <= 0 ||
-      (unitType !== UnitType.AtomBomb &&
-        unitType !== UnitType.HydrogenBomb &&
-        unitType !== UnitType.MIRV)
-    ) {
+    if (duration <= 0 || !SILO_WEAPONS.has(unitType)) {
       return false;
     }
 

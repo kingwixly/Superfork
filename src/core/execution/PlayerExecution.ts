@@ -320,6 +320,16 @@ export class PlayerExecution implements Execution {
       (tile) => this.mg.ownerID(tile) === this.player.smallID(),
     );
 
+    // Superfork: a fresh air landing is an enclave on purpose. Leave it
+    // alone while its protection lasts so the assault has time to break out.
+    // Checked against the whole pocket, not the border cluster: the landing
+    // tile is in the middle, never on the border.
+    const airheads = this.player.activeAirheads();
+    if (airheads.length > 0) {
+      const pocket = new Set(tiles);
+      if (airheads.some((t) => pocket.has(t))) return;
+    }
+
     if (this.player.numTilesOwned() === tiles.length) {
       this.mg.conquerPlayer(capturing, this.player);
     }

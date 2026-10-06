@@ -23,7 +23,12 @@ import { UserSettings } from "../game/UserSettings";
 import { GameConfig, TeamCountConfig } from "../Schemas";
 import { NukeType } from "../StatsSchemas";
 import { assertNever, sigmoid, toInt, within } from "../Util";
-import { CAPITAL_TROOP_CAP_BONUS, superforkUnitSpec } from "./SuperforkUnits";
+import {
+  CAPITAL_TROOP_CAP_BONUS,
+  EMP_RADIUS,
+  NEUTRON_RADIUS,
+  superforkUnitSpec,
+} from "./SuperforkUnits";
 
 declare global {
   interface Window {
@@ -1125,6 +1130,14 @@ export class Config {
         return { inner: 12, outer: 30 };
       case UnitType.HydrogenBomb:
         return { inner: 80, outer: 100 };
+      // Superfork warheads. nukeSpawn asks for these in team games (to
+      // protect teammates' buildings) and threw for anything not listed.
+      case UnitType.NeutronBomb:
+        return { inner: NEUTRON_RADIUS, outer: NEUTRON_RADIUS };
+      case UnitType.EMPBomb:
+        return { inner: EMP_RADIUS, outer: EMP_RADIUS };
+      case UnitType.ASBM:
+        return { inner: 0, outer: 0 };
     }
     throw new Error(`Unknown nuke type: ${unitType}`);
   }

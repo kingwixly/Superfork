@@ -18,6 +18,7 @@ import { BeginTerritorySelectionEvent } from "../../controllers/TerritorySelecti
 import { UIState } from "../../UIState";
 import { renderNumber, translateText } from "../../Utils";
 import { GameView, PlayerView } from "../../view";
+import { ARC_WEAPONS } from "../SiloWeapons";
 import { BuildItemDisplay, BuildMenu, flattenedBuildTable } from "./BuildMenu";
 import { ChatIntegration } from "./ChatIntegration";
 import { EmojiTable } from "./EmojiTable";
@@ -585,11 +586,9 @@ function createMenuElements(
                 ),
               );
             } else if (buildableUnit.canBuild !== false) {
-              const rocketDirectionUp =
-                item.unitType === UnitType.AtomBomb ||
-                item.unitType === UnitType.HydrogenBomb
-                  ? params.uiState?.rocketDirectionUp
-                  : undefined;
+              const rocketDirectionUp = ARC_WEAPONS.has(item.unitType)
+                ? params.uiState?.rocketDirectionUp
+                : undefined;
               params.eventBus.emit(
                 new BuildUnitIntentEvent(
                   buildableUnit.type,

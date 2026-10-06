@@ -1,3 +1,7 @@
+import {
+  EMP_RADIUS,
+  NEUTRON_RADIUS,
+} from "../../../core/configuration/SuperforkUnits";
 /**
  * Canonical unit type string constants.
  *
@@ -45,6 +49,7 @@ export const UT_TRANSPORT_JET = "Transport Jet" as const;
 export const UT_CARGO_JET = "Cargo Jet" as const;
 export const UT_AIRLINER = "Airliner" as const;
 export const UT_INTERCEPTOR = "Interceptor" as const;
+export const UT_BOMBER = "Bomber" as const;
 // Superfork ships. Destroyer gets its own sprite: it and the reworked
 // Warship coexist, so sharing a column would make them indistinguishable
 // exactly when telling them apart matters most.
@@ -59,6 +64,7 @@ export const AIRCRAFT_TYPES: ReadonlySet<string> = new Set([
   UT_CARGO_JET,
   UT_AIRLINER,
   UT_INTERCEPTOR,
+  UT_BOMBER,
 ]);
 
 // ---------------------------------------------------------------------------
@@ -94,6 +100,9 @@ export const SMOOTHED_NUKE_TYPES: ReadonlySet<string> = new Set([
   UT_HYDROGEN_BOMB,
   UT_MIRV,
   UT_MIRV_WARHEAD,
+  // Superfork warheads fly the same silo arc, with the same trail.
+  UT_NEUTRON_BOMB,
+  UT_EMP_BOMB,
 ]);
 
 /** Blast radii (in tiles) matching upstream DefaultConfig.nukeMagnitudes(). */
@@ -103,6 +112,10 @@ export const NUKE_MAGNITUDES: Readonly<
   [UT_ATOM_BOMB]: { inner: 12, outer: 30 },
   [UT_HYDROGEN_BOMB]: { inner: 80, outer: 100 },
   [UT_MIRV_WARHEAD]: { inner: 12, outer: 18 },
+  // Superfork: the in-flight target circle. Neither has an inner "crater"
+  // ring, so both rings sit on the blast radius.
+  [UT_NEUTRON_BOMB]: { inner: NEUTRON_RADIUS, outer: NEUTRON_RADIUS },
+  [UT_EMP_BOMB]: { inner: EMP_RADIUS, outer: EMP_RADIUS },
 };
 
 // ---------------------------------------------------------------------------
@@ -141,4 +154,10 @@ export const ALL_UNIT_TYPES = [
   UT_CORVETTE,
   UT_CARRIER,
   UT_DESTROYER,
+  // Superfork: drawn with aliased sprites (see UnitPass SPRITE_ALIASES).
+  // Missing here meant the renderer never learned these names at all.
+  UT_NEUTRON_BOMB,
+  UT_EMP_BOMB,
+  UT_ASBM_WARHEAD,
+  UT_BOMBER,
 ] as const;
