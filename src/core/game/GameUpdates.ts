@@ -17,7 +17,6 @@ import {
   WarshipState,
 } from "./Game";
 import { TileRef } from "./GameMap";
-import type { ProvinceSnapshot } from "./Provinces";
 
 export interface GameUpdateViewData {
   tick: number;
@@ -107,8 +106,6 @@ export enum GameUpdateType {
   SpawnPhaseEnd,
   GamePaused,
   DonateEvent,
-  // Superfork
-  Province,
 }
 
 export type GameUpdate =
@@ -134,13 +131,7 @@ export type GameUpdate =
   | EmbargoUpdate
   | SpawnPhaseEndUpdate
   | GamePausedUpdate
-  | DonateEventUpdate
-  | ProvinceUpdate;
-
-/** Superfork: a province was drawn, changed hands, edited or removed. */
-export interface ProvinceUpdate extends ProvinceSnapshot {
-  type: GameUpdateType.Province;
-}
+  | DonateEventUpdate;
 
 export interface BonusEventUpdate {
   type: GameUpdateType.BonusEvent;

@@ -44,7 +44,6 @@ import { MoveWarshipExecution } from "./MoveWarshipExecution";
 import { NationExecution } from "./NationExecution";
 import { NoOpExecution } from "./NoOpExecution";
 import { PauseExecution } from "./PauseExecution";
-import { ProvinceExecution } from "./ProvinceExecution";
 import {
   PuppetCommandExecution,
   PuppetLiberateExecution,
@@ -242,8 +241,6 @@ export class Executor {
         return new LoadCorvetteExecution(player, intent.unitId, intent.troops);
       case "launch_corvette":
         return new LaunchCorvetteExecution(player, intent.unitId, intent.tile);
-      case "province":
-        return new ProvinceExecution(player, intent);
       case "withdraw_bank":
         return new WithdrawBankExecution(player, intent.unitId);
       case "rename_capital":

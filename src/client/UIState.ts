@@ -16,6 +16,4 @@ export interface UIState {
    * belong to the selection, not to attacks or unit selection.
    */
   territorySelection?: boolean;
-  /** True while the province border tool is open; drags paint, not pan. */
-  provinceDrawing?: boolean;
 }

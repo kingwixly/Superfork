@@ -94,7 +94,6 @@ export class HostLobbyModal extends BaseModal {
   @state() private whitelistEnabled: boolean = false;
   @state() private allowedPublicIds: string = "";
   @state() private waterNukes: boolean = false;
-  @state() private provinces: boolean = false;
   @state() private lobbyId = "";
   @state() private lobbyUrlSuffix = "";
   @state() private clients: ClientInfo[] = [];
@@ -569,10 +568,6 @@ export class HostLobbyModal extends BaseModal {
                     checked: this.waterNukes,
                   },
                   {
-                    labelKey: "game_settings.provinces",
-                    checked: this.provinces,
-                  },
-                  {
                     labelKey: "game_settings.doomsday_clock",
                     checked: this.doomsdayClock,
                     doomsdayClockSpeed: this.doomsdayClockSpeed,
@@ -865,7 +860,6 @@ export class HostLobbyModal extends BaseModal {
     this.whitelistEnabled = false;
     this.allowedPublicIds = "";
     this.waterNukes = false;
-    this.provinces = false;
     this.hostCheatsEnabled = false;
     this.hostCheatInfiniteGold = false;
     this.hostCheatInfiniteTroops = false;
@@ -962,10 +956,6 @@ export class HostLobbyModal extends BaseModal {
         break;
       case "game_settings.water_nukes":
         this.waterNukes = checked;
-        this.putGameConfig();
-        break;
-      case "game_settings.provinces":
-        this.provinces = checked;
         this.putGameConfig();
         break;
       case "game_settings.doomsday_clock":
@@ -1458,7 +1448,6 @@ export class HostLobbyModal extends BaseModal {
               ? (this.parseAllowedPublicIds() ?? [])
               : [],
             waterNukes: this.waterNukes ? true : null,
-            provinces: this.provinces ? true : null,
             hostCheats: this.hostCheatsEnabled
               ? {
                   infiniteGold: this.hostCheatInfiniteGold || undefined,

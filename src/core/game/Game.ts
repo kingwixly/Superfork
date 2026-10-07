@@ -12,7 +12,6 @@ import {
   UnitUpdate,
 } from "./GameUpdates";
 import { MotionPlanRecord } from "./MotionPlans";
-import { ProvinceManager } from "./Provinces";
 import { RailNetwork } from "./RailNetwork";
 import { Stats } from "./Stats";
 import { ReadonlyTileSet } from "./TileSet";
@@ -1159,8 +1158,6 @@ export interface Game extends GameMap {
   hasPlayer(id: PlayerID): boolean;
   /** Superfork: journal of player-to-player tile transfers. Drives Liberation. */
   conquestLedger(): ConquestLedger;
-  /** Superfork: player-drawn provinces (empty unless the lobby enabled them). */
-  provinces(): ProvinceManager;
   addPlayer(playerInfo: PlayerInfo): Player;
   terraNullius(): TerraNullius;
   owner(ref: TileRef): Player | TerraNullius;

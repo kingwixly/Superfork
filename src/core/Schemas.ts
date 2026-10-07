@@ -77,8 +77,7 @@ export type Intent =
   | RenameCapitalIntent
   | WithdrawBankIntent
   | LoadCorvetteIntent
-  | LaunchCorvetteIntent
-  | ProvinceIntent;
+  | LaunchCorvetteIntent;
 
 export type AttackIntent = z.infer<typeof AttackIntentSchema>;
 
@@ -95,7 +94,6 @@ export type CeasefireResponseIntent = z.infer<
 >;
 export type SanctionIntent = z.infer<typeof SanctionIntentSchema>;
 export type CedeLandIntent = z.infer<typeof CedeLandIntentSchema>;
-export type ProvinceIntent = z.infer<typeof ProvinceIntentSchema>;
 export type TreatyCreateIntent = z.infer<typeof TreatyCreateIntentSchema>;
 export type TreatyInviteIntent = z.infer<typeof TreatyInviteIntentSchema>;
 export type TreatyResponseIntent = z.infer<typeof TreatyResponseIntentSchema>;
@@ -585,8 +583,6 @@ export const GameConfigSchema = z.object({
   // that only know publicIds at create_game); resolved to clientID at lookup.
   nameRevealPublicIds: z.string().array().max(200).optional(),
   waterNukes: z.boolean().nullable().optional(),
-  // Superfork: player-drawn provinces. Off by default while the feature is new.
-  provinces: z.boolean().nullable().optional(),
   randomSpawn: z.boolean(),
   maxPlayers: zb.uint().optional(),
   // OFM: allowlist of publicIds allowed to join (admin-only, see create_game).
@@ -1002,27 +998,6 @@ export const RenameCapitalIntentSchema = z.object({
   name: z.string(),
 });
 
-/** Most stroke points one province drawing may carry. */
-export const MAX_PROVINCE_POINTS = 6000;
-
-/**
- * Superfork provinces. One intent with an action rather than six: they all
- * act on the sender's provinces and share validation.
- *
- * A drawing is a set of polylines flattened into `points`; `breaks` holds
- * the index where each stroke after the first begins (zbin has no nested
- * arrays).
- */
-export const ProvinceIntentSchema = z.object({
-  type: z.literal("province"),
-  action: z.enum(["draw", "rename", "admin", "disband", "merge", "trim"]),
-  provinceId: zb.uint().optional(),
-  otherId: zb.uint().optional(),
-  name: z.string().max(64).optional(),
-  points: z.array(zb.uint()).max(MAX_PROVINCE_POINTS).optional(),
-  breaks: z.array(zb.uint()).max(200).optional(),
-});
-
 /** Aircraft repositioning. Mirrors move_warship. */
 export const MoveAircraftIntentSchema = z.object({
   type: z.literal("move_aircraft"),
@@ -1080,7 +1055,6 @@ export const IntentSchema = z.discriminatedUnion("type", [
   WithdrawBankIntentSchema,
   LoadCorvetteIntentSchema,
   LaunchCorvetteIntentSchema,
-  ProvinceIntentSchema,
 ]);
 
 // StampedIntent = Intent with server-stamped clientID (used in turns and execution)
