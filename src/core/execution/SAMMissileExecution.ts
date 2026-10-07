@@ -11,6 +11,21 @@ import { PathFinding } from "../pathfinding/PathFinder";
 import { PathStatus, SteppingPathFinder } from "../pathfinding/types";
 import { NukeType } from "../StatsSchemas";
 
+/**
+ * Aircraft a SAM will engage.
+ *
+ * Fighters and military transports only. Civilian traffic is spared so open
+ * borders stay viable, and interceptors are spared because they are already
+ * fragile to fighters - ground fire deleting them as well would leave nothing
+ * able to stop a MIRV before separation.
+ */
+export const SAM_AIR_TARGETS: UnitType[] = [
+  UnitType.FighterJet,
+  UnitType.TransportJet,
+  // Phase 39. The stealth bomber is deliberately absent: SAMs cannot see it.
+  UnitType.LargeBomber,
+];
+
 export class SAMMissileExecution implements Execution {
   private active = true;
   private pathFinder: SteppingPathFinder<TileRef>;
@@ -47,11 +62,14 @@ export class SAMMissileExecution implements Execution {
       UnitType.HydrogenBomb,
       UnitType.MIRVWarhead,
     ];
+    // Aircraft were missing here, so a missile fired at a jet deleted itself
+    // on launch and SAMs never shot anything down.
+    const isAircraft = SAM_AIR_TARGETS.includes(this.target.type());
     if (
       !this.target.isActive() ||
       !this.ownerUnit.isActive() ||
       this.target.owner() === this.SAMMissile.owner() ||
-      !nukesWhitelist.includes(this.target.type())
+      (!nukesWhitelist.includes(this.target.type()) && !isAircraft)
     ) {
       // Clear the flag so other SAMs can re-target this nuke
       if (this.target.isActive()) {
@@ -79,9 +97,11 @@ export class SAMMissileExecution implements Execution {
         this.SAMMissile.delete(false);
 
         // Record stats
-        this.mg
-          .stats()
-          .bombIntercept(this._owner, this.target.type() as NukeType, 1);
+        if (!isAircraft) {
+          this.mg
+            .stats()
+            .bombIntercept(this._owner, this.target.type() as NukeType, 1);
+        }
         return;
       } else if (result.status === PathStatus.NEXT) {
         this.SAMMissile.move(result.node);

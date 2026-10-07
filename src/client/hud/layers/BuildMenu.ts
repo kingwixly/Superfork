@@ -40,6 +40,13 @@ const interceptorIcon = assetUrl("images/InterceptorIconWhite.svg");
 const transportJetIcon = assetUrl("images/TransportJetIconWhite.svg");
 const airfieldIcon = assetUrl("images/AirfieldIconWhite.svg");
 const airportIcon = assetUrl("images/AirportIconWhite.svg");
+const bomberIcon = assetUrl("images/BomberIconWhite.svg");
+const blindingBombIcon = assetUrl("images/BlindingBombIconWhite.svg");
+const bunkerBusterIcon = assetUrl("images/BunkerBusterIconWhite.svg");
+const bomberAtomDropIcon = assetUrl("images/BomberAtomDropIconWhite.svg");
+const bomberHydrogenDropIcon = assetUrl(
+  "images/BomberHydrogenDropIconWhite.svg",
+);
 const goldCoinIcon = assetUrl("images/GoldCoinIcon.svg");
 const mirvIcon = assetUrl("images/MIRVIcon.svg");
 const missileSiloIcon = assetUrl("images/MissileSiloIconWhite.svg");
@@ -192,6 +199,45 @@ export const buildTable: BuildItemDisplay[][] = [
       key: "unit_type.interceptor",
       countable: true,
     },
+    // The bomber was listed in the Air tab but had no entry here, so it was
+    // silently dropped and could never be bought.
+    {
+      unitType: UnitType.Bomber,
+      icon: bomberIcon,
+      description: "build_menu.desc.bomber",
+      key: "unit_type.bomber",
+      countable: true,
+    },
+    // Phase 39 strikes. Each is flown by an idle bomber of its kind; the
+    // first one also buys the bomber, which the price shows.
+    {
+      unitType: UnitType.BlindingBomb,
+      icon: blindingBombIcon,
+      description: "build_menu.desc.blinding_bomb",
+      key: "unit_type.blinding_bomb",
+      countable: false,
+    },
+    {
+      unitType: UnitType.BunkerBuster,
+      icon: bunkerBusterIcon,
+      description: "build_menu.desc.bunker_buster",
+      key: "unit_type.bunker_buster",
+      countable: false,
+    },
+    {
+      unitType: UnitType.BomberAtomDrop,
+      icon: bomberAtomDropIcon,
+      description: "build_menu.desc.bomber_atom_drop",
+      key: "unit_type.bomber_atom_drop",
+      countable: false,
+    },
+    {
+      unitType: UnitType.BomberHydrogenDrop,
+      icon: bomberHydrogenDropIcon,
+      description: "build_menu.desc.bomber_hydrogen_drop",
+      key: "unit_type.bomber_hydrogen_drop",
+      countable: false,
+    },
     {
       unitType: UnitType.TransportJet,
       icon: transportJetIcon,
@@ -283,6 +329,10 @@ export const buildCategories: BuildCategory[] = [
       UnitType.Interceptor,
       UnitType.Bomber,
       UnitType.TransportJet,
+      UnitType.BlindingBomb,
+      UnitType.BunkerBuster,
+      UnitType.BomberAtomDrop,
+      UnitType.BomberHydrogenDrop,
     ],
   },
   {

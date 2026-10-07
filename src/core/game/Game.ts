@@ -241,6 +241,10 @@ export enum UnitType {
   CargoJet = "Cargo Jet",
   Airliner = "Airliner",
   Interceptor = "Interceptor",
+  // Strategic bombers (Phase 39). Reusable: bought once, then re-armed per
+  // strike. Ordered through the strike types below, never bought directly.
+  StealthBomber = "Stealth Bomber",
+  LargeBomber = "Large Bomber",
 
   // Air-to-air munition. Nuke interception by Interceptor aircraft reuses
   // SAMMissile, since the behaviour is the same class of thing.
@@ -256,6 +260,16 @@ export enum UnitType {
   ASBMWarhead = "ASBM Warhead",
   NeutronBomb = "Neutron Bomb",
   EMPBomb = "EMP Burst",
+
+  // Air strikes (Phase 39). Each is a build-menu ORDER: pick it, click a
+  // target, and an idle bomber of the right kind flies it (or a new one is
+  // bought). Blinding Bomb and Bunker Buster are also the falling munitions'
+  // own unit types; the two drop orders never become units, the bombs they
+  // release are ordinary Atom / Hydrogen bombs.
+  BlindingBomb = "Blinding Bomb",
+  BunkerBuster = "Bunker Buster",
+  BomberAtomDrop = "Bomber Atom Drop",
+  BomberHydrogenDrop = "Bomber Hydrogen Drop",
 }
 
 export enum TrainType {
@@ -287,6 +301,12 @@ export const BuildableAttacks = unitTypeGroup([
   UnitType.FighterJet, // Phase 14
   UnitType.Interceptor, // Phase 14
   UnitType.TransportJet, // Phase 14
+  // Never listed before Phase 39, so the build menu could not offer it.
+  UnitType.Bomber,
+  UnitType.BlindingBomb, // Phase 39
+  UnitType.BunkerBuster, // Phase 39
+  UnitType.BomberAtomDrop, // Phase 39
+  UnitType.BomberHydrogenDrop, // Phase 39
 ] as const);
 
 export const Structures = unitTypeGroup([
@@ -354,6 +374,16 @@ export const Aircraft = unitTypeGroup([
   UnitType.CargoJet,
   UnitType.Airliner,
   UnitType.Interceptor,
+  UnitType.StealthBomber,
+  UnitType.LargeBomber,
+] as const);
+
+/** Strike orders flown by the strategic bombers. See UnitType.BlindingBomb. */
+export const AirStrikeOrders = unitTypeGroup([
+  UnitType.BlindingBomb,
+  UnitType.BunkerBuster,
+  UnitType.BomberAtomDrop,
+  UnitType.BomberHydrogenDrop,
 ] as const);
 
 /**
@@ -387,6 +417,7 @@ export const SuperforkUnits = unitTypeGroup([
   ...SuperforkStructures.types,
   ...Aircraft.types,
   ...SuperforkNukes.types,
+  ...AirStrikeOrders.types,
   UnitType.AAMissile,
   UnitType.Destroyer,
   UnitType.Corvette,
@@ -523,9 +554,30 @@ export interface UnitParamsMap {
     homeBase?: Unit;
   };
 
+  [UnitType.StealthBomber]: {
+    homeBase?: Unit;
+  };
+
+  [UnitType.LargeBomber]: {
+    homeBase?: Unit;
+  };
+
   [UnitType.AAMissile]: {
     targetUnit: Unit;
   };
+
+  // Falling strike munitions. The drop orders never become units.
+  [UnitType.BlindingBomb]: {
+    targetTile?: TileRef;
+  };
+
+  [UnitType.BunkerBuster]: {
+    targetTile?: TileRef;
+  };
+
+  [UnitType.BomberAtomDrop]: Record<string, never>;
+
+  [UnitType.BomberHydrogenDrop]: Record<string, never>;
 
   // -------------------------- Superfork: ships --------------------------
 

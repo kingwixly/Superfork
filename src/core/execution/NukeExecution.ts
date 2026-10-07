@@ -36,6 +36,13 @@ export class NukeExecution implements Execution {
     private speed: number = -1,
     private waitTicks = 0,
     private rocketDirectionUp: boolean = true,
+    /**
+     * Released by a large bomber (Phase 39) rather than launched from a
+     * silo: `src` is the bomber's position, no silo is needed or cooled
+     * down, and the bomb is free here because the strike order already paid
+     * for it.
+     */
+    private airDrop: boolean = false,
   ) {}
 
   init(mg: Game, ticks: number): void {
@@ -184,7 +191,9 @@ export class NukeExecution implements Execution {
 
   tick(ticks: number): void {
     if (this.nuke === null) {
-      const spawn = this.player.canBuild(this.nukeType, this.dst);
+      const spawn = this.airDrop
+        ? (this.src ?? this.dst)
+        : this.player.canBuild(this.nukeType, this.dst);
       if (spawn === false) {
         console.warn(`cannot build Nuke`);
         this.active = false;
@@ -193,9 +202,11 @@ export class NukeExecution implements Execution {
       // The launch tile can be overridden by the caller (e.g. MIRV warheads
       // launch from the MIRV separation point, not a silo).
       this.src ??= spawn;
-      const silo = this.player
-        .units(UnitType.MissileSilo)
-        .find((silo) => silo.tile() === spawn);
+      const silo = this.airDrop
+        ? undefined
+        : this.player
+            .units(UnitType.MissileSilo)
+            .find((silo) => silo.tile() === spawn);
       // Stacked purchases launch several nukes across ticks; delay each missile
       // so launches from the same silo trail each other instead of overlapping,
       // need to check the entire queue because even if nukes have waitticks,
@@ -209,10 +220,15 @@ export class NukeExecution implements Execution {
           this.waitTicks += lastDep - this.mg.ticks();
         }
       }
-      this.nuke = this.player.buildUnit(this.nukeType, this.src, {
-        targetTile: this.dst,
-        trajectory: this.getTrajectory(this.dst),
-      });
+      this.nuke = this.player.buildUnit(
+        this.nukeType,
+        this.src,
+        {
+          targetTile: this.dst,
+          trajectory: this.getTrajectory(this.dst),
+        },
+        { free: this.airDrop },
+      );
       this.nuke.updateNukeState({ waitTicks: this.waitTicks });
       this.recordMotionPlan(ticks);
       if (this.nuke.type() !== UnitType.MIRVWarhead) {
@@ -262,6 +278,13 @@ export class NukeExecution implements Execution {
       return;
     }
 
+    // A bomb released straight over its target (or a downed bomber's load
+    // going off where it fell) has no arc to fly.
+    if (this.src === this.dst) {
+      this.detonate();
+      return;
+    }
+
     // Move to next tile
     const result = this.pathFinder.next(this.src!, this.dst, this.speed);
 
@@ -307,6 +330,9 @@ export class NukeExecution implements Execution {
     if (this.nuke === null || this.src === undefined || this.src === null) {
       return;
     }
+    // A bomb falling straight down has no path; the parabola below would
+    // still bow it 50 tiles into the sky.
+    if (this.src === this.dst) return;
     const pathFinder = UniversalPathFinding.Parabola(this.mg, {
       increment: this.speed,
       directionUp: this.rocketDirectionUp,
@@ -328,6 +354,7 @@ export class NukeExecution implements Execution {
   }
 
   private getTrajectory(target: TileRef): TrajectoryTile[] {
+    if (this.src === target) return [{ tile: target, targetable: true }];
     const trajectoryTiles: TrajectoryTile[] = [];
     const targetRangeSquared =
       this.mg.config().defaultNukeTargetableRange() ** 2;

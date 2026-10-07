@@ -45,6 +45,8 @@ import {
 import {
   UT_ASBM_WARHEAD,
   UT_ATOM_BOMB,
+  UT_BLINDING_BOMB,
+  UT_BUNKER_BUSTER,
   UT_EMP_BOMB,
   UT_HYDROGEN_BOMB,
   UT_MIRV_WARHEAD,
@@ -109,6 +111,8 @@ const UNIT_TYPE_TO_NUKE_TYPE: Readonly<Record<string, NukeExplosionType>> = {
   [UT_NEUTRON_BOMB]: "atom",
   [UT_EMP_BOMB]: "mirvWarhead",
   [UT_ASBM_WARHEAD]: "mirvWarhead",
+  [UT_BLINDING_BOMB]: "mirvWarhead",
+  [UT_BUNKER_BUSTER]: "atom",
 };
 
 function toRgb01(s: string): [number, number, number] | null {

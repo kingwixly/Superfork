@@ -289,6 +289,10 @@ export class UnitDisplay extends LitElement implements Controller {
               case UnitType.NeutronBomb:
               case UnitType.EMPBomb:
               case UnitType.ASBM:
+              case UnitType.BlindingBomb:
+              case UnitType.BunkerBuster:
+              case UnitType.BomberAtomDrop:
+              case UnitType.BomberHydrogenDrop:
                 this.eventBus?.emit(
                   new ToggleStructureEvent([
                     UnitType.MissileSilo,

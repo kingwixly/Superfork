@@ -17,6 +17,7 @@ import { NukeExecution } from "./NukeExecution";
 import { PortExecution } from "./PortExecution";
 import { SAMLauncherExecution } from "./SAMLauncherExecution";
 import { SpecialWarheadExecution } from "./SpecialWarheadExecution";
+import { orderAirStrike } from "./StrikeBomberExecution";
 import { TransportJetExecution } from "./TransportJetExecution";
 import { WarshipExecution } from "./WarshipExecution";
 
@@ -168,6 +169,13 @@ export class ConstructionExecution implements Execution {
         this.mg.addExecution(new ASBMExecution(player, target.id()));
         break;
       }
+      // Strategic bomber strikes: an idle bomber flies it, or one is bought.
+      case UnitType.BlindingBomb:
+      case UnitType.BunkerBuster:
+      case UnitType.BomberAtomDrop:
+      case UnitType.BomberHydrogenDrop:
+        orderAirStrike(this.mg, player, this.constructionType, this.tile);
+        break;
       case UnitType.Bomber: {
         const spawn = player.canBuild(UnitType.Bomber, this.tile);
         if (spawn !== false) {

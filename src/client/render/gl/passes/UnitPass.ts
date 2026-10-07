@@ -34,6 +34,9 @@
  *   Col 17: Corvette (7×7)             — superfork
  *   Col 18: Carrier (13×13)            — superfork
  *   Col 19: Destroyer (5×11)           — superfork
+ *   Col 20: Bomber (7×7)               — superfork
+ *   Col 21: Stealth Bomber (9×5)       — superfork
+ *   Col 22: Large Bomber (11×11)       — superfork
  *
  * Data flow:
  *   FrameSnapshot.units → filter by typeToAtlasIdx → instance VBO → GPU
@@ -47,10 +50,13 @@ import {
   AIRCRAFT_TYPES,
   SMOOTHED_NUKE_TYPES,
   TrainType,
+  UT_AA_MISSILE,
   UT_AIRLINER,
   UT_ASBM_WARHEAD,
   UT_ATOM_BOMB,
+  UT_BLINDING_BOMB,
   UT_BOMBER,
+  UT_BUNKER_BUSTER,
   UT_CARGO_JET,
   UT_CARRIER,
   UT_CORVETTE,
@@ -59,11 +65,13 @@ import {
   UT_FIGHTER_JET,
   UT_HYDROGEN_BOMB,
   UT_INTERCEPTOR,
+  UT_LARGE_BOMBER,
   UT_MIRV,
   UT_MIRV_WARHEAD,
   UT_NEUTRON_BOMB,
   UT_SAM_MISSILE,
   UT_SHELL,
+  UT_STEALTH_BOMBER,
   UT_TRADE_SHIP,
   UT_TRAIN,
   UT_TRANSPORT,
@@ -119,6 +127,10 @@ const UNIT_ORDER = [
   UT_CORVETTE,
   UT_CARRIER,
   UT_DESTROYER,
+  // Phase 39: bombers got their own sprites.
+  UT_BOMBER,
+  UT_STEALTH_BOMBER,
+  UT_LARGE_BOMBER,
 ] as const;
 
 const ATLAS_COLS = UNIT_ORDER.length;
@@ -132,8 +144,17 @@ const SPRITE_ALIASES: Readonly<Record<string, (typeof UNIT_ORDER)[number]>> = {
   [UT_NEUTRON_BOMB]: UT_ATOM_BOMB,
   [UT_EMP_BOMB]: UT_ATOM_BOMB,
   [UT_ASBM_WARHEAD]: UT_MIRV_WARHEAD,
-  [UT_BOMBER]: UT_TRANSPORT_JET,
+  [UT_BLINDING_BOMB]: UT_ATOM_BOMB,
+  [UT_BUNKER_BUSTER]: UT_ATOM_BOMB,
+  [UT_AA_MISSILE]: UT_SAM_MISSILE,
 };
+
+/**
+ * A hostile stealth bomber is drawn only within this many tiles of one of
+ * the viewer's own buildings. SAMs cannot see it at all; the viewer gets a
+ * glimpse as it passes overhead.
+ */
+const STEALTH_REVEAL_RADIUS = 20;
 
 /** Atlas column of the hydrogen bomb — drives the GPU glow halo. */
 const HYDROGEN_BOMB_COL = UNIT_ORDER.indexOf(UT_HYDROGEN_BOMB);
@@ -176,6 +197,9 @@ const TRAIN_CARRIAGE_LOADED_COL = UNIT_ORDER.indexOf("TrainCarriageLoaded");
 
 /** Nuke + warhead types — rendered with flickering hot colors */
 const FLICKER_TYPES: ReadonlySet<string> = new Set([
+  UT_BLINDING_BOMB,
+  UT_BUNKER_BUSTER,
+  UT_AA_MISSILE,
   UT_NEUTRON_BOMB,
   UT_EMP_BOMB,
   UT_ASBM_WARHEAD,
@@ -190,6 +214,9 @@ const FLICKER_TYPES: ReadonlySet<string> = new Set([
 /** Missile/projectile types — rendered on top of structures in the layer order.
  *  Ground/sea units (boats, trains) render below structures. */
 const MISSILE_TYPES: ReadonlySet<string> = new Set([
+  UT_BLINDING_BOMB,
+  UT_BUNKER_BUSTER,
+  UT_AA_MISSILE,
   UT_NEUTRON_BOMB,
   UT_EMP_BOMB,
   UT_ASBM_WARHEAD,
@@ -530,6 +557,9 @@ export class UnitPass {
       }
 
       if (atlasIdx === undefined) continue;
+      if (unit.unitType === UT_STEALTH_BOMBER && !this.canSeeStealth(unit)) {
+        continue;
+      }
 
       const isRetreatingWarship =
         unit.unitType === UT_WARSHIP && unit.retreating;
@@ -631,6 +661,26 @@ export class UnitPass {
   setAffiliationTex(tex: WebGLTexture): void {
     this.affiliationTex = tex;
   }
+  /** Own and allied stealth bombers always; hostile ones only overhead. */
+  private canSeeStealth(unit: UnitState): boolean {
+    const me = this.localPlayerID;
+    if (me <= 0) return true; // spectators see everything
+    if (unit.ownerID === me || this.friendlyOwners.has(unit.ownerID)) {
+      return true;
+    }
+    const x = unit.pos % this.mapW;
+    const y = (unit.pos - x) / this.mapW;
+    const r2 = STEALTH_REVEAL_RADIUS * STEALTH_REVEAL_RADIUS;
+    for (const s of this.structures.values()) {
+      if (s.ownerID !== me) continue;
+      const sx = s.pos % this.mapW;
+      const dx = sx - x;
+      const dy = (s.pos - sx) / this.mapW - y;
+      if (dx * dx + dy * dy <= r2) return true;
+    }
+    return false;
+  }
+
   setLocalPlayer(id: number): void {
     this.localPlayerID = id;
   }

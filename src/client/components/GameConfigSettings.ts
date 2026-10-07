@@ -135,6 +135,11 @@ const unitOptions: { type: UnitType; translationKey: string }[] = [
   { type: UnitType.FighterJet, translationKey: "unit_type.fighter_jet" },
   { type: UnitType.Interceptor, translationKey: "unit_type.interceptor" },
   { type: UnitType.Bomber, translationKey: "unit_type.bomber" },
+  {
+    type: UnitType.StealthBomber,
+    translationKey: "unit_type.stealth_bomber",
+  },
+  { type: UnitType.LargeBomber, translationKey: "unit_type.large_bomber" },
   { type: UnitType.TransportJet, translationKey: "unit_type.transport_jet" },
   { type: UnitType.NeutronBomb, translationKey: "unit_type.neutron_bomb" },
   { type: UnitType.EMPBomb, translationKey: "unit_type.emp_bomb" },

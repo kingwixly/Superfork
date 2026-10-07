@@ -58,27 +58,38 @@ describe("SAM vs aircraft", () => {
     expect(sam.missileTimerQueue().length).toBeGreaterThan(before);
   });
 
-  test.each([UnitType.CargoJet, UnitType.Airliner, UnitType.Interceptor])(
-    "it does NOT engage %s",
-    (type) => {
-      // Civilian traffic is spared so open borders stay viable; interceptors
-      // are spared because they are already fragile to fighters, and ground
-      // fire deleting them too would leave no counter to a MIRV.
-      //
-      // Each case builds its own SAM and its own aircraft - an earlier version
-      // looped over all four reusing the map, so a leftover transport from a
-      // previous iteration satisfied every assertion and the test passed
-      // whatever the targeting rule was.
-      const { sam, exec } = samAt(land[0]);
-      foe.buildUnit(type, land[0], {
-        patrolTile: land[0],
-        targetUnit: undefined,
-      } as never);
-      const before = sam.missileTimerQueue().length;
-      exec.tick(1);
-      expect(sam.missileTimerQueue().length).toBe(before);
-    },
-  );
+  test.each([
+    UnitType.CargoJet,
+    UnitType.Airliner,
+    UnitType.Interceptor,
+    UnitType.StealthBomber,
+  ])("it does NOT engage %s", (type) => {
+    // Civilian traffic is spared so open borders stay viable; interceptors
+    // are spared because they are already fragile to fighters, and ground
+    // fire deleting them too would leave no counter to a MIRV.
+    //
+    // Each case builds its own SAM and its own aircraft - an earlier version
+    // looped over all four reusing the map, so a leftover transport from a
+    // previous iteration satisfied every assertion and the test passed
+    // whatever the targeting rule was.
+    const { sam, exec } = samAt(land[0]);
+    foe.buildUnit(type, land[0], {
+      patrolTile: land[0],
+      targetUnit: undefined,
+    } as never);
+    const before = sam.missileTimerQueue().length;
+    exec.tick(1);
+    expect(sam.missileTimerQueue().length).toBe(before);
+  });
+
+  test("its missile actually brings a large bomber down", () => {
+    // Missiles fired at aircraft used to delete themselves on launch.
+    const sam = me.buildUnit(UnitType.SAMLauncher, land[0], {});
+    game.addExecution(new SAMLauncherExecution(me, null, sam));
+    const bomber = foe.buildUnit(UnitType.LargeBomber, land[3], {});
+    for (let i = 0; i < 100 && bomber.isActive(); i++) game.executeNextTick();
+    expect(bomber.isActive()).toBe(false);
+  });
 
   test("it ignores friendly aircraft", () => {
     const { sam, exec } = samAt(land[0]);

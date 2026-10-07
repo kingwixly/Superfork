@@ -19,11 +19,20 @@ import {
   UnitInfo,
   UnitType,
 } from "../game/Game";
+import {
+  bomberFor,
+  hasIdleStrikeBomber,
+  isStrikeOrder,
+  payloadFor,
+  StrikeOrder,
+} from "../game/StrikeBombers";
 import { UserSettings } from "../game/UserSettings";
 import { GameConfig, TeamCountConfig } from "../Schemas";
 import { NukeType } from "../StatsSchemas";
 import { assertNever, sigmoid, toInt, within } from "../Util";
 import {
+  BLINDING_RADIUS,
+  BUNKER_BUSTER_RADIUS,
   CAPITAL_TROOP_CAP_BONUS,
   EMP_RADIUS,
   NEUTRON_RADIUS,
@@ -686,11 +695,11 @@ export class Config {
         // and for any superfork type missing from the spec table.
         const spec = superforkUnitSpec(type);
         if (spec !== undefined) {
+          const base = spec.costByLifetimePurchases
+            ? this.lifetimeCostWrapper(spec.cost, type)
+            : this.costWrapper(spec.cost, ...(spec.costCountsToward ?? [type]));
           info = {
-            cost: this.costWrapper(
-              spec.cost,
-              ...(spec.costCountsToward ?? [type]),
-            ),
+            cost: isStrikeOrder(type) ? this.strikeOrderCost(type, base) : base,
             maxHealth: spec.maxHealth,
             damage: spec.damage,
             constructionDuration: this.instantBuild()
@@ -760,6 +769,43 @@ export class Config {
       return base + BigInt(hc.startingGold);
     }
     return base;
+  }
+
+  /** Like costWrapper, but counting every unit ever bought. */
+  private lifetimeCostWrapper(
+    costFn: (units: number) => number,
+    type: UnitType,
+  ): (g: Game, p: Player, extraUnits?: number) => bigint {
+    return (game: Game, player: Player, extraUnits: number = 0) => {
+      if (
+        player.type() === PlayerType.Human &&
+        this.hasInfiniteGoldFor(player)
+      ) {
+        return 0n;
+      }
+      return BigInt(costFn(player.unitsConstructed(type) + extraUnits));
+    };
+  }
+
+  /**
+   * A strike costs its payload, plus a new bomber when none is free. The
+   * drop orders' payloads are priced as the real bombs, so a bomber drop is
+   * never a cheaper atom bomb than a silo launch.
+   */
+  private strikeOrderCost(
+    order: StrikeOrder,
+    payloadCost: (g: Game, p: Player, extraUnits?: number) => bigint,
+  ): (g: Game, p: Player, extraUnits?: number) => bigint {
+    return (game: Game, player: Player) => {
+      const payload = payloadFor(order);
+      const payloadPrice =
+        payload === order
+          ? payloadCost(game, player)
+          : this.unitInfo(payload).cost(game, player);
+      const bomber = bomberFor(order);
+      if (hasIdleStrikeBomber(player, bomber)) return payloadPrice;
+      return payloadPrice + this.unitInfo(bomber).cost(game, player);
+    };
   }
 
   private costWrapper(
@@ -1138,6 +1184,10 @@ export class Config {
         return { inner: EMP_RADIUS, outer: EMP_RADIUS };
       case UnitType.ASBM:
         return { inner: 0, outer: 0 };
+      case UnitType.BlindingBomb:
+        return { inner: BLINDING_RADIUS, outer: BLINDING_RADIUS };
+      case UnitType.BunkerBuster:
+        return { inner: BUNKER_BUSTER_RADIUS, outer: BUNKER_BUSTER_RADIUS };
     }
     throw new Error(`Unknown nuke type: ${unitType}`);
   }

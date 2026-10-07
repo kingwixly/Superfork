@@ -3,10 +3,16 @@
  * FX parameters. Kept out of the passes so they can be unit-tested.
  */
 
+import {
+  BLINDING_RADIUS,
+  BUNKER_BUSTER_RADIUS,
+} from "../../../../../core/configuration/SuperforkUnits";
 import type { NukeExplosionRenderParams } from "../../../types";
 import {
   UT_ASBM_WARHEAD,
   UT_ATOM_BOMB,
+  UT_BLINDING_BOMB,
+  UT_BUNKER_BUSTER,
   UT_EMP_BOMB,
   UT_HYDROGEN_BOMB,
   UT_MIRV_WARHEAD,
@@ -43,6 +49,11 @@ export function nukeExplosionRadius(
       return fx.nukeRadiusEmp;
     case UT_ASBM_WARHEAD:
       return fx.nukeRadiusAsbm;
+    // Phase 39 stealth bombs: drawn at their real effect radius.
+    case UT_BLINDING_BOMB:
+      return BLINDING_RADIUS;
+    case UT_BUNKER_BUSTER:
+      return BUNKER_BUSTER_RADIUS * 1.5;
     default:
       return undefined;
   }
@@ -91,6 +102,28 @@ export function superforkWarheadExplosion(
           [0.95, 1, 0.5],
         ],
         ...blast(SUPERFORK_BLAST_MS, radius * 1.3),
+      };
+    // Blinding bomb: a white-violet flash across everything it blinds.
+    case UT_BLINDING_BOMB:
+      return {
+        type: "sparkles",
+        density: 200,
+        colors: [
+          [0.85, 0.75, 1],
+          [1, 1, 1],
+        ],
+        ...blast(SUPERFORK_BLAST_MS, radius * 1.1),
+      };
+    // Bunker buster: a tight, hot ring.
+    case UT_BUNKER_BUSTER:
+      return {
+        type: "shockwave",
+        thickness: 3,
+        colors: [
+          [1, 0.75, 0.2],
+          [1, 0.35, 0.1],
+        ],
+        ...blast(1600, radius * 1.4),
       };
     case UT_ASBM_WARHEAD:
       return {

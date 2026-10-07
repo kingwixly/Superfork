@@ -19,6 +19,7 @@ import {
   UnitType,
 } from "../../core/game/Game";
 import { TileRef } from "../../core/game/GameMap";
+import { payloadFor } from "../../core/game/StrikeBombers";
 import { UserSettings } from "../../core/game/UserSettings";
 import { Controller } from "../Controller";
 import { ARC_WEAPONS, SILO_WEAPONS } from "../hud/SiloWeapons";
@@ -453,7 +454,16 @@ export class BuildPreviewController implements Controller {
       case UnitType.HydrogenBomb:
       case UnitType.NeutronBomb:
       case UnitType.EMPBomb:
+      case UnitType.BlindingBomb:
+      case UnitType.BunkerBuster:
         rangeRadius = this.game.config().nukeMagnitudes(u.type).outer;
+        break;
+      // Bomber drops: the circle of the bomb they release.
+      case UnitType.BomberAtomDrop:
+      case UnitType.BomberHydrogenDrop:
+        rangeRadius = this.game
+          .config()
+          .nukeMagnitudes(payloadFor(u.type)).outer;
         break;
       case UnitType.Factory:
         rangeRadius = this.game.config().trainStationMaxRange();

@@ -65,6 +65,12 @@ import {
   diffPlayerUpdate,
   packAttackTroopDeltas,
 } from "./GameUpdateUtils";
+import {
+  bomberFor,
+  idleStrikeBomber,
+  payloadFor,
+  StrikeOrder,
+} from "./StrikeBombers";
 import { ReadonlyTileSet, TileSet } from "./TileSet";
 import {
   bumpTraversalGeneration,
@@ -1837,9 +1843,59 @@ export class PlayerImpl implements Player {
       case UnitType.ASBMWarhead:
         return targetTile;
 
+      // Phase 39 strategic bombers. Bought implicitly by a strike order, but
+      // they still launch from a base like every other aircraft.
+      case UnitType.StealthBomber:
+      case UnitType.LargeBomber:
+        return this.launchBaseFor(unitType, targetTile) ?? false;
+      case UnitType.BlindingBomb:
+      case UnitType.BunkerBuster:
+      case UnitType.BomberAtomDrop:
+      case UnitType.BomberHydrogenDrop:
+        return this.strikeSpawn(unitType, targetTile);
+
       default:
         assertNever(unitType);
     }
+  }
+
+  /**
+   * Where a strike order starts: the idle bomber of the right kind nearest
+   * the target, else the base a new one would launch from. False when the
+   * strike is not allowed at all.
+   */
+  strikeSpawn(order: StrikeOrder, tile: TileRef): TileRef | false {
+    const mg = this.mg;
+    const config = mg.config();
+    if (mg.isSpawnImmunityActive() || mg.isImpassable(tile)) return false;
+    const bomber = bomberFor(order);
+    const payload = payloadFor(order);
+    // Switching off the bomber, or the bomb it drops, in the lobby switches
+    // off the strike too.
+    if (config.isUnitDisabled(bomber)) return false;
+    if (payload !== order && config.isUnitDisabled(payload)) return false;
+
+    const gameOver =
+      mg.getWinner() !== null &&
+      config.gameConfig().gameType !== GameType.Singleplayer;
+    const owner = mg.owner(tile);
+    if (owner.isPlayer() && this.isOnSameTeam(owner) && !gameOver) {
+      return false;
+    }
+    if (config.gameConfig().gameMode === GameMode.Team && !gameOver) {
+      const magnitude = config.nukeMagnitudes(payload);
+      const wouldHitTeammate = mg.anyUnitNearby(
+        tile,
+        magnitude.outer,
+        Structures.types,
+        (unit) => unit.owner().isPlayer() && this.isOnSameTeam(unit.owner()),
+      );
+      if (wouldHitTeammate) return false;
+    }
+
+    const idle = idleStrikeBomber(mg, this, bomber, tile);
+    if (idle !== null) return idle.bomber().tile();
+    return this.launchBaseFor(bomber, tile) ?? false;
   }
 
   nukeSpawn(tile: TileRef, nukeType: UnitType): TileRef | false {
@@ -2015,7 +2071,9 @@ export class PlayerImpl implements Player {
           return (
             type === UnitType.TransportJet ||
             type === UnitType.FighterJet ||
-            type === UnitType.Bomber
+            type === UnitType.Bomber ||
+            type === UnitType.StealthBomber ||
+            type === UnitType.LargeBomber
           );
         case UnitType.Carrier:
           return type === UnitType.FighterJet || type === UnitType.Interceptor;

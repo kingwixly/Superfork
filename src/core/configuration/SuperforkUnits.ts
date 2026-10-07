@@ -48,6 +48,13 @@ export interface SuperforkUnitSpec {
    */
   costCountsToward?: UnitType[];
 
+  /**
+   * Price by every one ever bought, not by how many are owned right now, so
+   * losing one does not make the replacement cheaper. Used by the large
+   * bomber, whose price "rises with every buy".
+   */
+  costByLifetimePurchases?: boolean;
+
   maxHealth?: number;
   damage?: number;
 
@@ -83,6 +90,23 @@ const s = (seconds: number) => seconds * TICKS_PER_SECOND;
 export const BANK_RESERVE_CAP = 50_000_000n;
 export const BANK_ACCRUAL_NUMERATOR = 900_000n;
 export const BANK_ACCRUAL_DENOMINATOR = 1_000_000n;
+
+/**
+ * Strategic bombers and their strikes (Phase 39).
+ *
+ * Payload prices are charged per strike, on top of the airframe when a new
+ * bomber has to be bought because none is free.
+ */
+export const BLINDING_RADIUS = 30;
+export const BUNKER_BUSTER_RADIUS = 8;
+/** How long a blinding bomb keeps SAMs and silos offline. */
+export const BLINDING_DURATION = s(30);
+export const BLINDING_BOMB_PRICE = 1_500_000;
+export const BUNKER_BUSTER_PRICE = 2_500_000;
+/** Share of troops a nation loses when a bunker buster hits its capital. */
+export const CAPITAL_STRIKE_TROOP_LOSS = 0.25;
+/** After a capital strike, no new capital may be promoted for this long. */
+export const CAPITAL_STRIKE_LOCKOUT = s(120);
 
 /** Capital effects, per spec. */
 export const CAPITAL_TROOP_CAP_BONUS = 0.1; // +10% max troop capacity
@@ -279,6 +303,48 @@ export const SUPERFORK_UNITS: Record<string, SuperforkUnitSpec> = {
     maxHealth: 350,
     speed: 1.75,
     range: 120, // generous intercept envelope
+  },
+
+  [UnitType.StealthBomber]: {
+    domain: UnitDomain.Air,
+    // Price of the airframe only; each strike also pays for its payload.
+    // Reusable, so this is paid once per bomber, not per sortie.
+    cost: (n) => Math.min(10_000_000, 4_000_000 + n * 2_000_000),
+    maxHealth: 500, // two interceptor missiles
+    speed: 1.6,
+  },
+
+  [UnitType.LargeBomber]: {
+    domain: UnitDomain.Air,
+    // Dani: extremely expensive, and every new one costs more than the last,
+    // however many have been lost.
+    cost: (n) => 10_000_000 + n * 5_000_000,
+    costByLifetimePurchases: true,
+    maxHealth: 900,
+    speed: 1.1,
+  },
+
+  // Strike orders. Their real price is computed in Config (payload, plus an
+  // airframe when no bomber is free); these entries cover the payload alone
+  // and give the falling munitions a unit spec.
+  [UnitType.BlindingBomb]: {
+    domain: UnitDomain.Air,
+    cost: () => BLINDING_BOMB_PRICE,
+  },
+
+  [UnitType.BunkerBuster]: {
+    domain: UnitDomain.Air,
+    cost: () => BUNKER_BUSTER_PRICE,
+  },
+
+  [UnitType.BomberAtomDrop]: {
+    domain: UnitDomain.Air,
+    cost: () => 750_000,
+  },
+
+  [UnitType.BomberHydrogenDrop]: {
+    domain: UnitDomain.Air,
+    cost: () => 5_000_000,
   },
 
   [UnitType.AAMissile]: {

@@ -93,6 +93,11 @@ const UNIT_COLUMNS = [
   "corvette",
   "carrier",
   "destroyer",
+  // Phase 39: bombers get their own sprites (the bomber borrowed the
+  // transport jet's).
+  "bomber",
+  "stealth_bomber",
+  "large_bomber",
 ];
 
 const UNIT_CELL = 13;

@@ -1,6 +1,10 @@
 import { Unit, UnitType } from "../game/Game";
 import { TileRef } from "../game/GameMap";
 import { AircraftExecution } from "./AircraftExecution";
+import {
+  canEngageMirv,
+  InterceptorMissileExecution,
+} from "./InterceptorMissileExecution";
 
 /**
  * Everything an interceptor can shoot at. Ordered by value, and that order is
@@ -14,9 +18,26 @@ const INTERCEPT_TARGETS = [
   UnitType.ASBM,
   UnitType.NeutronBomb,
   UnitType.EMPBomb,
+  // Phase 39: the one counter to a stealth bomber. Below the warheads: a
+  // bomber loiters, a warhead in flight does not.
+  UnitType.StealthBomber,
   UnitType.MIRVWarhead,
   UnitType.ASBMWarhead,
 ];
+
+/**
+ * Targets engaged with an air-to-air missile rather than by flying into
+ * them. A MIRV moves far too fast to catch, so the interceptor shoots at it
+ * from anywhere in its envelope the moment it appears.
+ */
+const MISSILE_TARGETS: ReadonlySet<UnitType> = new Set([
+  UnitType.MIRV,
+  UnitType.StealthBomber,
+]);
+/** Missile launch range against a stealth bomber, in tiles. */
+export const AAM_RANGE_VS_AIRCRAFT = 30;
+/** Ticks between an interceptor's missile shots. */
+export const AAM_RELOAD = 20;
 
 /**
  * Interceptor aircraft.
@@ -28,8 +49,13 @@ const INTERCEPT_TARGETS = [
  * After separation there is nothing left to hit but individual warheads, and
  * it is far too late.
  *
+ * Since Phase 39 it does this with an air-to-air missile fired the moment a
+ * MIRV enters its envelope (20% fail, one missile per MIRV at a time, three
+ * attempts per MIRV), and the same missile is the only counter to a stealth
+ * bomber. Other warheads are still rammed as before.
+ *
  * That capability is paid for with fragility. Interceptors carry the lowest
- * health of any aircraft and no air-to-air weapon at all — a fighter kills one
+ * health of any aircraft and cannot fight other aircraft — a fighter kills one
  * in a couple of passes and the interceptor cannot answer. The counterplay to
  * a strong air-defence net is therefore to sweep it with fighters first, which
  * is the trade-off the whole layer balances on.
@@ -40,6 +66,7 @@ const INTERCEPTOR_PATROL_RADIUS = 16;
 export class InterceptorExecution extends AircraftExecution {
   private patrolTile: TileRef;
   private patrolLeg = 0;
+  private lastShot = Number.NEGATIVE_INFINITY;
 
   constructor(unit: Unit, home: Unit | undefined, patrolTile: TileRef) {
     super(unit, home);
@@ -69,6 +96,11 @@ export class InterceptorExecution extends AircraftExecution {
     const tile = target.tile();
     if (tile === undefined) return;
 
+    if (MISSILE_TARGETS.has(target.type())) {
+      this.engageWithMissile(target, ticks);
+      return;
+    }
+
     if (this.distanceTo(tile) <= 2) {
       // Interception is a kill, not damage: warheads have no meaningful
       // health, and a partly-destroyed nuke is not a thing.
@@ -77,6 +109,28 @@ export class InterceptorExecution extends AircraftExecution {
       return;
     }
     this.destination = tile;
+  }
+
+  /**
+   * Phase 39 redo. A MIRV is engaged the moment it is anywhere in the
+   * envelope: the interceptor fires at once and keeps closing. Only one
+   * missile is ever in the air at a MIRV, and it draws at most three in all
+   * (see InterceptorMissileExecution). A stealth bomber is chased into
+   * missile range first.
+   */
+  private engageWithMissile(target: Unit, ticks: number): void {
+    const tile = target.tile();
+    this.destination = tile;
+    if (ticks - this.lastShot < AAM_RELOAD) return;
+    if (target.type() === UnitType.MIRV) {
+      if (!canEngageMirv(target)) return;
+    } else if (this.distanceTo(tile) > AAM_RANGE_VS_AIRCRAFT) {
+      return;
+    }
+    this.lastShot = ticks;
+    this.mg.addExecution(
+      new InterceptorMissileExecution(this.owner(), this.unit.tile(), target),
+    );
   }
 
   /**
@@ -102,7 +156,11 @@ export class InterceptorExecution extends AircraftExecution {
 
     const range = this.mg.config().unitInfo(UnitType.Interceptor).range ?? 120;
     // ONE query across every warhead type, ranked in memory afterwards.
-    const found = this.hostileAircraftNear(range, INTERCEPT_TARGETS);
+    // MIRVs already being shot at, or out of attempts, are someone else's
+    // problem (or nobody's): look past them.
+    const found = this.hostileAircraftNear(range, INTERCEPT_TARGETS).filter(
+      (u) => u.type() !== UnitType.MIRV || canEngageMirv(u),
+    );
     if (found.length === 0) return undefined;
     found.sort(
       (a, b) =>

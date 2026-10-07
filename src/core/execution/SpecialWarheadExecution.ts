@@ -223,7 +223,7 @@ export class SpecialWarheadExecution implements Execution {
 }
 
 /** Re-sends EMP'd units to clients on the tick they come back online. */
-class EmpRecoveryExecution implements Execution {
+export class EmpRecoveryExecution implements Execution {
   private mg: Game;
   private active = true;
   constructor(

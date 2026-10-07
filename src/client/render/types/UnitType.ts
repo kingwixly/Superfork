@@ -1,4 +1,6 @@
 import {
+  BLINDING_RADIUS,
+  BUNKER_BUSTER_RADIUS,
   EMP_RADIUS,
   NEUTRON_RADIUS,
 } from "../../../core/configuration/SuperforkUnits";
@@ -50,6 +52,13 @@ export const UT_CARGO_JET = "Cargo Jet" as const;
 export const UT_AIRLINER = "Airliner" as const;
 export const UT_INTERCEPTOR = "Interceptor" as const;
 export const UT_BOMBER = "Bomber" as const;
+export const UT_STEALTH_BOMBER = "Stealth Bomber" as const;
+export const UT_LARGE_BOMBER = "Large Bomber" as const;
+// Phase 39 munitions: the stealth bomber's falling bombs and the
+// interceptor's air-to-air missile.
+export const UT_BLINDING_BOMB = "Blinding Bomb" as const;
+export const UT_BUNKER_BUSTER = "Bunker Buster" as const;
+export const UT_AA_MISSILE = "AA Missile" as const;
 // Superfork ships. Destroyer gets its own sprite: it and the reworked
 // Warship coexist, so sharing a column would make them indistinguishable
 // exactly when telling them apart matters most.
@@ -65,6 +74,8 @@ export const AIRCRAFT_TYPES: ReadonlySet<string> = new Set([
   UT_AIRLINER,
   UT_INTERCEPTOR,
   UT_BOMBER,
+  UT_STEALTH_BOMBER,
+  UT_LARGE_BOMBER,
 ]);
 
 // ---------------------------------------------------------------------------
@@ -116,6 +127,11 @@ export const NUKE_MAGNITUDES: Readonly<
   // ring, so both rings sit on the blast radius.
   [UT_NEUTRON_BOMB]: { inner: NEUTRON_RADIUS, outer: NEUTRON_RADIUS },
   [UT_EMP_BOMB]: { inner: EMP_RADIUS, outer: EMP_RADIUS },
+  [UT_BLINDING_BOMB]: { inner: BLINDING_RADIUS, outer: BLINDING_RADIUS },
+  [UT_BUNKER_BUSTER]: {
+    inner: BUNKER_BUSTER_RADIUS,
+    outer: BUNKER_BUSTER_RADIUS,
+  },
 };
 
 // ---------------------------------------------------------------------------
@@ -160,4 +176,9 @@ export const ALL_UNIT_TYPES = [
   UT_EMP_BOMB,
   UT_ASBM_WARHEAD,
   UT_BOMBER,
+  UT_STEALTH_BOMBER,
+  UT_LARGE_BOMBER,
+  UT_BLINDING_BOMB,
+  UT_BUNKER_BUSTER,
+  UT_AA_MISSILE,
 ] as const;

@@ -1,5 +1,10 @@
 import { InterceptorExecution } from "../src/core/execution/InterceptorExecution";
 import {
+  INTERCEPT_FAILURE_PERCENT,
+  InterceptorMissileExecution,
+  mirvInterceptAttempts,
+} from "../src/core/execution/InterceptorMissileExecution";
+import {
   Game,
   Player,
   PlayerInfo,
@@ -70,7 +75,8 @@ describe("Interceptor", () => {
 
   test("prefers an unseparated MIRV over a closer atom bomb", () => {
     // The signature behaviour: one MIRV kill removes 350 warheads, so it
-    // outranks anything else in range regardless of distance.
+    // outranks anything else in range regardless of distance. Since Phase 39
+    // it is engaged with a missile, fired at once.
     const spot = land[6];
     const { exec } = interceptorAt(spot, land[0]);
     const atom = foe.buildUnit(UnitType.AtomBomb, spot, {
@@ -84,8 +90,64 @@ describe("Interceptor", () => {
 
     exec.tick(1);
 
-    expect(mirv.isActive()).toBe(false);
+    expect(mirvInterceptAttempts(mirv)).toBe(1);
     expect(atom.isActive()).toBe(true);
+  });
+
+  test("one missile at a time, and at most three, per MIRV", () => {
+    const spot = land[6];
+    const airstrip = me.buildUnit(UnitType.Airstrip, land[0], {});
+    for (const t of [land[4], land[5], land[6]]) {
+      const unit = me.buildUnit(UnitType.Interceptor, t, { patrolTile: t });
+      game.addExecution(new InterceptorExecution(unit, airstrip, t));
+    }
+    const mirv = foe.buildUnit(UnitType.MIRV, spot, {
+      targetTile: spot,
+      targetPlayer: me,
+    });
+    let most = 0;
+    for (let i = 0; i < 300 && mirv.isActive(); i++) {
+      game.executeNextTick();
+      most = Math.max(most, game.units(UnitType.AAMissile).length);
+    }
+    expect(most).toBe(1);
+    expect(mirvInterceptAttempts(mirv)).toBeLessThanOrEqual(3);
+    if (mirv.isActive()) expect(mirvInterceptAttempts(mirv)).toBe(3);
+  });
+
+  test("a missile that reaches a MIRV fails about one time in five", () => {
+    let kills = 0;
+    const runs = 200;
+    for (let i = 0; i < runs; i++) {
+      const spot = land[i % land.length];
+      const mirv = foe.buildUnit(UnitType.MIRV, spot, {
+        targetTile: spot,
+        targetPlayer: me,
+      });
+      const missile = new InterceptorMissileExecution(me, spot, mirv);
+      missile.init(game, i);
+      missile.tick(i);
+      if (!mirv.isActive()) kills++;
+      else mirv.delete(false);
+    }
+    const failRate = 1 - kills / runs;
+    expect(failRate).toBeGreaterThan(INTERCEPT_FAILURE_PERCENT / 100 - 0.1);
+    expect(failRate).toBeLessThan(INTERCEPT_FAILURE_PERCENT / 100 + 0.1);
+  });
+
+  test("shoots at stealth bombers, which nothing on the ground can see", () => {
+    const spot = land[9];
+    const airstrip = me.buildUnit(UnitType.Airstrip, land[0], {});
+    const jet = me.buildUnit(UnitType.Interceptor, spot, { patrolTile: spot });
+    const exec = new InterceptorExecution(jet, airstrip, spot);
+    const stealth = foe.buildUnit(UnitType.StealthBomber, spot, {});
+    const health = stealth.health();
+    game.addExecution(exec);
+    // One in five missiles fails, so give it a few shots.
+    for (let i = 0; i < 200 && stealth.health() === health; i++) {
+      game.executeNextTick();
+    }
+    expect(!stealth.isActive() || stealth.health() < health).toBe(true);
   });
 
   test("intercepts superfork warheads too", () => {
@@ -161,10 +223,11 @@ describe("Interceptor vs MIRV separation", () => {
     const base = b.buildUnit(UnitType.Airstrip, tiles[0], {});
     const jet = b.buildUnit(UnitType.Interceptor, spot, { patrolTile: spot });
     const exec = new InterceptorExecution(jet, base, spot);
-    exec.init(g, 0);
 
     expect(mirv.isActive()).toBe(true);
-    exec.tick(1);
+    g.addExecution(exec);
+    // Missiles until it dies or three have been spent; this seed kills it.
+    for (let i = 0; i < 300 && mirv.isActive(); i++) g.executeNextTick();
     expect(mirv.isActive()).toBe(false);
 
     // No warheads were ever left behind in the world.

@@ -33,6 +33,53 @@ export function canDemoteCapital(mg: Game, capital: Unit): boolean {
   return stackedStructures(mg, capital).length === 0;
 }
 
+/**
+ * Capital strike lockout (Phase 39): after a bunker buster takes out a
+ * nation's capital, it may not promote a new one until this tick. Kept off
+ * the Player interface because nothing else needs it.
+ */
+const promotionLockedUntil = new WeakMap<Player, number>();
+
+export function lockCapitalPromotion(player: Player, untilTick: number): void {
+  promotionLockedUntil.set(
+    player,
+    Math.max(untilTick, promotionLockedUntil.get(player) ?? 0),
+  );
+}
+
+/** Tick until which `player` may not promote a capital (0 = not locked). */
+export function capitalPromotionLockedUntil(player: Player): number {
+  return promotionLockedUntil.get(player) ?? 0;
+}
+
+/**
+ * Turn a capital back into a city of the same level, free. Shared by the
+ * player's own demotion and the bunker buster.
+ */
+export function demoteCapital(mg: Game, capital: Unit): Unit | null {
+  const tile = capital.tile();
+  if (tile === undefined) return null;
+  const owner = capital.owner();
+  const level = capital.level();
+  capital.delete(false);
+  // Free: the city already exists and was paid for. buildUnit used to
+  // charge the full city price, so demoting cost money.
+  const city = owner.buildUnit(UnitType.City, tile, {}, { free: true });
+  for (let i = 1; i < level; i++) {
+    city.increaseLevel();
+  }
+  // A capital is still a city for rail purposes; keep the station.
+  const nearbyFactory = mg.hasUnitNearby(
+    tile,
+    mg.config().trainStationMaxRange(),
+    UnitType.Factory,
+  );
+  if (nearbyFactory) {
+    mg.addExecution(new TrainStationExecution(city));
+  }
+  return city;
+}
+
 /** Promote an owned City into this nation's Capital. One capital per nation. */
 export class PromoteCapitalExecution implements Execution {
   private mg: Game;
@@ -66,6 +113,8 @@ export class PromoteCapitalExecution implements Execution {
     if (this.player.units(UnitType.Capital).length > 0) {
       return;
     }
+    // Recently struck by a bunker buster.
+    if (ticks < capitalPromotionLockedUntil(this.player)) return;
 
     // Affordability must be checked HERE. Every other build path goes through
     // canBuild, which gates on cost; a promotion is not a build, so it skips
@@ -205,27 +254,7 @@ export class DemoteCapitalExecution implements Execution {
       return;
     }
 
-    const tile = capital.tile();
-    if (tile === undefined) return;
-
-    const level = capital.level();
-    capital.delete(false);
-    // Free: the city already exists and was paid for. buildUnit used to
-    // charge the full city price, so demoting cost money.
-    const city = this.player.buildUnit(UnitType.City, tile, {}, { free: true });
-    for (let i = 1; i < level; i++) {
-      city.increaseLevel();
-    }
-
-    // Same on the way back down.
-    const nearbyFactory = this.mg.hasUnitNearby(
-      tile,
-      this.mg.config().trainStationMaxRange(),
-      UnitType.Factory,
-    );
-    if (nearbyFactory) {
-      this.mg.addExecution(new TrainStationExecution(city));
-    }
+    demoteCapital(this.mg, capital);
   }
 
   isActive(): boolean {

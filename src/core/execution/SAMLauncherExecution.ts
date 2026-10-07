@@ -9,7 +9,7 @@ import {
 } from "../game/Game";
 import { TileRef } from "../game/GameMap";
 import { PseudoRandom } from "../PseudoRandom";
-import { SAMMissileExecution } from "./SAMMissileExecution";
+import { SAM_AIR_TARGETS, SAMMissileExecution } from "./SAMMissileExecution";
 
 type Target = {
   unit: Unit;
@@ -279,19 +279,6 @@ class SAMTargetingSystem {
     return this.sortTargets(targets);
   }
 }
-
-/**
- * Aircraft a SAM will engage.
- *
- * Fighters and military transports only. Civilian traffic is spared so open
- * borders stay viable, and interceptors are spared because they are already
- * fragile to fighters - ground fire deleting them as well would leave nothing
- * able to stop a MIRV before separation.
- */
-const SAM_AIR_TARGETS: UnitType[] = [
-  UnitType.FighterJet,
-  UnitType.TransportJet,
-];
 
 export class SAMLauncherExecution implements Execution {
   private mg: Game;

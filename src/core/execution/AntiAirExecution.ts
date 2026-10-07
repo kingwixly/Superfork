@@ -5,6 +5,8 @@ export const ANTI_AIR_TARGETS: UnitType[] = [
   UnitType.FighterJet,
   UnitType.TransportJet,
   UnitType.Bomber,
+  // Phase 39. Not the stealth bomber: only interceptors can see that.
+  UnitType.LargeBomber,
 ];
 
 /** Engagement radius, in tiles. */
