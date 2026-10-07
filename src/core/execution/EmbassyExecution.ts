@@ -60,6 +60,8 @@ export class EmbassyRequestExecution implements Execution {
   init(mg: Game, ticks: number): void {
     this.active = false;
     if (!canUseSuperforkSystems(this.guest.type())) return;
+    // The lobby can switch embassies off; buildUnit throws for disabled types.
+    if (mg.config().isUnitDisabled(UnitType.Embassy)) return;
     if (!mg.hasPlayer(this.hostID)) return;
 
     const host = mg.player(this.hostID);

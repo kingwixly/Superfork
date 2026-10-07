@@ -60,6 +60,8 @@ export class PromoteCapitalExecution implements Execution {
     if (city.isUnderConstruction()) {
       return;
     }
+    // The lobby can switch capitals off; buildUnit throws for disabled types.
+    if (this.mg.config().isUnitDisabled(UnitType.Capital)) return;
     // One per nation.
     if (this.player.units(UnitType.Capital).length > 0) {
       return;

@@ -33,6 +33,7 @@ import {
   GameConfig,
   Intent,
   LiveStats,
+  ProvinceIntent,
   ReportReason,
   ServerMessage,
   Winner,
@@ -216,6 +217,11 @@ export class SendCeasefireResponseIntentEvent implements GameEvent {
     public readonly requestor: string,
     public readonly accept: boolean,
   ) {}
+}
+
+/** Superfork: any province action (see ProvinceIntentSchema). */
+export class SendProvinceIntentEvent implements GameEvent {
+  constructor(public readonly intent: Omit<ProvinceIntent, "type">) {}
 }
 
 /** Superfork diplomacy: answer an embassy request on your land. */
@@ -514,6 +520,9 @@ export class Transport {
         requestor: e.requestor,
         accept: e.accept,
       }),
+    );
+    this.eventBus.on(SendProvinceIntentEvent, (e) =>
+      this.sendIntent({ type: "province", ...e.intent }),
     );
     this.eventBus.on(SendEmbassyResponseIntentEvent, (e) =>
       this.sendIntent({

@@ -51,6 +51,19 @@ export class MouseDownEvent implements GameEvent {
   ) {}
 }
 
+/**
+ * Superfork: freehand stroke for the province drawing tool. While
+ * UIState.provinceDrawing is set, a single-pointer drag paints instead of
+ * panning the map; these carry the stroke (screen coordinates).
+ */
+export class ProvinceStrokeEvent implements GameEvent {
+  constructor(
+    public readonly phase: "start" | "move" | "end",
+    public readonly x: number,
+    public readonly y: number,
+  ) {}
+}
+
 export class MouseMoveEvent implements GameEvent {
   constructor(
     public readonly x: number,
@@ -786,6 +799,11 @@ export class InputHandler {
       this.lastPointerDownY = event.clientY;
 
       this.eventBus.emit(new MouseDownEvent(event.clientX, event.clientY));
+      if (this.uiState.provinceDrawing === true) {
+        this.eventBus.emit(
+          new ProvinceStrokeEvent("start", event.clientX, event.clientY),
+        );
+      }
 
       // Start long-press timer for touch devices
       if (event.pointerType === "touch") {
@@ -832,6 +850,12 @@ export class InputHandler {
     }
     this.pointerDown = false;
     this.pointers.clear();
+    if (this.uiState.provinceDrawing === true) {
+      this.eventBus.emit(
+        new ProvinceStrokeEvent("end", event.clientX, event.clientY),
+      );
+      return;
+    }
 
     // Clean up long-press state
     if (this.longPressTimer !== null) {
@@ -1003,7 +1027,12 @@ export class InputHandler {
 
       // If shift is held OR touch long-press is active OR selection box already
       // started, continue emitting selection box updates
-      if (
+      if (this.uiState.provinceDrawing === true) {
+        // Drawing a province border: the drag paints, the map stays put.
+        this.eventBus.emit(
+          new ProvinceStrokeEvent("move", event.clientX, event.clientY),
+        );
+      } else if (
         this.selectionBoxActive ||
         this.activeKeys.has(this.keybinds.boxSelectWarships) ||
         this.longPressActive

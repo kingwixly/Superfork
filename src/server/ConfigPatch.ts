@@ -42,6 +42,7 @@ const NULLABLE_KEYS = [
   "disableAlliances",
   "customAllianceDuration",
   "waterNukes",
+  "provinces",
 ] as const satisfies readonly (keyof GameConfig)[];
 
 type NullableKey = (typeof NULLABLE_KEYS)[number];

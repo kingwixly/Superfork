@@ -118,6 +118,27 @@ const unitOptions: { type: UnitType; translationKey: string }[] = [
   { type: UnitType.HydrogenBomb, translationKey: "unit_type.hydrogen_bomb" },
   { type: UnitType.MIRV, translationKey: "unit_type.mirv" },
   { type: UnitType.Factory, translationKey: "unit_type.factory" },
+  // Superfork. Missing from this list meant hosts could not switch any of
+  // them off.
+  { type: UnitType.Bank, translationKey: "unit_type.bank" },
+  { type: UnitType.Capital, translationKey: "unit_type.capital" },
+  { type: UnitType.Embassy, translationKey: "unit_type.embassy" },
+  { type: UnitType.Airstrip, translationKey: "unit_type.airstrip" },
+  { type: UnitType.Airfield, translationKey: "unit_type.airfield" },
+  {
+    type: UnitType.InternationalAirport,
+    translationKey: "unit_type.international_airport",
+  },
+  { type: UnitType.Destroyer, translationKey: "unit_type.destroyer" },
+  { type: UnitType.Corvette, translationKey: "unit_type.corvette" },
+  { type: UnitType.Carrier, translationKey: "unit_type.carrier" },
+  { type: UnitType.FighterJet, translationKey: "unit_type.fighter_jet" },
+  { type: UnitType.Interceptor, translationKey: "unit_type.interceptor" },
+  { type: UnitType.Bomber, translationKey: "unit_type.bomber" },
+  { type: UnitType.TransportJet, translationKey: "unit_type.transport_jet" },
+  { type: UnitType.NeutronBomb, translationKey: "unit_type.neutron_bomb" },
+  { type: UnitType.EMPBomb, translationKey: "unit_type.emp_bomb" },
+  { type: UnitType.ASBM, translationKey: "unit_type.asbm" },
 ];
 
 const MAP_ICON = svg`<path

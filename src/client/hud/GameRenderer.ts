@@ -6,6 +6,7 @@ import { BuildPreviewController } from "../controllers/BuildPreviewController";
 import { HoverHighlightController } from "../controllers/HoverHighlightController";
 import { LiveStatsController } from "../controllers/LiveStatsController";
 import { MapLayerController } from "../controllers/MapLayerController";
+import { ProvinceController } from "../controllers/ProvinceController";
 import { SoundEffectController } from "../controllers/SoundEffectController";
 import { StructureHighlightController } from "../controllers/StructureHighlightController";
 import { TerritorySelectionController } from "../controllers/TerritorySelectionController";
@@ -317,6 +318,7 @@ export function createRenderer(
   const layers: Controller[] = [
     new WarshipSelectionController(game, eventBus, transformHandler, view),
     new TerritorySelectionController(eventBus, game, transformHandler, uiState),
+    new ProvinceController(eventBus, game, transformHandler, uiState),
     new BuildPreviewController(
       game,
       eventBus,

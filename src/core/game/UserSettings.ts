@@ -305,6 +305,15 @@ export class UserSettings {
     return this.getBool("settings.attackingTroopsOverlay", true);
   }
 
+  /** Superfork: draw province borders on the map. */
+  provinceBorders() {
+    return this.getBool("settings.provinceBorders", true);
+  }
+
+  toggleProvinceBorders() {
+    this.setBool("settings.provinceBorders", !this.provinceBorders());
+  }
+
   toggleAttackingTroopsOverlay() {
     this.setBool(
       "settings.attackingTroopsOverlay",
