@@ -1973,6 +1973,8 @@ export async function createLobby(): Promise<GameInfo> {
 // Idempotent server-side: repeat calls return the same successor.
 export async function createNextLobby(
   previousGameID: string,
+  // UCI "new lobby": lets a non-host admin start the next lobby.
+  uciToken?: string,
 ): Promise<GameInfo> {
   const token = await getPlayToken();
   const response = await fetch(
@@ -1982,6 +1984,7 @@ export async function createNextLobby(
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
+        ...(uciToken !== undefined ? { "X-UCI-Token": uciToken } : {}),
       },
     },
   );
@@ -1991,6 +1994,30 @@ export async function createNextLobby(
     throw new Error(`create next lobby failed: HTTP ${response.status}`);
   }
   return (await response.json()) as GameInfo;
+}
+
+/**
+ * Trade the UCI password for a session token. Any worker can answer; this one
+ * is the game's own. Returns null for a wrong password; throws on lockout or
+ * when UCI is not set up on the server.
+ */
+export async function verifyUciPassword(
+  gameID: string,
+  password: string,
+): Promise<string | null> {
+  const response = await fetch(
+    `${ClientEnv.gameHttpBase(gameID)}/${ClientEnv.gameWorkerPath(gameID)}/api/uci/verify`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password }),
+    },
+  );
+  if (response.status === 401) return null;
+  if (response.status === 429) throw new Error("locked");
+  if (!response.ok) throw new Error("unavailable");
+  const data = (await response.json()) as { token?: unknown };
+  return typeof data.token === "string" ? data.token : null;
 }
 
 export function getApiBase() {

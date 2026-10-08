@@ -1,5 +1,6 @@
 import { PseudoRandom } from "../../PseudoRandom";
 import { Game, Player, PlayerType, Relation } from "../../game/Game";
+import { forcedAiAnswer } from "../../game/Uci";
 import {
   AssistanceResponseExecution,
   hasPendingAssistance,
@@ -82,7 +83,9 @@ export class NationDiplomacyBehavior {
 
       // Accept if we are losing to them, decline if we are winning. A bot
       // that accepts while ahead throws away a won war.
-      const accept = this.player.troops() < other.troops() * LOSING_RATIO;
+      const accept =
+        forcedAiAnswer(this.game, other) ??
+        this.player.troops() < other.troops() * LOSING_RATIO;
       this.game.addExecution(
         new CeasefireResponseExecution(this.player, other.id(), accept),
       );
@@ -101,8 +104,9 @@ export class NationDiplomacyBehavior {
       // foothold, so a nation that distrusts you says no.
       if (pendingEmbassyBetween(other, this.player) !== undefined) {
         const accept =
-          this.player.isFriendly(other) ||
-          this.player.relation(other) >= Relation.Neutral;
+          forcedAiAnswer(this.game, other) ??
+          (this.player.isFriendly(other) ||
+            this.player.relation(other) >= Relation.Neutral);
         this.game.addExecution(
           new EmbassyResponseExecution(this.player, other.id(), accept),
         );
@@ -111,8 +115,9 @@ export class NationDiplomacyBehavior {
       // Help an ally unless we are fighting for our own life.
       if (pendingAssistanceFrom(other, this.player) !== undefined) {
         const accept =
-          this.player.isFriendly(other) &&
-          this.player.troops() > other.troops() * LOSING_RATIO;
+          forcedAiAnswer(this.game, other) ??
+          (this.player.isFriendly(other) &&
+            this.player.troops() > other.troops() * LOSING_RATIO);
         this.game.addExecution(
           new AssistanceResponseExecution(this.player, other.id(), accept),
         );

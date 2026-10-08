@@ -43,6 +43,7 @@ import { ReplayPanel } from "./layers/ReplayPanel";
 import { SettingsModal } from "./layers/SettingsModal";
 import { SpawnTimer } from "./layers/SpawnTimer";
 import { TutorialPanel } from "./layers/TutorialPanel";
+import { UciMenu } from "./layers/UciMenu";
 import { UnitDisplay } from "./layers/UnitDisplay";
 import { WinModal } from "./layers/WinModal";
 import { loadAllSprites } from "./SpriteLoader";
@@ -168,6 +169,13 @@ export function createRenderer(
   }
   newLobbyPrompt.eventBus = eventBus;
   newLobbyPrompt.game = game;
+
+  const uciMenu = document.querySelector("uci-menu") as UciMenu;
+  if (!(uciMenu instanceof UciMenu)) {
+    console.error("uci menu not found");
+  }
+  uciMenu.eventBus = eventBus;
+  uciMenu.game = game;
 
   const replayPanel = document.querySelector("replay-panel") as ReplayPanel;
   if (!(replayPanel instanceof ReplayPanel)) {
@@ -333,6 +341,7 @@ export function createRenderer(
     new SoundEffectController(game, eventBus),
     ...(mapLayerController ? [mapLayerController] : []),
     eventsDisplay,
+    uciMenu,
     actionableEvents,
     attacksDisplay,
     chatDisplay,

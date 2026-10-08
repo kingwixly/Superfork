@@ -1,4 +1,5 @@
 ﻿import { Execution, Game, Player, Structures } from "../game/Game";
+import { forcedAiAnswer } from "../game/Uci";
 import { PseudoRandom } from "../PseudoRandom";
 import { simpleHash } from "../Util";
 import { AllianceExtensionExecution } from "./alliance/AllianceExtensionExecution";
@@ -67,7 +68,9 @@ export class TribeExecution implements Execution {
   private acceptAllAllianceRequests() {
     // Accept all alliance requests
     for (const req of this.tribe.incomingAllianceRequests()) {
-      req.accept();
+      // UCI "all AI say no" applies to tribes too.
+      if (forcedAiAnswer(this.mg, req.requestor()) === false) req.reject();
+      else req.accept();
     }
 
     // Accept all alliance extension requests
@@ -77,6 +80,7 @@ export class TribeExecution implements Execution {
       if (!alliance.onlyOneAgreedToExtend()) continue;
 
       const human = alliance.other(this.tribe);
+      if (forcedAiAnswer(this.mg, human) === false) continue;
       this.mg.addExecution(
         new AllianceExtensionExecution(this.tribe, human.id()),
       );

@@ -12,6 +12,7 @@ import {
 import { TileRef } from "../game/GameMap";
 import { MotionPlanRecord } from "../game/MotionPlans";
 import { targetTransportTile } from "../game/TransportShipUtils";
+import { isAttackLocked } from "../game/Uci";
 import { WaterPathFinder } from "../pathfinding/PathFinder";
 import { PathStatus } from "../pathfinding/types";
 import { AttackExecution } from "./AttackExecution";
@@ -53,6 +54,11 @@ export class TransportShipExecution implements Execution {
   }
 
   init(mg: Game, ticks: number) {
+    // UCI lock attack: no naval landings either.
+    if (isAttackLocked(this.attacker)) {
+      this.active = false;
+      return;
+    }
     if (!mg.isValidRef(this.ref)) {
       console.warn(`TransportShipExecution: ref ${this.ref} not valid`);
       this.active = false;

@@ -40,6 +40,7 @@ import { ServerEnv } from "./ServerEnv";
 import { applyStaticAssetCacheControl } from "./StaticAssetCache";
 import { createMatchTelemetryEmitter } from "./telemetry/BufferedMatchTelemetryEmitter";
 import { MAX_WEBSOCKET_PAYLOAD_BYTES } from "./telemetry/MatchTelemetryConfig";
+import { uciAuth } from "./UciAuth";
 import { WorkerLobbyService } from "./WorkerLobbyService";
 import { initWorkerMetrics } from "./WorkerMetrics";
 import { stripWorkerPrefix } from "./WorkerPathPrefix";
@@ -205,14 +206,17 @@ export async function startWorker() {
       if (previousGame === null) {
         return res.status(404).json({ error: "Previous game not found" });
       }
-      if (!previousGame.isCreator(creatorPersistentID)) {
+      // A UCI admin may start the next lobby for any game ("new lobby").
+      const uciToken = req.headers["x-uci-token"];
+      const isUciAdmin = uciAuth()?.verifyToken(uciToken) ?? false;
+      if (!previousGame.isCreator(creatorPersistentID) && !isUciAdmin) {
         return res.status(403).json({
           error: "Only the lobby creator can create a successor lobby",
         });
       }
       // Reusing a lobby is a private-lobby feature: a public game's players
       // never opted into following a host to another game.
-      if (previousGame.isPublic()) {
+      if (previousGame.isPublic() && !isUciAdmin) {
         return res
           .status(403)
           .json({ error: "Public games cannot spawn a successor lobby" });
@@ -260,6 +264,27 @@ export async function startWorker() {
       workerIndex: workerId,
       workerPath: ServerEnv.workerPath(id),
     });
+  });
+
+  // UCI developer tools: trade the password for a session token. Off unless
+  // UCI_PASSWORD_HASH is set. See UciAuth.ts.
+  app.post("/api/uci/verify", async (req, res) => {
+    const auth = uciAuth();
+    if (auth === null) {
+      return res.status(404).json({ error: "not available" });
+    }
+    // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
+    const ip = req.ip || req.socket.remoteAddress || "unknown";
+    if (auth.isLockedOut(ip)) {
+      return res.status(429).json({ error: "too many attempts" });
+    }
+    const token = await auth.verifyPassword(req.body?.password, ip);
+    if (token === null) {
+      log.warn(`UCI: wrong password from ${ipAnonymize(ip)}`);
+      return res.status(401).json({ error: "wrong password" });
+    }
+    log.info(`UCI: unlocked by ${ipAnonymize(ip)}`);
+    return res.json({ token });
   });
 
   // Toggle whether a private lobby is visible in the public lobby browser.

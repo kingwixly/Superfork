@@ -940,6 +940,8 @@ export interface Player {
   isPlayer(): this is Player;
   toString(): string;
   isLobbyCreator(): boolean;
+  /** UCI host transfer: overrides the lobby-creator flag from PlayerInfo. */
+  setLobbyCreator(isCreator: boolean): void;
 
   // State & Properties
   isAlive(): boolean;

@@ -274,6 +274,10 @@ export class PlayerView {
    */
   applyUpdate(pu: PlayerUpdate): void {
     applyStateUpdate(this.state, pu);
+    // Normally fixed for the game, but a UCI host transfer moves it.
+    if (pu.isLobbyCreator !== undefined) {
+      this.static.isLobbyCreator = pu.isLobbyCreator;
+    }
     // applyStateUpdate refreshes outgoingEmojis every tick; re-apply the
     // "Disable emojis" setting so live emojis stay hidden when it's off (#4430).
     if (!userSettings.emojis()) {

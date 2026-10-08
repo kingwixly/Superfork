@@ -77,7 +77,8 @@ export type Intent =
   | RenameCapitalIntent
   | WithdrawBankIntent
   | LoadCorvetteIntent
-  | LaunchCorvetteIntent;
+  | LaunchCorvetteIntent
+  | UciIntent;
 
 export type AttackIntent = z.infer<typeof AttackIntentSchema>;
 
@@ -94,6 +95,9 @@ export type CeasefireResponseIntent = z.infer<
 >;
 export type SanctionIntent = z.infer<typeof SanctionIntentSchema>;
 export type CedeLandIntent = z.infer<typeof CedeLandIntentSchema>;
+export type UciIntent = z.infer<typeof UciIntentSchema>;
+export type UciAction = z.infer<typeof UciActionSchema>;
+export type ClientUciAuthMessage = z.infer<typeof ClientUciAuthMessageSchema>;
 export type TreatyCreateIntent = z.infer<typeof TreatyCreateIntentSchema>;
 export type TreatyInviteIntent = z.infer<typeof TreatyInviteIntentSchema>;
 export type TreatyResponseIntent = z.infer<typeof TreatyResponseIntentSchema>;
@@ -160,7 +164,8 @@ export type ClientMessage =
   | ClientLogMessage
   | ClientHashMessage
   | ClientSpectateMessage
-  | ClientReportMessage;
+  | ClientReportMessage
+  | ClientUciAuthMessage;
 
 export type ServerMessage =
   | ServerTurnMessage
@@ -1005,6 +1010,42 @@ export const MoveAircraftIntentSchema = z.object({
   tile: zb.uint(),
 });
 
+/**
+ * UCI developer tools. The server only relays one from a client that has
+ * proven the UCI password (see src/server/UciAuth.ts); in singleplayer the
+ * client checks the password over HTTP before showing the menu at all.
+ */
+export const UciActionSchema = z.enum([
+  "gold",
+  "troops",
+  "lock_attack",
+  "cede_country",
+  "cede_area",
+  "switch",
+  "disappear",
+  "ai_attack",
+  "ai_answers",
+  "announce",
+  "pause",
+  "end_game",
+  "transfer_host",
+]);
+export const MAX_UCI_ANNOUNCEMENT = 200;
+export const UciIntentSchema = z.object({
+  type: z.literal("uci"),
+  action: UciActionSchema,
+  /** The country acted on. Defaults to the admin's own where that makes sense. */
+  targetID: MappedID.optional(),
+  /** Who receives ceded land. Defaults to the admin. */
+  recipientID: MappedID.optional(),
+  tiles: z.array(zb.uint()).max(MAX_CEDE_TILES).optional(),
+  enabled: z.boolean().optional(),
+  aiAnswer: z.enum(["yes", "no", "normal"]).optional(),
+  text: SafeString.max(MAX_UCI_ANNOUNCEMENT).optional(),
+  /** transfer_host: the new host's clientID. */
+  targetClientID: MappedID.optional(),
+});
+
 export const IntentSchema = z.discriminatedUnion("type", [
   AttackIntentSchema,
   CancelAttackIntentSchema,
@@ -1055,6 +1096,7 @@ export const IntentSchema = z.discriminatedUnion("type", [
   WithdrawBankIntentSchema,
   LoadCorvetteIntentSchema,
   LaunchCorvetteIntentSchema,
+  UciIntentSchema,
 ]);
 
 // StampedIntent = Intent with server-stamped clientID (used in turns and execution)
@@ -1432,6 +1474,15 @@ export const ClientSpectateMessageSchema = z.object({
   spectator: z.boolean(),
 });
 
+/**
+ * Proves the UCI password for this connection, with the token the HTTP
+ * verify endpoint issued. Never relayed to other clients.
+ */
+export const ClientUciAuthMessageSchema = z.object({
+  type: z.literal("uci_auth"),
+  token: z.string().max(200),
+});
+
 export const ClientMessageSchema = zb.discriminatedUnion("type", [
   ClientSendWinnerSchema,
   ClientSendLiveStatsSchema,
@@ -1443,6 +1494,7 @@ export const ClientMessageSchema = zb.discriminatedUnion("type", [
   ClientHashSchema,
   ClientSpectateMessageSchema,
   ClientReportMessageSchema,
+  ClientUciAuthMessageSchema,
 ]);
 
 //

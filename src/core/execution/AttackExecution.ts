@@ -14,6 +14,7 @@ import {
   UnitType,
 } from "../game/Game";
 import { GameMap, TileRef } from "../game/GameMap";
+import { isAttackLocked } from "../game/Uci";
 import { PseudoRandom } from "../PseudoRandom";
 import { assertNever } from "../Util";
 import { followMasterIntoWar } from "./PuppetExecution";
@@ -66,6 +67,12 @@ export class AttackExecution implements Execution {
     }
     this.mg = mg;
     this.map = mg.map();
+
+    // UCI lock attack.
+    if (isAttackLocked(this._owner)) {
+      this.active = false;
+      return;
+    }
 
     if (this._targetID !== null && !mg.hasPlayer(this._targetID)) {
       console.warn(`target ${this._targetID} not found`);

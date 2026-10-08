@@ -73,6 +73,7 @@ import {
   noopMatchTelemetryEmitter,
   type MatchTelemetryEmitter,
 } from "./telemetry/MatchTelemetry";
+import { uciAuth } from "./UciAuth";
 
 // Outcome of GameServer.joinClient. The worker maps each to a close code.
 export type JoinResult =
@@ -380,7 +381,7 @@ export class GameServer {
           return finish({ status: 400, error: "cannot kick yourself" });
         }
         const reason =
-          actor.isAdmin && !actor.isLobbyCreator
+          (actor.isAdmin || actor.isUciAdmin === true) && !actor.isLobbyCreator
             ? KICK_REASON_ADMIN
             : KICK_REASON_LOBBY_CREATOR;
         this.log.info("player kicked", {
@@ -408,6 +409,42 @@ export class GameServer {
           );
         }
         return finish({ status: 200 });
+      }
+
+      case "uci": {
+        this.log.info("uci action", {
+          clientID: stamped.clientID,
+          gameID: this.id,
+          action: stamped.action,
+        });
+        if (stamped.action === "transfer_host") {
+          const next =
+            stamped.targetClientID === undefined
+              ? undefined
+              : this.clients.get(stamped.targetClientID);
+          if (next === undefined) {
+            return finish({ status: 404, error: "no such player" });
+          }
+          this.creatorPersistentID = next.persistentID;
+          this.broadcastLobbyInfo();
+        }
+        if (!this.hasStarted()) return finish({ status: 200 });
+        if (stamped.action === "pause") {
+          // Same ordering as toggle_pause: flush the pause into a turn
+          // before stopping, clear the flag before resuming.
+          if (stamped.enabled ?? true) {
+            this.addIntent(stamped);
+            this.endTurn();
+            this.paused = true;
+          } else {
+            this.paused = false;
+            this.addIntent(stamped);
+            this.endTurn();
+          }
+          return finish({ status: 200 });
+        }
+        if (!this.paused) this.addIntent(stamped);
+        return finish({ status: 200 }, this.paused ? "paused" : undefined);
       }
 
       case "toggle_pause": {
@@ -695,6 +732,7 @@ export class GameServer {
           isLobbyCreator: client.clientID === this.lobbyCreatorID,
           isAdmin: isAdminRole(client.role),
           isAdminBot: false,
+          isUciAdmin: client.uciAdmin,
         });
         if (outcome.status !== 200) {
           this.log.warn(`intent rejected`, {
@@ -719,6 +757,16 @@ export class GameServer {
       }
       case "spectate": {
         this.setSpectator(client, clientMsg.spectator);
+        break;
+      }
+      case "uci_auth": {
+        const auth = uciAuth();
+        client.uciAdmin = auth !== null && auth.verifyToken(clientMsg.token);
+        this.log.info("uci auth", {
+          clientID: client.clientID,
+          gameID: this.id,
+          ok: client.uciAdmin,
+        });
         break;
       }
       case "winner": {

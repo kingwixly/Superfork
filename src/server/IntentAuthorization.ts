@@ -7,6 +7,8 @@ export interface IntentActor {
   isLobbyCreator: boolean;
   isAdmin: boolean; // role-based admin/root (also true for the admin bot)
   isAdminBot: boolean; // the trusted admin-bot HTTP API
+  // Proved the UCI password on this connection (see UciAuth.ts).
+  isUciAdmin?: boolean;
 }
 
 // Outcome of dispatching an intent. `status` is an HTTP-style code: 200 on
@@ -39,11 +41,21 @@ export function authorizeIntent(
     return { status: 403, error: "admin bot cannot act on public games" };
   }
 
+  const uci = actor.isUciAdmin === true && !actor.isAdminBot;
+
   switch (intent.type) {
+    case "uci":
+      if (!uci) {
+        return { status: 403, error: "uci requires the uci password" };
+      }
+      return null;
+
     case "mark_disconnected":
       return { status: 400, error: "mark_disconnected is server-internal" };
 
     case "kick_player":
+      // UCI "remove from game" works in any game.
+      if (uci) return null;
       if (!actor.isLobbyCreator && !actor.isAdmin) {
         return {
           status: 403,
@@ -112,6 +124,11 @@ export function authorizeIntent(
       return null;
 
     case "toggle_pause":
+      if (uci) {
+        return game.hasStarted
+          ? null
+          : { status: 409, error: "game not started" };
+      }
       if (!actor.isLobbyCreator && !actor.isAdminBot) {
         return { status: 403, error: "only the lobby creator can pause" };
       }

@@ -80,6 +80,7 @@ import {
   bestShoreDeploymentSource,
   canBuildTransportShip,
 } from "./TransportShipUtils";
+import { isAttackLocked } from "./Uci";
 import { UnitImpl } from "./UnitImpl";
 
 // Rot re-stamps every second, so a little slack keeps the cue from strobing.
@@ -124,6 +125,21 @@ Object.freeze(EMPTY_ATTACK_UPDATES);
 Object.freeze(EMPTY_ALLIANCE_VIEWS);
 Object.freeze(EMPTY_EMOJIS);
 
+/** What a UCI attack lock stops a country building: anything offensive. */
+const UCI_LOCKED_UNITS: ReadonlySet<UnitType> = new Set([
+  UnitType.AtomBomb,
+  UnitType.HydrogenBomb,
+  UnitType.MIRV,
+  UnitType.NeutronBomb,
+  UnitType.EMPBomb,
+  UnitType.ASBM,
+  UnitType.Bomber,
+  UnitType.TransportJet,
+  UnitType.BlindingBomb,
+  UnitType.BunkerBuster,
+  UnitType.BomberAtomDrop,
+  UnitType.BomberHydrogenDrop,
+]);
 export class PlayerImpl implements Player {
   public _lastTileChange: number = 0;
   // Bumped on every ownership change of one of this player's tiles (several
@@ -752,7 +768,13 @@ export class PlayerImpl implements Player {
   }
 
   isLobbyCreator(): boolean {
-    return this.playerInfo.isLobbyCreator;
+    return this.lobbyCreatorOverride ?? this.playerInfo.isLobbyCreator;
+  }
+
+  private lobbyCreatorOverride: boolean | null = null;
+
+  setLobbyCreator(isCreator: boolean): void {
+    this.lobbyCreatorOverride = isCreator;
   }
 
   isAlive(): boolean {
@@ -1728,6 +1750,10 @@ export class PlayerImpl implements Player {
     if (SuperforkUnits.has(unitType) && !canUseSuperforkSystems(this.type())) {
       return false;
     }
+    // UCI lock attack: no missiles, strikes or warplanes either.
+    if (isAttackLocked(this) && UCI_LOCKED_UNITS.has(unitType)) {
+      return false;
+    }
 
     return this.canSpawnUnitType(unitType, targetTile, validTiles);
   }
@@ -2333,6 +2359,7 @@ export class PlayerImpl implements Player {
   }
 
   public canAttack(tile: TileRef): boolean {
+    if (isAttackLocked(this)) return false;
     const owner = this.mg.owner(tile);
     if (owner === this) {
       return false;

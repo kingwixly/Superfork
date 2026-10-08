@@ -61,6 +61,7 @@ import {
   TreatyResponseExecution,
 } from "./TreatyExecution";
 import { TribeSpawner } from "./TribeSpawner";
+import { UciExecution } from "./UciExecution";
 import { UpgradeStructureExecution } from "./UpgradeStructureExecution";
 import { PlayerSpawner } from "./utils/PlayerSpawner";
 
@@ -172,6 +173,9 @@ export class Executor {
         return new MarkDisconnectedExecution(player, intent.isDisconnected);
       case "toggle_pause":
         return new PauseExecution(player, intent.paused);
+
+      case "uci":
+        return new UciExecution(player, intent);
 
       case "ceasefire_propose":
         return new CeasefireProposeExecution(

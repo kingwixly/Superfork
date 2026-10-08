@@ -10,6 +10,9 @@ export class Client {
 
   public reportedWinner: Winner | null = null;
 
+  /** Proved the UCI password on this connection. */
+  public uciAdmin = false;
+
   constructor(
     public readonly clientID: ClientID,
     public readonly persistentID: string,

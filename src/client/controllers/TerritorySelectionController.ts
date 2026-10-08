@@ -25,19 +25,22 @@ import { TransformHandler } from "../TransformHandler";
 import {
   SendCedeLandIntentEvent,
   SendEmbassyRequestIntentEvent,
+  SendUciIntentEvent,
 } from "../Transport";
 import { UIState } from "../UIState";
 import { translateText } from "../Utils";
 import { GameView } from "../view";
 
 /** What a completed selection is for. */
-export type SelectionPurpose = "cede" | "embassy";
+export type SelectionPurpose = "cede" | "embassy" | "uci_paint";
 
 export interface SelectionRequest {
   purpose: SelectionPurpose;
   targetID: PlayerID;
   /** Tiles to start with. */
   initial?: TileRef[];
+  /** uci_paint: the session token the action is sent with. */
+  uciToken?: string;
 }
 
 /** Raised by the diplomacy menu to begin a selection. */
@@ -129,12 +132,12 @@ export class TerritorySelectionController implements Controller {
       return;
     }
 
-    if (!this.ownsForCede(tile)) return;
+    if (!this.paintable(tile)) return;
     const removing = this.selected.has(tile);
     for (const t of this.disc(tile, CEDE_BRUSH_RADIUS)) {
       if (removing) {
         this.selected.delete(t);
-      } else if (this.ownsForCede(t) && this.selected.size < MAX_CEDE_TILES) {
+      } else if (this.paintable(t) && this.selected.size < MAX_CEDE_TILES) {
         this.selected.add(t);
       }
     }
@@ -157,6 +160,12 @@ export class TerritorySelectionController implements Controller {
     return out;
   }
 
+  /** Cede: your own land. UCI paint: any land at all. */
+  private paintable(tile: TileRef): boolean {
+    if (this.active?.purpose === "uci_paint") return this.game.isLand(tile);
+    return this.ownsForCede(tile);
+  }
+
   /** Only your own land can be ceded. */
   private ownsForCede(tile: TileRef): boolean {
     const me = this.game.myPlayer();
@@ -175,6 +184,14 @@ export class TerritorySelectionController implements Controller {
     if (req.purpose === "embassy") {
       this.eventBus.emit(
         new SendEmbassyRequestIntentEvent(req.targetID, tiles[0]),
+      );
+    } else if (req.purpose === "uci_paint") {
+      this.eventBus.emit(
+        new SendUciIntentEvent(req.uciToken ?? "", {
+          action: "cede_area",
+          tiles,
+          recipientID: req.targetID,
+        }),
       );
     } else {
       this.eventBus.emit(new SendCedeLandIntentEvent(req.targetID, tiles));
@@ -221,20 +238,25 @@ export class TerritorySelectionController implements Controller {
     const banner = this.banner;
     if (req === null || banner === null) return;
     const player = this.targetName();
-    const cede = req.purpose === "cede";
+    const paint = req.purpose === "uci_paint";
+    const cede = req.purpose === "cede" || paint;
     banner.textContent = "";
 
     const text = document.createElement("div");
     const title = document.createElement("div");
     title.style.fontWeight = "700";
-    title.textContent = cede
-      ? translateText("territory_select.cede_title", { player })
-      : translateText("territory_select.embassy_title", { player });
+    title.textContent = paint
+      ? translateText("uci.paint_title", { player })
+      : cede
+        ? translateText("territory_select.cede_title", { player })
+        : translateText("territory_select.embassy_title", { player });
     const hint = document.createElement("div");
     hint.style.opacity = "0.8";
     hint.style.fontSize = "12px";
     hint.textContent = cede
-      ? translateText("territory_select.cede_hint", { player }) +
+      ? translateText(paint ? "uci.paint_hint" : "territory_select.cede_hint", {
+          player,
+        }) +
         " · " +
         translateText("territory_select.tiles", { count: this.selected.size })
       : translateText("territory_select.embassy_hint", { player });

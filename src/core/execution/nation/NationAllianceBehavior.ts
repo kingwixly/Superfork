@@ -6,6 +6,7 @@ import {
   PlayerType,
   Relation,
 } from "../../game/Game";
+import { forcedAiAnswer } from "../../game/Uci";
 import { PseudoRandom } from "../../PseudoRandom";
 import { assertNever } from "../../Util";
 import { AllianceExtensionExecution } from "../alliance/AllianceExtensionExecution";
@@ -37,7 +38,9 @@ export class NationAllianceBehavior {
         req.reject();
         continue;
       }
-      if (this.getAllianceDecision(req.requestor(), true)) {
+      // UCI "all AI say yes / no" overrides the judgement.
+      const forced = forcedAiAnswer(this.game, req.requestor());
+      if (forced ?? this.getAllianceDecision(req.requestor(), true)) {
         req.accept();
       } else {
         req.reject();
@@ -54,7 +57,8 @@ export class NationAllianceBehavior {
       if (!alliance.onlyOneAgreedToExtend()) continue;
 
       const human = alliance.other(this.player);
-      if (!this.getAllianceDecision(human, true)) continue;
+      const forced = forcedAiAnswer(this.game, human);
+      if (!(forced ?? this.getAllianceDecision(human, true))) continue;
 
       this.game.addExecution(
         new AllianceExtensionExecution(this.player, human.id()),

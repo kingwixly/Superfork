@@ -30,11 +30,13 @@ import {
   ClientSendLiveStatsMessage,
   ClientSendWinnerMessage,
   ClientSpectateMessage,
+  ClientUciAuthMessage,
   GameConfig,
   Intent,
   LiveStats,
   ReportReason,
   ServerMessage,
+  UciIntent,
   Winner,
 } from "../core/Schemas";
 import {
@@ -334,6 +336,23 @@ export class SendToggleGameStartTimer implements GameEvent {
   constructor() {}
 }
 
+/**
+ * A UCI developer-tool action. The token travels separately (uci_auth) and
+ * is re-sent before every action, so a reconnected socket is re-proven
+ * without the menu having to track connection state.
+ */
+export class SendUciIntentEvent implements GameEvent {
+  constructor(
+    public readonly token: string,
+    public readonly intent: Omit<UciIntent, "type">,
+  ) {}
+}
+
+/** Prove the UCI password on this connection without sending an action. */
+export class SendUciAuthEvent implements GameEvent {
+  constructor(public readonly token: string) {}
+}
+
 // Switch between playing and watching from the lobby screen.
 export class SendSpectateEvent implements GameEvent {
   constructor(public readonly spectator: boolean) {}
@@ -554,6 +573,22 @@ export class Transport {
     this.eventBus.on(SendKickPlayerIntentEvent, (e) =>
       this.onSendKickPlayerIntent(e),
     );
+
+    this.eventBus.on(SendUciAuthEvent, (e) =>
+      this.sendMsg({
+        type: "uci_auth",
+        token: e.token,
+      } satisfies ClientUciAuthMessage),
+    );
+
+    this.eventBus.on(SendUciIntentEvent, (e) => {
+      // Never relayed: proves this connection to the server only.
+      this.sendMsg({
+        type: "uci_auth",
+        token: e.token,
+      } satisfies ClientUciAuthMessage);
+      this.sendIntent({ type: "uci", ...e.intent });
+    });
 
     this.eventBus.on(SendUpdateGameConfigIntentEvent, (e) =>
       this.onSendUpdateGameConfigIntent(e),
