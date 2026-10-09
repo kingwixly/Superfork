@@ -117,6 +117,19 @@ export class UnitDisplay extends LitElement implements Controller {
           this.cost(item) <= (player?.gold() ?? 0n) &&
           (player?.units(UnitType.Port).length ?? 0) > 0
         );
+      // Strikes need a bomber of the right kind first.
+      case UnitType.BlindingBomb:
+      case UnitType.BunkerBuster:
+        return (
+          this.cost(item) <= (player?.gold() ?? 0n) &&
+          (player?.units(UnitType.StealthBomber).length ?? 0) > 0
+        );
+      case UnitType.BomberAtomDrop:
+      case UnitType.BomberHydrogenDrop:
+        return (
+          this.cost(item) <= (player?.gold() ?? 0n) &&
+          (player?.units(UnitType.LargeBomber).length ?? 0) > 0
+        );
       default:
         return this.cost(item) <= (player?.gold() ?? 0n);
     }

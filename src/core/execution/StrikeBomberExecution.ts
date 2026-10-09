@@ -207,9 +207,9 @@ export class StrikeBomberExecution
 }
 
 /**
- * Carry out a strike order: hand it to an idle bomber of the right kind, or
- * buy a new one at the nearest capable base. Charges the payload, plus the
- * airframe when a new bomber is bought. Returns false if nothing could fly.
+ * Carry out a strike order with an idle bomber the player already owns
+ * (bought separately from the Air tab). Charges the payload only. Returns
+ * false if no bomber of the right kind is free.
  */
 export function orderAirStrike(
   mg: Game,
@@ -218,35 +218,27 @@ export function orderAirStrike(
   target: TileRef,
 ): boolean {
   if (player.canBuild(order, target) === false) return false;
-  const bomberType: StrikeBomberType = bomberFor(order);
-  const payload = payloadFor(order);
-  // The order's price: payload, plus an airframe if none is free. Taken
-  // before anything is bought, since buying one makes it free.
-  const total = mg.unitInfo(order).cost(mg, player);
+  const bomber = idleStrikeBomber(mg, player, bomberFor(order), target);
+  if (bomber === null) return false;
+  player.removeGold(mg.unitInfo(order).cost(mg, player));
+  bomber.assign(payloadFor(order), target);
+  return true;
+}
 
-  let bomber: StrikeBomberControl | null = idleStrikeBomber(
-    mg,
-    player,
-    bomberType,
-    target,
-  );
-  let charge = total;
-  if (bomber === null) {
-    const spawn = player.canBuild(bomberType, target);
-    if (spawn === false) return false;
-    const base = [
-      ...player.units(UnitType.Airfield),
-      ...player.units(UnitType.InternationalAirport),
-    ].find((b) => b.tile() === spawn);
-    // buildUnit charges the airframe (and records the purchase, which the
-    // large bomber's rising price counts).
-    charge -= mg.unitInfo(bomberType).cost(mg, player);
-    const unit = player.buildUnit(bomberType, spawn, { homeBase: base });
-    const exec = new StrikeBomberExecution(unit, base);
-    mg.addExecution(exec);
-    bomber = exec;
-  }
-  if (charge > 0n) player.removeGold(charge);
-  bomber.assign(payload, target);
+/** Buy a strategic bomber; it waits at its base for strike orders. */
+export function buyStrikeBomber(
+  mg: Game,
+  player: Player,
+  type: StrikeBomberType,
+  near: TileRef,
+): boolean {
+  const spawn = player.canBuild(type, near);
+  if (spawn === false) return false;
+  const base = [
+    ...player.units(UnitType.Airfield),
+    ...player.units(UnitType.InternationalAirport),
+  ].find((b) => b.tile() === spawn);
+  const unit = player.buildUnit(type, spawn, { homeBase: base });
+  mg.addExecution(new StrikeBomberExecution(unit, base));
   return true;
 }

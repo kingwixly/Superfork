@@ -58,6 +58,12 @@ function run(ticks: number) {
   for (let i = 0; i < ticks; i++) game.executeNextTick();
 }
 
+/** Buy a strategic bomber at the airfield, as the Air tab does. */
+function buy(type: UnitType.StealthBomber | UnitType.LargeBomber) {
+  order(type, base);
+  run(2);
+}
+
 /** A foe tile well inside their land, away from the edges. */
 function foeTile(): number {
   return game.ref(60, 100);
@@ -66,19 +72,27 @@ function foeTile(): number {
 describe("Strike bombers", () => {
   beforeEach(setupGame);
 
-  test("the first strike buys a stealth bomber; it flies, strikes, and comes home", () => {
+  test("a strike needs a bomber you own; it flies, strikes, and comes home", () => {
     const target = foeTile();
-    const cost =
-      game.config().unitInfo(UnitType.BunkerBuster).cost(game, me) ?? 0n;
-    // Airframe plus payload while no bomber is free.
-    expect(cost).toBe(4_000_000n + 2_500_000n);
     const gold = me.gold();
+    // No bomber yet: the order does nothing and costs nothing.
     order(UnitType.BunkerBuster, target);
     run(2);
-    expect(me.units(UnitType.StealthBomber).length).toBe(1);
-    expect(me.gold()).toBe(gold - cost);
+    expect(me.units(UnitType.StealthBomber).length).toBe(0);
+    expect(me.gold()).toBe(gold);
 
+    buy(UnitType.StealthBomber);
+    expect(me.units(UnitType.StealthBomber).length).toBe(1);
+    expect(me.gold()).toBe(gold - 4_000_000n);
+
+    // The strike itself costs only its payload.
+    expect(game.config().unitInfo(UnitType.BunkerBuster).cost(game, me)).toBe(
+      2_500_000n,
+    );
     const city = foe.buildUnit(UnitType.City, target, {});
+    order(UnitType.BunkerBuster, target);
+    run(2);
+    expect(me.gold()).toBe(gold - 4_000_000n - 2_500_000n);
     run(2000);
     expect(city.isActive()).toBe(false);
     const bomber = me.units(UnitType.StealthBomber)[0];
@@ -86,17 +100,17 @@ describe("Strike bombers", () => {
     expect(bomber.tile()).toBe(base);
   });
 
-  test("a second strike reuses the idle bomber and pays only the payload", () => {
+  test("the same bomber flies strike after strike", () => {
+    buy(UnitType.StealthBomber);
     order(UnitType.BlindingBomb, foeTile());
     run(2000);
-    const price = game.config().unitInfo(UnitType.BlindingBomb).cost(game, me);
-    expect(price).toBe(1_500_000n);
     order(UnitType.BlindingBomb, foeTile());
     run(2);
     expect(me.units(UnitType.StealthBomber).length).toBe(1);
   });
 
   test("a bunker buster demotes a plain capital, costs troops and locks promotion", () => {
+    buy(UnitType.StealthBomber);
     const target = foeTile();
     const capital = foe.buildUnit(UnitType.Capital, target, {});
     foe.setTroops(100_000);
@@ -117,6 +131,7 @@ describe("Strike bombers", () => {
   });
 
   test("a capital locked by a stacked airport is destroyed instead", () => {
+    buy(UnitType.StealthBomber);
     const target = foeTile();
     const capital = foe.buildUnit(UnitType.Capital, target, {});
     foe.buildUnit(UnitType.InternationalAirport, target + 1, {});
@@ -130,6 +145,7 @@ describe("Strike bombers", () => {
   });
 
   test("a blinding bomb takes SAMs and silos offline, and nothing else", () => {
+    buy(UnitType.StealthBomber);
     const target = foeTile();
     const sam = foe.buildUnit(UnitType.SAMLauncher, target, {});
     const city = foe.buildUnit(UnitType.City, target + 2, {});
@@ -150,31 +166,32 @@ describe("Strike bombers", () => {
 
   test("a large bomber drops an atom bomb straight down", () => {
     const target = foeTile();
-    const first = game
-      .config()
-      .unitInfo(UnitType.BomberAtomDrop)
-      .cost(game, me);
-    expect(first).toBe(10_000_000n + 750_000n);
+    expect(game.config().unitInfo(UnitType.LargeBomber).cost(game, me)).toBe(
+      10_000_000n,
+    );
+    buy(UnitType.LargeBomber);
+    expect(me.units(UnitType.LargeBomber).length).toBe(1);
+    // The drop costs exactly an atom bomb.
+    expect(game.config().unitInfo(UnitType.BomberAtomDrop).cost(game, me)).toBe(
+      750_000n,
+    );
     const tilesBefore = foe.numTilesOwned();
     order(UnitType.BomberAtomDrop, target);
-    run(2);
-    expect(me.units(UnitType.LargeBomber).length).toBe(1);
     run(3000);
     expect(foe.numTilesOwned()).toBeLessThan(tilesBefore);
     expect(game.owner(target).isPlayer()).toBe(false);
   });
 
   test("every new large bomber costs more, even after losing one", () => {
-    order(UnitType.BomberAtomDrop, foeTile());
-    run(2);
+    buy(UnitType.LargeBomber);
     me.units(UnitType.LargeBomber)[0].delete(false);
     run(2);
-    // None free again, so the next order buys another - at the higher price.
     const next = game.config().unitInfo(UnitType.LargeBomber).cost(game, me);
     expect(next).toBe(15_000_000n);
   });
 
   test("a loaded large bomber that is shot down blows up where it falls", () => {
+    buy(UnitType.LargeBomber);
     order(UnitType.BomberHydrogenDrop, foeTile());
     run(40);
     const bomber = me.units(UnitType.LargeBomber)[0];

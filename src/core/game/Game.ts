@@ -303,6 +303,8 @@ export const BuildableAttacks = unitTypeGroup([
   UnitType.TransportJet, // Phase 14
   // Never listed before Phase 39, so the build menu could not offer it.
   UnitType.Bomber,
+  UnitType.StealthBomber, // Phase 42: bought first, then used for strikes
+  UnitType.LargeBomber, // Phase 42
   UnitType.BlindingBomb, // Phase 39
   UnitType.BunkerBuster, // Phase 39
   UnitType.BomberAtomDrop, // Phase 39

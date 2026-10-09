@@ -41,6 +41,8 @@ const transportJetIcon = assetUrl("images/TransportJetIconWhite.svg");
 const airfieldIcon = assetUrl("images/AirfieldIconWhite.svg");
 const airportIcon = assetUrl("images/AirportIconWhite.svg");
 const bomberIcon = assetUrl("images/BomberIconWhite.svg");
+const stealthBomberIcon = assetUrl("images/StealthBomberIconWhite.svg");
+const largeBomberIcon = assetUrl("images/LargeBomberIconWhite.svg");
 const blindingBombIcon = assetUrl("images/BlindingBombIconWhite.svg");
 const bunkerBusterIcon = assetUrl("images/BunkerBusterIconWhite.svg");
 const bomberAtomDropIcon = assetUrl("images/BomberAtomDropIconWhite.svg");
@@ -208,8 +210,23 @@ export const buildTable: BuildItemDisplay[][] = [
       key: "unit_type.bomber",
       countable: true,
     },
-    // Phase 39 strikes. Each is flown by an idle bomber of its kind; the
-    // first one also buys the bomber, which the price shows.
+    // Phase 42: the strategic bombers are bought here, then used by the
+    // strike orders below.
+    {
+      unitType: UnitType.StealthBomber,
+      icon: stealthBomberIcon,
+      description: "build_menu.desc.stealth_bomber",
+      key: "unit_type.stealth_bomber",
+      countable: true,
+    },
+    {
+      unitType: UnitType.LargeBomber,
+      icon: largeBomberIcon,
+      description: "build_menu.desc.large_bomber",
+      key: "unit_type.large_bomber",
+      countable: true,
+    },
+    // Strikes: each is flown by one of your idle bombers of its kind.
     {
       unitType: UnitType.BlindingBomb,
       icon: blindingBombIcon,
@@ -329,6 +346,8 @@ export const buildCategories: BuildCategory[] = [
       UnitType.Interceptor,
       UnitType.Bomber,
       UnitType.TransportJet,
+      UnitType.StealthBomber,
+      UnitType.LargeBomber,
       UnitType.BlindingBomb,
       UnitType.BunkerBuster,
       UnitType.BomberAtomDrop,

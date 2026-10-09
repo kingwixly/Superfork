@@ -1919,9 +1919,9 @@ export class PlayerImpl implements Player {
       if (wouldHitTeammate) return false;
     }
 
+    // Flown by a bomber you own and that is not already on a mission.
     const idle = idleStrikeBomber(mg, this, bomber, tile);
-    if (idle !== null) return idle.bomber().tile();
-    return this.launchBaseFor(bomber, tile) ?? false;
+    return idle !== null ? idle.bomber().tile() : false;
   }
 
   nukeSpawn(tile: TileRef, nukeType: UnitType): TileRef | false {

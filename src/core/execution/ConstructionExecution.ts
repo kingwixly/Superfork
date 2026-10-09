@@ -17,7 +17,7 @@ import { NukeExecution } from "./NukeExecution";
 import { PortExecution } from "./PortExecution";
 import { SAMLauncherExecution } from "./SAMLauncherExecution";
 import { SpecialWarheadExecution } from "./SpecialWarheadExecution";
-import { orderAirStrike } from "./StrikeBomberExecution";
+import { buyStrikeBomber, orderAirStrike } from "./StrikeBomberExecution";
 import { TransportJetExecution } from "./TransportJetExecution";
 import { WarshipExecution } from "./WarshipExecution";
 
@@ -175,6 +175,10 @@ export class ConstructionExecution implements Execution {
       case UnitType.BomberAtomDrop:
       case UnitType.BomberHydrogenDrop:
         orderAirStrike(this.mg, player, this.constructionType, this.tile);
+        break;
+      case UnitType.StealthBomber:
+      case UnitType.LargeBomber:
+        buyStrikeBomber(this.mg, player, this.constructionType, this.tile);
         break;
       case UnitType.Bomber: {
         const spawn = player.canBuild(UnitType.Bomber, this.tile);

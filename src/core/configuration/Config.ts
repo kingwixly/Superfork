@@ -19,13 +19,7 @@ import {
   UnitInfo,
   UnitType,
 } from "../game/Game";
-import {
-  bomberFor,
-  hasIdleStrikeBomber,
-  isStrikeOrder,
-  payloadFor,
-  StrikeOrder,
-} from "../game/StrikeBombers";
+import { isStrikeOrder, payloadFor, StrikeOrder } from "../game/StrikeBombers";
 import { UserSettings } from "../game/UserSettings";
 import { GameConfig, TeamCountConfig } from "../Schemas";
 import { NukeType } from "../StatsSchemas";
@@ -788,9 +782,9 @@ export class Config {
   }
 
   /**
-   * A strike costs its payload, plus a new bomber when none is free. The
-   * drop orders' payloads are priced as the real bombs, so a bomber drop is
-   * never a cheaper atom bomb than a silo launch.
+   * A strike costs its payload. The drop orders' payloads are priced as the
+   * real bombs, so a bomber drop is never a cheaper atom bomb than a silo
+   * launch. The bomber itself is bought separately.
    */
   private strikeOrderCost(
     order: StrikeOrder,
@@ -798,13 +792,9 @@ export class Config {
   ): (g: Game, p: Player, extraUnits?: number) => bigint {
     return (game: Game, player: Player) => {
       const payload = payloadFor(order);
-      const payloadPrice =
-        payload === order
-          ? payloadCost(game, player)
-          : this.unitInfo(payload).cost(game, player);
-      const bomber = bomberFor(order);
-      if (hasIdleStrikeBomber(player, bomber)) return payloadPrice;
-      return payloadPrice + this.unitInfo(bomber).cost(game, player);
+      return payload === order
+        ? payloadCost(game, player)
+        : this.unitInfo(payload).cost(game, player);
     };
   }
 
