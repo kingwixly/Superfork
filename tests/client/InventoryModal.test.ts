@@ -728,27 +728,21 @@ describe("InventoryModal", () => {
     expect(localStorage.getItem(EFFECTS_KEY)).toBe(saved.effects);
   });
 
-  it("restores an enabled Retry button after a failed retry", async () => {
-    Object.assign(modal as unknown as Record<string, unknown>, {
-      cosmetics: null,
-      ownershipState: "error",
-      isLoading: false,
-      loadFailed: true,
-    });
+  it("falls back to the free country flags when the catalog cannot load", async () => {
+    // Superfork: self-hosted servers have no cosmetics API at all.
     vi.mocked(fetchCosmetics).mockResolvedValue(null);
-    modal.requestUpdate();
-    await modal.updateComplete;
-
-    modal.querySelector<HTMLButtonElement>("[data-inventory-retry]")!.click();
+    vi.mocked(userAuth).mockResolvedValue(false);
+    modal.open();
 
     await vi.waitFor(() => {
-      const retry = modal.querySelector<HTMLButtonElement>(
-        "[data-inventory-retry]",
+      expect((modal as unknown as { isLoading: boolean }).isLoading).toBe(
+        false,
       );
-      expect(retry).toBeTruthy();
-      expect(retry?.disabled).toBe(false);
     });
-    expect((modal as unknown as { isLoading: boolean }).isLoading).toBe(false);
+    expect(modal.querySelector('[data-inventory-state="error"]')).toBeNull();
+    expect((modal as unknown as { loadFailed: boolean }).loadFailed).toBe(
+      false,
+    );
   });
 
   it("shows a non-destructive failure state", async () => {
@@ -851,10 +845,12 @@ describe("InventoryModal", () => {
       new CustomEvent("userMeResponse", { detail: false }),
     );
 
+    // Superfork: a failed account lookup now reads as a guest (there is no
+    // account API self-hosted) - and must still not wipe the saved loadout.
     await vi.waitFor(() => {
       expect(
-        modal.querySelector('[data-inventory-state="error"]'),
-      ).toBeTruthy();
+        (modal as unknown as { ownershipState: string }).ownershipState,
+      ).toBe("guest");
     });
     expect(localStorage.getItem(PATTERN_KEY)).toBe(saved.pattern);
     expect(localStorage.getItem(FLAG_KEY)).toBe(saved.flag);

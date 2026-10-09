@@ -4,6 +4,73 @@
     "name": "None"
   },
   {
+    "code": "Republic of Wakanda",
+    "continent": "Africa",
+    "name": "Republic of Wakanda"
+  },
+  {
+    "code": "Kingdom of Wakanda",
+    "continent": "Africa",
+    "name": "Kingdom of Wakanda"
+  },
+  {
+    "code": "Wakanda",
+    "continent": "Africa",
+    "name": "Wakanda"
+  },
+  {
+    "code": "SuperFront",
+    "name": "SuperFront"
+  },
+  {
+    "code": "Violet Dominion",
+    "name": "Violet Dominion"
+  },
+  {
+    "code": "Amethyst Republic",
+    "name": "Amethyst Republic"
+  },
+  {
+    "code": "Twilight Federation",
+    "name": "Twilight Federation"
+  },
+  {
+    "code": "Lavender Isles",
+    "name": "Lavender Isles"
+  },
+  {
+    "code": "Purple Horde",
+    "name": "Purple Horde"
+  },
+  {
+    "code": "Aurora Union",
+    "name": "Aurora Union"
+  },
+  {
+    "code": "Obsidian Order",
+    "name": "Obsidian Order"
+  },
+  {
+    "code": "Orchid Coast",
+    "name": "Orchid Coast"
+  },
+  {
+    "code": "Iron Covenant",
+    "name": "Iron Covenant"
+  },
+  {
+    "code": "Ember Khanate",
+    "name": "Ember Khanate"
+  },
+  {
+    "code": "Northreach",
+    "name": "Northreach"
+  },
+  {
+    "code": "Sunspire",
+    "name": "Sunspire"
+  },
+  {
     "code": "Abbasid Caliphate",
     "continent": "Asia",
     "name": "Abbasid Caliphate"

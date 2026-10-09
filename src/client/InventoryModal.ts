@@ -50,6 +50,9 @@ import { translateText } from "./Utils";
 
 type OwnershipState = "loading" | "guest" | "loaded" | "error";
 
+/** Stand-in when the cosmetics API is unreachable (always, self-hosted). */
+const EMPTY_CATALOG: Cosmetics = { patterns: {}, flags: {} };
+
 function countryFlag(name: string, code: string): Flag {
   return {
     name,
@@ -192,7 +195,10 @@ export class InventoryModal extends BaseModal {
       if (loadId !== this.ownershipLoadId) return;
       if (response === false) {
         this.userMeResponse = false;
-        this.ownershipState = "error";
+        // Superfork: self-hosted servers have no account API, so this always
+        // fails there. Treat it as a guest rather than an error, which hid
+        // the whole inventory (and with it every country flag).
+        this.ownershipState = "guest";
         return;
       }
 
@@ -201,7 +207,7 @@ export class InventoryModal extends BaseModal {
     } catch {
       if (loadId !== this.ownershipLoadId) return;
       this.userMeResponse = false;
-      this.ownershipState = "error";
+      this.ownershipState = "guest";
     }
   }
 
@@ -228,8 +234,11 @@ export class InventoryModal extends BaseModal {
         this.loadOwnership(userMeResponse),
       ]);
       if (loadId !== this.inventoryLoadId) return;
-      this.cosmetics = cosmetics;
-      this.loadFailed = cosmetics === null;
+      // Superfork: no cosmetics API on a self-hosted server. Fall back to an
+      // empty catalog so the free country flags (which ship with the game)
+      // are still choosable instead of the whole inventory failing.
+      this.cosmetics = cosmetics ?? EMPTY_CATALOG;
+      this.loadFailed = false;
     } catch {
       if (loadId !== this.inventoryLoadId) return;
       this.cosmetics = null;
@@ -740,7 +749,9 @@ export class InventoryModal extends BaseModal {
   protected async onOpen(): Promise<void> {
     if (
       this.ownershipState === "loading" ||
-      (this.cosmetics === null && !this.loadFailed)
+      (this.cosmetics === null && !this.loadFailed) ||
+      // Showing the fallback: try the real catalog again on each open.
+      this.cosmetics === EMPTY_CATALOG
     ) {
       await this.loadInventory();
       return;
