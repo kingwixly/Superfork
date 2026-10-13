@@ -1,4 +1,4 @@
-import { Player, Unit, UnitType } from "../game/Game";
+import { Game, Player, PlayerID, Unit, UnitType } from "../game/Game";
 import { TileRef } from "../game/GameMap";
 import { AircraftExecution } from "./AircraftExecution";
 
@@ -6,8 +6,17 @@ import { AircraftExecution } from "./AircraftExecution";
 export const BOMB_INTERVAL = 25;
 /** Radius of a single bomb, in tiles. */
 export const BOMB_RADIUS = 6;
-/** Share of the defender's troops a bomb kills inside that radius. */
-export const BOMB_TROOP_KILL = 0.03;
+/**
+ * Share of the troops stationed inside a bomb's radius that it kills. Troops
+ * are one pool per nation, so "stationed there" is the nation's troops times
+ * the share of its land the bomb covers. The old rule took 3% of the WHOLE
+ * army per bomb, forever, and erased armies in a minute or two.
+ */
+export const BOMB_TROOP_KILL = 0.35;
+/** Tiles one bomb covers (a radius-6 disc). */
+export const BOMB_AREA_TILES = 113;
+/** Bombs per sortie; then the bomber flies home to re-arm. */
+export const BOMBS_PER_SORTIE = 8;
 /** Explosions drawn per bomb run (visual only). */
 const BOMB_IMPACTS = 3;
 /** Impact offsets within the bomb radius, cycled through per run. */
@@ -41,6 +50,11 @@ const IMPACT_PATTERN: readonly [number, number][] = [
  */
 export class BomberExecution extends AircraftExecution {
   private lastBomb = 0;
+  /** The nation being bombed: whoever owned the ordered tile. */
+  private targetOwner: PlayerID | null = null;
+  private bombs = BOMBS_PER_SORTIE;
+  /** Re-armed at base and waiting for a new order. */
+  private idle = false;
 
   constructor(
     unit: Unit,
@@ -50,12 +64,38 @@ export class BomberExecution extends AircraftExecution {
     super(unit, home);
   }
 
+  init(mg: Game, ticks: number): void {
+    super.init(mg, ticks);
+    this.aimAt(this.target);
+  }
+
   protected onOrdered(tile: TileRef): void {
     this.target = tile;
     this.destination = tile;
+    this.idle = false;
+    this.aimAt(tile);
+  }
+
+  /** Only the nation that owns the ordered tile is bombed - never anyone else. */
+  private aimAt(tile: TileRef): void {
+    const owner = this.mg.owner(tile);
+    this.targetOwner = owner.isPlayer() ? (owner as Player).id() : null;
   }
 
   protected decide(ticks: number): void {
+    if (this.bombs <= 0) {
+      // Out of bombs: home to re-arm, then wait for the next order.
+      const homeTile = this.home?.tile();
+      if (homeTile === undefined || this.distanceTo(homeTile) <= 1) {
+        this.bombs = BOMBS_PER_SORTIE;
+        this.destination = undefined;
+        this.idle = true;
+        return;
+      }
+      this.destination = homeTile;
+      return;
+    }
+    if (this.idle) return;
     this.destination ??= this.target;
     this.maybeBomb(ticks);
   }
@@ -70,12 +110,20 @@ export class BomberExecution extends AircraftExecution {
     const owner = this.mg.owner(tile);
     if (!owner.isPlayer()) return;
     const victim = owner as Player;
+    // Only the ordered target, and never yourself or a friend (an alliance
+    // can be signed mid-flight).
+    if (victim.id() !== this.targetOwner) return;
     if (victim.id() === this.owner().id()) return;
     if (this.owner().isFriendly(victim)) return;
 
-    const killed = Math.floor(victim.troops() * BOMB_TROOP_KILL);
+    const share = Math.min(
+      1,
+      BOMB_AREA_TILES / Math.max(1, victim.numTilesOwned()),
+    );
+    const killed = Math.floor(victim.troops() * share * BOMB_TROOP_KILL);
     if (killed > 0) victim.removeTroops(killed);
     this.lastBomb = ticks;
+    this.bombs--;
     this.showImpacts(tile, ticks);
   }
 

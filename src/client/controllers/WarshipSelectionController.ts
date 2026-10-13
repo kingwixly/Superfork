@@ -17,9 +17,16 @@ import {
 import { MapRenderer } from "../render/gl";
 import { TransformHandler } from "../TransformHandler";
 import { MoveAircraftIntentEvent, MoveWarshipIntentEvent } from "../Transport";
+import { UIState } from "../UIState";
 import { GameView, UnitView } from "../view";
 
 const WARSHIP_SELECTION_RADIUS = 10;
+/**
+ * Over land a click must land right on the aircraft to select it: land
+ * clicks are also attacks, and a wide radius would swallow attacks next to
+ * your own patrolling fighters.
+ */
+export const AIRCRAFT_LAND_PICK_RADIUS = 3;
 
 /**
  * Controller for warship selection state + click handling.
@@ -73,7 +80,13 @@ export class WarshipSelectionController implements Controller {
     private eventBus: EventBus,
     private transformHandler: TransformHandler,
     private view: MapRenderer,
+    private uiState?: UIState,
   ) {}
+
+  /** Mark this click as an aircraft click, so it does not also attack. */
+  private consumeClick(): void {
+    if (this.uiState) this.uiState.aircraftClickAt = performance.now();
+  }
 
   tick() {
     // Prune any destroyed warships from the multi-selection so callers
@@ -192,6 +205,7 @@ export class WarshipSelectionController implements Controller {
   /** Send the right move intent for the kind of unit selected. */
   private emitMoveFor(unitIds: number[], tile: TileRef): void {
     if (this.selectionIsAircraft()) {
+      this.consumeClick();
       this.eventBus.emit(new MoveAircraftIntentEvent(unitIds, tile));
     } else {
       this.eventBus.emit(new MoveWarshipIntentEvent(unitIds, tile));
@@ -218,6 +232,25 @@ export class WarshipSelectionController implements Controller {
       if (!this.game.isValidCoord(cell.x, cell.y)) return;
       clickRef = this.game.ref(cell.x, cell.y);
     }
+    // Nothing selected yet: a click near one of your aircraft selects it,
+    // wherever it is. This used to bail out on any land click first, so an
+    // aircraft over land - which is where bombers work - could never be
+    // selected, and so never moved.
+    if (this.selectedUnit === null && this.multiSelectedWarships.length === 0) {
+      nearbyWarships ??= this.findWarshipsNearCell(clickRef);
+      const aircraft = nearbyWarships.find(
+        (u) =>
+          AIRCRAFT_SELECTABLE.includes(u.type()) &&
+          this.game.manhattanDist(u.tile(), clickRef!) <=
+            AIRCRAFT_LAND_PICK_RADIUS,
+      );
+      if (aircraft !== undefined && !this.game.isWater(clickRef)) {
+        this.consumeClick();
+        this.eventBus.emit(new UnitSelectionEvent(aircraft, true));
+        return;
+      }
+    }
+
     // Ships need water; aircraft fly over anything. Keeping the old
     // water-only guard would have made aircraft orders silently impossible
     // over land, which is most of the map.
@@ -353,6 +386,12 @@ export class WarshipSelectionController implements Controller {
   private onUnitSelection(event: UnitSelectionEvent) {
     this.multiSelectedWarships = [];
     this.selectedUnit = null;
+    if (this.uiState) {
+      const units = event.units ?? (event.unit ? [event.unit] : []);
+      this.uiState.aircraftSelected =
+        event.isSelected &&
+        units.some((u) => AIRCRAFT_SELECTABLE.includes(u.type()));
+    }
 
     if (!event.isSelected) {
       this.view.setSelectedUnits([]);

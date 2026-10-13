@@ -16,4 +16,12 @@ export interface UIState {
    * belong to the selection, not to attacks or unit selection.
    */
   territorySelection?: boolean;
+  /**
+   * When an aircraft click (select or move order) last happened, in
+   * performance.now() ms. The same map click must not also launch a ground
+   * attack on the land underneath.
+   */
+  aircraftClickAt?: number;
+  /** True while one of your aircraft is selected. */
+  aircraftSelected?: boolean;
 }

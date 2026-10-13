@@ -69,6 +69,7 @@ import {
 import { createCanvas } from "./Utils";
 import { WebGLFrameBuilder } from "./WebGLFrameBuilder";
 import { MapLayerController } from "./controllers/MapLayerController";
+import { AIRCRAFT_LAND_PICK_RADIUS } from "./controllers/WarshipSelectionController";
 import { createRenderer, GameRenderer } from "./hud/GameRenderer";
 import { goldRateTracker } from "./hud/layers/lib/GoldRateTracker";
 import {
@@ -1138,6 +1139,33 @@ export class ClientGameRunner {
     }
   }
 
+  /**
+   * A click that selects or orders one of your aircraft is not an attack.
+   * Checked from both sides because the selection controller may handle the
+   * same click before or after this one.
+   */
+  private isAircraftClick(tile: TileRef): boolean {
+    const ui = this.renderer.uiState;
+    if (ui.aircraftSelected === true) return true;
+    if (
+      ui.aircraftClickAt !== undefined &&
+      performance.now() - ui.aircraftClickAt < 100
+    ) {
+      return true;
+    }
+    const me = this.gameView.myPlayer();
+    if (me === null) return false;
+    return this.gameView
+      .units(UnitType.FighterJet, UnitType.Interceptor, UnitType.Bomber)
+      .some(
+        (u) =>
+          u.isActive() &&
+          u.owner() === me &&
+          this.gameView.manhattanDist(u.tile(), tile) <=
+            AIRCRAFT_LAND_PICK_RADIUS,
+      );
+  }
+
   private inputEvent(event: MouseUpEvent) {
     if (
       !this.isActive ||
@@ -1155,6 +1183,7 @@ export class ClientGameRunner {
     }
     console.log(`clicked cell ${cell}`);
     const tile = this.gameView.ref(cell.x, cell.y);
+    if (this.isAircraftClick(tile)) return;
     if (
       this.gameView.isLand(tile) &&
       !this.gameView.hasOwner(tile) &&

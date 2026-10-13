@@ -323,7 +323,13 @@ export function createRenderer(
   tutorialPanel.uiState = uiState;
 
   const layers: Controller[] = [
-    new WarshipSelectionController(game, eventBus, transformHandler, view),
+    new WarshipSelectionController(
+      game,
+      eventBus,
+      transformHandler,
+      view,
+      uiState,
+    ),
     new TerritorySelectionController(eventBus, game, transformHandler, uiState),
     new BuildPreviewController(
       game,
