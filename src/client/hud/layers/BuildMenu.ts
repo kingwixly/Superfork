@@ -348,10 +348,6 @@ export const buildCategories: BuildCategory[] = [
       UnitType.TransportJet,
       UnitType.StealthBomber,
       UnitType.LargeBomber,
-      UnitType.BlindingBomb,
-      UnitType.BunkerBuster,
-      UnitType.BomberAtomDrop,
-      UnitType.BomberHydrogenDrop,
     ],
   },
   {
@@ -364,6 +360,11 @@ export const buildCategories: BuildCategory[] = [
       UnitType.NeutronBomb,
       UnitType.EMPBomb,
       UnitType.ASBM,
+      // Bomber-delivered: need a stealth or large bomber (Air tab).
+      UnitType.BlindingBomb,
+      UnitType.BunkerBuster,
+      UnitType.BomberAtomDrop,
+      UnitType.BomberHydrogenDrop,
     ],
   },
 ];
