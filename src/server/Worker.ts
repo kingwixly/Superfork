@@ -1,6 +1,7 @@
 import { ID, isValidGameID } from "@openfront/engine-api/Schemas";
 import { CloseCode, CloseReason } from "@openfront/shared/CloseCodes";
 import { GameEnv } from "@openfront/shared/configuration/Env";
+import { GAME_ROUTE, rewriteLegacyGameApi } from "@openfront/shared/GameRoute";
 import { generateID, replacer } from "@openfront/shared/SharedUtil";
 import {
   ClientMessage,
@@ -30,7 +31,6 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { WebSocket, WebSocketServer } from "ws";
 import { z } from "zod";
-import { GAME_ROUTE, rewriteLegacyGameApi } from "@openfront/shared/GameRoute";
 import { registerAdminBotRoutes } from "./AdminBotRoutes";
 import { censorPlayer } from "./Censor";
 import { Client } from "./Client";

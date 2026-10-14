@@ -1,7 +1,7 @@
-import type { ExecRecord } from "../snapshot/SnapshotContext";
-import { unsnapshottable } from "../snapshot/Unsnapshottable";
 import { UnitType } from "@openfront/engine-api/game/GameTypes";
 import { Execution, Game, Player, Unit } from "../game/Game";
+import type { ExecRecord } from "../snapshot/SnapshotContext";
+import { unsnapshottable } from "../snapshot/Unsnapshottable";
 import { TrainStationExecution } from "./TrainStationExecution";
 
 /**

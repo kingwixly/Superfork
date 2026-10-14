@@ -1,5 +1,11 @@
 import { PlayerInfo, PlayerType } from "@openfront/engine-api/game/GameTypes";
-import { ASSISTANCE_COMMITMENT, AssistanceResponseExecution, clearPendingAssistance, pendingAssistanceFrom, RequestAssistanceExecution } from "@openfront/engine/execution/AssistanceExecution";
+import {
+  ASSISTANCE_COMMITMENT,
+  AssistanceResponseExecution,
+  clearPendingAssistance,
+  pendingAssistanceFrom,
+  RequestAssistanceExecution,
+} from "@openfront/engine/execution/AssistanceExecution";
 import { Game, Player } from "@openfront/engine/game/Game";
 import { setup } from "./util/Setup";
 

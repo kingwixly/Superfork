@@ -1,7 +1,7 @@
-import type { ExecRecord } from "../snapshot/SnapshotContext";
-import { unsnapshottable } from "../snapshot/Unsnapshottable";
 import { UnitType } from "@openfront/engine-api/game/GameTypes";
 import { Execution, Game, Unit } from "../game/Game";
+import type { ExecRecord } from "../snapshot/SnapshotContext";
+import { unsnapshottable } from "../snapshot/Unsnapshottable";
 
 /** Aircraft ground-based air defence will engage. */
 export const ANTI_AIR_TARGETS: UnitType[] = [

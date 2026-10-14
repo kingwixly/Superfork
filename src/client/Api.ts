@@ -1,4 +1,3 @@
-import { GAME_ROUTE } from "@openfront/shared/GameRoute";
 import type { NewsItem, StreamsFeed } from "@openfront/shared/ApiSchemas";
 import {
   ClaimAllRewardsResponse,
@@ -47,6 +46,7 @@ import {
   UserMeResponseSchema,
   VisibilityResponseSchema,
 } from "@openfront/shared/ApiSchemas";
+import { GAME_ROUTE } from "@openfront/shared/GameRoute";
 import {
   AnalyticsRecord,
   ArchivedAnalyticsRecordSchema,

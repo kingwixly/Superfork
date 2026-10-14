@@ -1,6 +1,6 @@
-import { GAME_ROUTE } from "@openfront/shared/GameRoute";
 import { UserMeResponse } from "@openfront/shared/ApiSchemas";
 import { CloseCode, isTerminalClose } from "@openfront/shared/CloseCodes";
+import { GAME_ROUTE } from "@openfront/shared/GameRoute";
 import { isCommitLike } from "@openfront/shared/ServerList";
 import { html } from "lit";
 import { customElement, state } from "lit/decorators.js";

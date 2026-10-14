@@ -830,7 +830,6 @@ export const UciIntentSchema = z.object({
   targetClientID: MappedID.optional(),
 });
 
-
 export const IntentSchema = z.discriminatedUnion("type", [
   AttackIntentSchema,
   CancelAttackIntentSchema,

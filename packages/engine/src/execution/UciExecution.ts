@@ -1,5 +1,3 @@
-import type { ExecRecord } from "../snapshot/SnapshotContext";
-import { unsnapshottable } from "../snapshot/Unsnapshottable";
 import { UciIntent } from "@openfront/engine-api/Schemas";
 import { TileRef } from "@openfront/engine-api/game/GameMap";
 import { MessageType, PlayerType } from "@openfront/engine-api/game/GameTypes";
@@ -12,6 +10,8 @@ import {
   setUciInfiniteGold,
   setUciInfiniteTroops,
 } from "../game/Uci";
+import type { ExecRecord } from "../snapshot/SnapshotContext";
+import { unsnapshottable } from "../snapshot/Unsnapshottable";
 import { AttackExecution } from "./AttackExecution";
 
 /** Gold an infinite-gold player is topped back up to every tick. */

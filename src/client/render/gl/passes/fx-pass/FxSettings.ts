@@ -3,7 +3,10 @@
  * FX parameters. Kept out of the passes so they can be unit-tested.
  */
 
-import { BLINDING_RADIUS, BUNKER_BUSTER_RADIUS } from "@openfront/engine-lib/configuration/SuperforkUnits";
+import {
+  BLINDING_RADIUS,
+  BUNKER_BUSTER_RADIUS,
+} from "@openfront/engine-lib/configuration/SuperforkUnits";
 import type { NukeExplosionRenderParams } from "../../../types";
 import {
   UT_ASBM_WARHEAD,

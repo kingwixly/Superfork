@@ -24,13 +24,13 @@ import { assertNever } from "@openfront/engine-lib/Util";
 import { z } from "zod";
 import { AttackLogicInput } from "../configuration/EngineConfig";
 import { Attack, Execution, Game, Player } from "../game/Game";
+import { isAttackLocked } from "../game/Uci";
 import { execSnapshotType } from "../snapshot/ExecutionSnapshot";
 import type {
   ExecRecord,
   SnapshotReader,
   SnapshotWriter,
 } from "../snapshot/SnapshotContext";
-import { isAttackLocked } from "../game/Uci";
 import { followMasterIntoWar } from "./PuppetExecution";
 import { FlatBinaryHeap } from "./utils/FlatBinaryHeap"; // adjust path if needed
 

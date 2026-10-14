@@ -1,4 +1,3 @@
-import { GAME_ROUTE } from "@openfront/shared/GameRoute";
 import { TileRef } from "@openfront/engine-api/game/GameMap";
 import {
   AllPlayers,
@@ -8,7 +7,13 @@ import {
   Tick,
   UnitType,
 } from "@openfront/engine-api/game/GameTypes";
-import { AllPlayersStats, ClientID, Intent, UciIntent, Winner } from "@openfront/engine-api/Schemas";
+import {
+  AllPlayersStats,
+  ClientID,
+  Intent,
+  UciIntent,
+  Winner,
+} from "@openfront/engine-api/Schemas";
 import {
   CloseCode,
   CloseReason,
@@ -20,7 +25,23 @@ import {
   EventConstructor,
   GameEvent,
 } from "@openfront/shared/EventBus";
-import { ClientHashMessage, ClientIntentMessage, ClientJoinMessage, ClientMessage, ClientPingMessage, ClientRejoinMessage, ClientReportMessage, ClientSendLiveStatsMessage, ClientSendWinnerMessage, ClientSpectateMessage, ClientUciAuthMessage, LiveStats, ReportReason, ServerMessage } from "@openfront/shared/WireSchemas";
+import { GAME_ROUTE } from "@openfront/shared/GameRoute";
+import {
+  ClientHashMessage,
+  ClientIntentMessage,
+  ClientJoinMessage,
+  ClientMessage,
+  ClientPingMessage,
+  ClientRejoinMessage,
+  ClientReportMessage,
+  ClientSendLiveStatsMessage,
+  ClientSendWinnerMessage,
+  ClientSpectateMessage,
+  ClientUciAuthMessage,
+  LiveStats,
+  ReportReason,
+  ServerMessage,
+} from "@openfront/shared/WireSchemas";
 import {
   createGameWireContext,
   decodeServerMessage,
@@ -349,7 +370,6 @@ export class SendUciIntentEvent implements GameEvent {
 export class SendUciAuthEvent implements GameEvent {
   constructor(public readonly token: string) {}
 }
-
 
 // The lobby a redirect came FROM, carried across the navigation: the latch is
 // keyed by the source, but only the target can see that the redirect worked.

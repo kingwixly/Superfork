@@ -1,8 +1,15 @@
 import { TileRef } from "@openfront/engine-api/game/GameMap";
-import { capitalDisplayName } from "@openfront/engine-lib/game/CapitalName";
-import { AllPlayers, GameType, PlayerActions, PlayerProfile, PlayerType, Relation } from "@openfront/engine-api/game/GameTypes";
-import { Emoji, flattenedEmojiTable, Player } from "@openfront/engine-api/Schemas";
+import {
+  AllPlayers,
+  GameType,
+  PlayerActions,
+  PlayerProfile,
+  PlayerType,
+  Relation,
+} from "@openfront/engine-api/game/GameTypes";
+import { Emoji, flattenedEmojiTable } from "@openfront/engine-api/Schemas";
 import { renderNumber, renderTroops } from "@openfront/engine-lib/Format";
+import { capitalDisplayName } from "@openfront/engine-lib/game/CapitalName";
 import type { UserMeResponse } from "@openfront/shared/ApiSchemas";
 import { assetUrl } from "@openfront/shared/AssetUrls";
 import { EventBus } from "@openfront/shared/EventBus";

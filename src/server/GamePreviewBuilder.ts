@@ -5,9 +5,9 @@ import {
 } from "@openfront/engine-api/game/GameTypes";
 import { ClanTagSchema, UsernameSchema } from "@openfront/engine-api/Schemas";
 import { buildAssetUrl } from "@openfront/shared/AssetPaths";
+import { GAME_ROUTE } from "@openfront/shared/GameRoute";
 import { GameInfo } from "@openfront/shared/WireSchemas";
 import { z } from "zod";
-import { GAME_ROUTE } from "@openfront/shared/GameRoute";
 import { getRuntimeAssetManifest } from "./RuntimeAssetManifest";
 import { ServerEnv } from "./ServerEnv";
 

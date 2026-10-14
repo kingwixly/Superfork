@@ -1,9 +1,16 @@
 import { UciIntent } from "@openfront/engine-api/Schemas";
-import { PlayerInfo, PlayerType, UnitType } from "@openfront/engine-api/game/GameTypes";
+import {
+  PlayerInfo,
+  PlayerType,
+  UnitType,
+} from "@openfront/engine-api/game/GameTypes";
 import { GameUpdateType } from "@openfront/engine-api/game/GameUpdates";
 import { PseudoRandom } from "@openfront/engine-lib/PseudoRandom";
 import { AttackExecution } from "@openfront/engine/execution/AttackExecution";
-import { UCI_GOLD_FLOOR, UciExecution } from "@openfront/engine/execution/UciExecution";
+import {
+  UCI_GOLD_FLOOR,
+  UciExecution,
+} from "@openfront/engine/execution/UciExecution";
 import { NationAllianceBehavior } from "@openfront/engine/execution/nation/NationAllianceBehavior";
 import { NationEmojiBehavior } from "@openfront/engine/execution/nation/NationEmojiBehavior";
 import { Game, Player } from "@openfront/engine/game/Game";

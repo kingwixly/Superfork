@@ -1,8 +1,8 @@
-import type { ExecRecord } from "../snapshot/SnapshotContext";
-import { unsnapshottable } from "../snapshot/Unsnapshottable";
 import { UnitType } from "@openfront/engine-api/game/GameTypes";
 import { PseudoRandom } from "@openfront/engine-lib/PseudoRandom";
 import { Execution, Game, Player, Unit } from "../game/Game";
+import type { ExecRecord } from "../snapshot/SnapshotContext";
+import { unsnapshottable } from "../snapshot/Unsnapshottable";
 import { CivilianAircraftExecution } from "./CivilianAircraftExecution";
 
 /**

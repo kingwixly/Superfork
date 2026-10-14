@@ -6,7 +6,6 @@ import { EventBus } from "@openfront/shared/EventBus";
 import { html, LitElement, TemplateResult } from "lit";
 import { customElement, state } from "lit/decorators.js";
 import {
-  getGamesPlayed,
   getTranslatedPlayerTeamLabel,
   homeHref,
   isInIframe,
@@ -34,7 +33,6 @@ import {
   momentShareText,
   momentShareUrl,
 } from "../../MomentShare";
-import { Platform } from "../../Platform";
 import { MAX_PRESTIGE, reachedLegendThisGame } from "../../Progression";
 import { resolveXpAccount } from "../../ProgressionAccount";
 import { fetchProgressionConfig, pollGameXp } from "../../ProgressionApi";
@@ -45,7 +43,6 @@ import {
   reconcileXp,
 } from "../../ProvisionalXpAtDeath";
 import { PlaySoundEffectEvent } from "../../sound/Sounds";
-import { steamSDK } from "../../SteamSDK";
 import { SendWinnerEvent } from "../../Transport";
 import { GameView } from "../../view";
 

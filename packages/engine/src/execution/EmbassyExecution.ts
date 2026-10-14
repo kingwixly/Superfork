@@ -1,9 +1,13 @@
-import type { ExecRecord } from "../snapshot/SnapshotContext";
-import { unsnapshottable } from "../snapshot/Unsnapshottable";
 import { TileRef } from "@openfront/engine-api/game/GameMap";
 import { MessageType, UnitType } from "@openfront/engine-api/game/GameTypes";
-import { canUseSuperforkSystems, EMBASSY_SLOW_DURATION, EMBASSY_TROOP_PENALTY } from "@openfront/engine-lib/configuration/SuperforkUnits";
+import {
+  canUseSuperforkSystems,
+  EMBASSY_SLOW_DURATION,
+  EMBASSY_TROOP_PENALTY,
+} from "@openfront/engine-lib/configuration/SuperforkUnits";
 import { Execution, Game, Player, Unit } from "../game/Game";
+import type { ExecRecord } from "../snapshot/SnapshotContext";
+import { unsnapshottable } from "../snapshot/Unsnapshottable";
 
 interface PendingEmbassy {
   guest: Player;

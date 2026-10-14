@@ -1,8 +1,8 @@
-import type { ExecRecord } from "../snapshot/SnapshotContext";
-import { unsnapshottable } from "../snapshot/Unsnapshottable";
 import { UnitType } from "@openfront/engine-api/game/GameTypes";
 import { WARSHIP_INTERCEPT_RANGE } from "@openfront/engine-lib/configuration/SuperforkUnits";
 import { Execution, Game, Unit } from "../game/Game";
+import type { ExecRecord } from "../snapshot/SnapshotContext";
+import { unsnapshottable } from "../snapshot/Unsnapshottable";
 
 /**
  * Warship nuke interception (superfork).

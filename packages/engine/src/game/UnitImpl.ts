@@ -1,6 +1,4 @@
-import { BANK_RESERVE_CAP, CAPITAL_CAPTURE_TROOP_LOSS } from "@openfront/engine-lib/configuration/SuperforkUnits";
 import { TileRef } from "@openfront/engine-api/game/GameMap";
-import { applyEmbassySeizure } from "../execution/EmbassyExecution";
 import {
   MessageType,
   NukeState,
@@ -17,6 +15,10 @@ import {
   GameUpdateType,
   UnitUpdate,
 } from "@openfront/engine-api/game/GameUpdates";
+import {
+  BANK_RESERVE_CAP,
+  CAPITAL_CAPTURE_TROOP_LOSS,
+} from "@openfront/engine-lib/configuration/SuperforkUnits";
 import { maxHealthWithVeterancy } from "@openfront/engine-lib/game/Veterancy";
 import {
   snapshotType,
@@ -30,6 +32,7 @@ import {
 } from "@openfront/engine-lib/snapshot/SnapshotType";
 import { simpleHash, toInt, withinInt } from "@openfront/engine-lib/Util";
 import { z } from "zod";
+import { applyEmbassySeizure } from "../execution/EmbassyExecution";
 import { UnitTypeSchema } from "../snapshot/CommonSchemas";
 import type {
   SnapshotReader,

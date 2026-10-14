@@ -1,5 +1,4 @@
 import { GameMap, TileRef } from "@openfront/engine-api/game/GameMap";
-import { ConquestLedger } from "./ConquestLedger";
 import {
   Cell,
   ColoredTeams,
@@ -76,6 +75,7 @@ import type {
 } from "../snapshot/SnapshotContext";
 import { AllianceImpl } from "./AllianceImpl";
 import { AllianceRequestImpl } from "./AllianceRequestImpl";
+import { ConquestLedger } from "./ConquestLedger";
 import {
   Alliance,
   AllianceRequest,

@@ -1,4 +1,8 @@
-import { GAME_ROUTE, GAME_ROUTE_ALTERNATION, rewriteLegacyGameApi } from "@openfront/shared/GameRoute";
+import {
+  GAME_ROUTE,
+  GAME_ROUTE_ALTERNATION,
+  rewriteLegacyGameApi,
+} from "@openfront/shared/GameRoute";
 import { describe, expect, test } from "vitest";
 
 describe("Match URL segment", () => {

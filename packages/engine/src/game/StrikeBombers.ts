@@ -1,5 +1,8 @@
 import { TileRef } from "@openfront/engine-api/game/GameMap";
-import { UnitType } from "@openfront/engine-api/game/GameTypes";
+import type {
+  StrikeBomberType,
+  StrikePayload,
+} from "@openfront/engine-lib/game/StrikeOrders";
 import { Game, Player, Unit } from "./Game";
 
 /**
@@ -19,10 +22,6 @@ export {
   type StrikeBomberType,
   type StrikeOrder,
   type StrikePayload,
-} from "@openfront/engine-lib/game/StrikeOrders";
-import type {
-  StrikeBomberType,
-  StrikePayload,
 } from "@openfront/engine-lib/game/StrikeOrders";
 
 /** The execution flying a bomber, as far as orders need to know it. */

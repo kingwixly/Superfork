@@ -28,7 +28,6 @@ import {
   UnitType,
   WarshipState,
 } from "@openfront/engine-api/game/GameTypes";
-import { ConquestLedger } from "./ConquestLedger";
 import {
   GameUpdate,
   PlayerUpdate,
@@ -47,6 +46,7 @@ import type { EngineConfig } from "../configuration/EngineConfig";
 import { AbstractGraph } from "../pathfinding/algorithms/AbstractGraph";
 import { PathFinder } from "../pathfinding/types";
 import type { ExecRecord, SnapshotWriter } from "../snapshot/SnapshotContext";
+import { ConquestLedger } from "./ConquestLedger";
 import { RailNetwork } from "./RailNetwork";
 import { Stats } from "./Stats";
 

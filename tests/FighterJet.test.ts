@@ -1,4 +1,8 @@
-import { PlayerInfo, PlayerType, UnitType } from "@openfront/engine-api/game/GameTypes";
+import {
+  PlayerInfo,
+  PlayerType,
+  UnitType,
+} from "@openfront/engine-api/game/GameTypes";
 import { FighterJetExecution } from "@openfront/engine/execution/FighterJetExecution";
 import { Game, Player } from "@openfront/engine/game/Game";
 import { setup } from "./util/Setup";

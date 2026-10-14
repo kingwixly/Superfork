@@ -1,8 +1,8 @@
-import type { ExecRecord } from "../snapshot/SnapshotContext";
-import { unsnapshottable } from "../snapshot/Unsnapshottable";
 import { MessageType } from "@openfront/engine-api/game/GameTypes";
 import { canUseSuperforkSystems } from "@openfront/engine-lib/configuration/SuperforkUnits";
 import { Execution, Game, Player } from "../game/Game";
+import type { ExecRecord } from "../snapshot/SnapshotContext";
+import { unsnapshottable } from "../snapshot/Unsnapshottable";
 
 /** Members at creation (including the founder), and the hard ceiling. */
 export const TREATY_FOUNDING_SIZE = 3;

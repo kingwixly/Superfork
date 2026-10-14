@@ -64,8 +64,14 @@ const WARSHIP = path.join(
   ROOT,
   "packages/engine/src/execution/nation/NationWarshipBehavior.ts",
 );
-const AIR = path.join(ROOT, "packages/engine/src/execution/nation/NationAirBehavior.ts");
-const NATION = path.join(ROOT, "packages/engine/src/execution/NationExecution.ts");
+const AIR = path.join(
+  ROOT,
+  "packages/engine/src/execution/nation/NationAirBehavior.ts",
+);
+const NATION = path.join(
+  ROOT,
+  "packages/engine/src/execution/NationExecution.ts",
+);
 
 describe("Nation AI fields superfork units", () => {
   const warship = readFileSync(WARSHIP, "utf8");

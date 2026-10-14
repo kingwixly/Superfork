@@ -1,5 +1,11 @@
 import { PlayerInfo, PlayerType } from "@openfront/engine-api/game/GameTypes";
-import { CEASEFIRE_DURATION_TICKS, CeasefireProposeExecution, CeasefireResponseExecution, clearPendingCeasefires, pendingCeasefireBetween } from "@openfront/engine/execution/CeasefireExecution";
+import {
+  CEASEFIRE_DURATION_TICKS,
+  CeasefireProposeExecution,
+  CeasefireResponseExecution,
+  clearPendingCeasefires,
+  pendingCeasefireBetween,
+} from "@openfront/engine/execution/CeasefireExecution";
 import { Game, Player } from "@openfront/engine/game/Game";
 import { vi } from "vitest";
 import { setup } from "./util/Setup";

@@ -425,7 +425,6 @@ export const SuperforkUnits = unitTypeGroup([
 
 export type SuperforkUnitType = (typeof SuperforkUnits.types)[number];
 
-
 export type TrajectoryTile = {
   tile: TileRef;
   targetable: boolean;

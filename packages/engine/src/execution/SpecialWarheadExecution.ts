@@ -1,12 +1,21 @@
-import type { ExecRecord } from "../snapshot/SnapshotContext";
-import { unsnapshottable } from "../snapshot/Unsnapshottable";
 import { TileRef } from "@openfront/engine-api/game/GameMap";
-import { MessageType, Structures, TrajectoryTile, UnitType, Aircraft } from "@openfront/engine-api/game/GameTypes";
-import { EMP_RADIUS, NEUTRON_RADIUS } from "@openfront/engine-lib/configuration/SuperforkUnits";
+import {
+  Aircraft,
+  MessageType,
+  Structures,
+  TrajectoryTile,
+  UnitType,
+} from "@openfront/engine-api/game/GameTypes";
+import {
+  EMP_RADIUS,
+  NEUTRON_RADIUS,
+} from "@openfront/engine-lib/configuration/SuperforkUnits";
 import { Execution, Game, Player, Unit } from "../game/Game";
 import { UniversalPathFinding } from "../pathfinding/PathFinder";
 import { ParabolaUniversalPathFinder } from "../pathfinding/PathFinder.Parabola";
 import { PathStatus } from "../pathfinding/types";
+import type { ExecRecord } from "../snapshot/SnapshotContext";
+import { unsnapshottable } from "../snapshot/Unsnapshottable";
 
 /** How long an EMP burst leaves structures inert. */
 export const EMP_DISABLE_DURATION = 30 * 10; // 30s

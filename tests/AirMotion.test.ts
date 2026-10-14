@@ -1,5 +1,11 @@
 import { PlayerInfo, PlayerType } from "@openfront/engine-api/game/GameTypes";
-import { airDistanceTiles, airPositionOf, POS_SCALE, stepToward, tileOfAirPosition } from "@openfront/engine/execution/utils/AirMotion";
+import {
+  airDistanceTiles,
+  airPositionOf,
+  POS_SCALE,
+  stepToward,
+  tileOfAirPosition,
+} from "@openfront/engine/execution/utils/AirMotion";
 import { Game } from "@openfront/engine/game/Game";
 import { setup } from "./util/Setup";
 

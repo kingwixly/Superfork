@@ -12,6 +12,7 @@ import { PlayerLike } from "@openfront/engine-api/game/ReadViews";
 import { TeamCountConfig } from "@openfront/engine-api/Schemas";
 import { NukeType } from "@openfront/engine-api/StatsSchemas";
 import { Config } from "@openfront/engine-lib/configuration/Config";
+import { superforkUnitSpec } from "@openfront/engine-lib/configuration/SuperforkUnits";
 import { exp, log, pow2 } from "@openfront/engine-lib/DetMath";
 import {
   assertNever,
@@ -20,7 +21,6 @@ import {
   within,
 } from "@openfront/engine-lib/Util";
 import type { EngineUnitInfo, Game, Player, Unit } from "../game/Game";
-import { superforkUnitSpec } from "@openfront/engine-lib/configuration/SuperforkUnits";
 import { isStrikeOrder, payloadFor, StrikeOrder } from "../game/StrikeBombers";
 
 export interface AttackLogicInput {

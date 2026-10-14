@@ -1,4 +1,3 @@
-import { GAME_ROUTE_ALTERNATION } from "@openfront/shared/GameRoute";
 import { GAME_ID_REGEX } from "@openfront/engine-api/Schemas";
 import {
   isRewardClaimable,
@@ -6,6 +5,7 @@ import {
 } from "@openfront/shared/ApiSchemas";
 import { assetUrl } from "@openfront/shared/AssetUrls";
 import { EventBus } from "@openfront/shared/EventBus";
+import { GAME_ROUTE_ALTERNATION } from "@openfront/shared/GameRoute";
 import { toWireGameStartInfo } from "@openfront/shared/SharedUtil";
 
 import {

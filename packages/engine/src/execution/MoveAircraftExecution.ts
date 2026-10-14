@@ -1,8 +1,8 @@
+import { TileRef } from "@openfront/engine-api/game/GameMap";
 import { Aircraft } from "@openfront/engine-api/game/GameTypes";
+import { Execution, Game, Player } from "../game/Game";
 import type { ExecRecord } from "../snapshot/SnapshotContext";
 import { unsnapshottable } from "../snapshot/Unsnapshottable";
-import { TileRef } from "@openfront/engine-api/game/GameMap";
-import { Execution, Game, Player } from "../game/Game";
 
 /**
  * Retarget aircraft.

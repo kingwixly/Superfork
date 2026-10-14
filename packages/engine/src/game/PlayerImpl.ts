@@ -1,6 +1,29 @@
-import { ASBM_TARGET_RADIUS, canStack, canUseSuperforkSystems, STACK_RADIUS } from "@openfront/engine-lib/configuration/SuperforkUnits";
 import { TileRef } from "@openfront/engine-api/game/GameMap";
-import { AllianceInfo, AllPlayers, BuildableUnit, Cell, ColoredTeams, EmojiMessage, GameMode, GameType, Gold, MAX_UPGRADE_AMOUNT, PlayerBuildable, PlayerBuildableUnitType, PlayerID, PlayerInfo, PlayerProfile, PlayerType, Relation, Structures, SuperforkUnits, Team, TerraNullius, Tick, UnitType } from "@openfront/engine-api/game/GameTypes";
+import {
+  AllianceInfo,
+  AllPlayers,
+  BuildableUnit,
+  Cell,
+  ColoredTeams,
+  EmojiMessage,
+  GameMode,
+  GameType,
+  Gold,
+  MAX_UPGRADE_AMOUNT,
+  PlayerBuildable,
+  PlayerBuildableUnitType,
+  PlayerID,
+  PlayerInfo,
+  PlayerProfile,
+  PlayerType,
+  Relation,
+  Structures,
+  SuperforkUnits,
+  Team,
+  TerraNullius,
+  Tick,
+  UnitType,
+} from "@openfront/engine-api/game/GameTypes";
 import {
   AllianceView,
   ATTACK_DELTA_INCOMING,
@@ -11,6 +34,12 @@ import {
 } from "@openfront/engine-api/game/GameUpdates";
 import { ReadonlyTileSet } from "@openfront/engine-api/game/ReadViews";
 import { ClientID } from "@openfront/engine-api/Schemas";
+import {
+  ASBM_TARGET_RADIUS,
+  canStack,
+  canUseSuperforkSystems,
+  STACK_RADIUS,
+} from "@openfront/engine-lib/configuration/SuperforkUnits";
 import { andFN, manhattanDistFN } from "@openfront/engine-lib/game/GameMapImpl";
 import { TileSet } from "@openfront/engine-lib/game/TileSet";
 import { PseudoRandom } from "@openfront/engine-lib/PseudoRandom";
@@ -44,7 +73,19 @@ import type {
   SnapshotWriter,
 } from "../snapshot/SnapshotContext";
 import { AttackImpl } from "./AttackImpl";
-import { Alliance, AllianceRequest, Attack, DisconnectSnapshot, Embargo, MutableAlliance, Player, Unit, UnitParams, Ceasefire, Sanction } from "./Game";
+import {
+  Alliance,
+  AllianceRequest,
+  Attack,
+  Ceasefire,
+  DisconnectSnapshot,
+  Embargo,
+  MutableAlliance,
+  Player,
+  Sanction,
+  Unit,
+  UnitParams,
+} from "./Game";
 import { GameImpl } from "./GameImpl";
 import { diffPlayerUpdate, packAttackTroopDeltas } from "./GameUpdateUtils";
 import {

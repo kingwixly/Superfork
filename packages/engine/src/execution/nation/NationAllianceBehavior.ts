@@ -13,11 +13,11 @@ import {
 import { assertNever } from "@openfront/engine-lib/Util";
 import { z } from "zod";
 import { Game, Player } from "../../game/Game";
+import { forcedAiAnswer } from "../../game/Uci";
 import type {
   SnapshotReader,
   SnapshotWriter,
 } from "../../snapshot/SnapshotContext";
-import { forcedAiAnswer } from "../../game/Uci";
 import { AllianceExtensionExecution } from "../alliance/AllianceExtensionExecution";
 import { AllianceRequestExecution } from "../alliance/AllianceRequestExecution";
 import {

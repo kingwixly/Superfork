@@ -1,6 +1,15 @@
-import { PlayerInfo, PlayerType, UnitType } from "@openfront/engine-api/game/GameTypes";
+import {
+  PlayerInfo,
+  PlayerType,
+  UnitType,
+} from "@openfront/engine-api/game/GameTypes";
 import { GameUpdateType } from "@openfront/engine-api/game/GameUpdates";
-import { BOMB_AREA_TILES, BOMB_TROOP_KILL, BomberExecution, BOMBS_PER_SORTIE } from "@openfront/engine/execution/BomberExecution";
+import {
+  BOMB_AREA_TILES,
+  BOMB_TROOP_KILL,
+  BomberExecution,
+  BOMBS_PER_SORTIE,
+} from "@openfront/engine/execution/BomberExecution";
 import { Game, Player } from "@openfront/engine/game/Game";
 import { setup } from "./util/Setup";
 

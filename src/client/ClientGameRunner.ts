@@ -1,6 +1,6 @@
-import { GAME_ROUTE } from "@openfront/shared/GameRoute";
 import { ClientID, GameID } from "@openfront/engine-api/Schemas";
 import { TileRef } from "@openfront/engine-api/game/GameMap";
+import { GAME_ROUTE } from "@openfront/shared/GameRoute";
 
 import {
   BuildableUnit,

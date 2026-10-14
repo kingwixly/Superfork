@@ -20,8 +20,8 @@
  * has been played. Phase 7 is the real balance pass.
  */
 
-import { pow2 } from "../DetMath";
 import { PlayerType, UnitType } from "@openfront/engine-api/game/GameTypes";
+import { pow2 } from "../DetMath";
 
 /** Which medium a unit moves through. Drives pathing and interception rules. */
 export enum UnitDomain {

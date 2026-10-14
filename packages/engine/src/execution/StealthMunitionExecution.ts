@@ -1,9 +1,19 @@
+import { TileRef } from "@openfront/engine-api/game/GameMap";
+import {
+  MessageType,
+  Structures,
+  UnitType,
+} from "@openfront/engine-api/game/GameTypes";
+import {
+  BLINDING_DURATION,
+  BLINDING_RADIUS,
+  BUNKER_BUSTER_RADIUS,
+  CAPITAL_STRIKE_LOCKOUT,
+  CAPITAL_STRIKE_TROOP_LOSS,
+} from "@openfront/engine-lib/configuration/SuperforkUnits";
+import { Execution, Game, Player, Unit } from "../game/Game";
 import type { ExecRecord } from "../snapshot/SnapshotContext";
 import { unsnapshottable } from "../snapshot/Unsnapshottable";
-import { TileRef } from "@openfront/engine-api/game/GameMap";
-import { MessageType, Structures, UnitType } from "@openfront/engine-api/game/GameTypes";
-import { BLINDING_DURATION, BLINDING_RADIUS, BUNKER_BUSTER_RADIUS, CAPITAL_STRIKE_LOCKOUT, CAPITAL_STRIKE_TROOP_LOSS } from "@openfront/engine-lib/configuration/SuperforkUnits";
-import { Execution, Game, Player, Unit } from "../game/Game";
 import {
   canDemoteCapital,
   demoteCapital,

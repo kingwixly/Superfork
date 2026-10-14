@@ -9,13 +9,13 @@ import {
 import { simpleHash } from "@openfront/engine-lib/Util";
 import { z } from "zod";
 import { Execution, Game, Player } from "../game/Game";
+import { forcedAiAnswer } from "../game/Uci";
 import { execSnapshotType } from "../snapshot/ExecutionSnapshot";
 import type {
   ExecRecord,
   SnapshotReader,
   SnapshotWriter,
 } from "../snapshot/SnapshotContext";
-import { forcedAiAnswer } from "../game/Uci";
 import { AllianceExtensionExecution } from "./alliance/AllianceExtensionExecution";
 import { DeleteUnitExecution } from "./DeleteUnitExecution";
 import { AiAttackBehavior } from "./utils/AiAttackBehavior";

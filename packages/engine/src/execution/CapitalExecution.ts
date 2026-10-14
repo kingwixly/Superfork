@@ -1,12 +1,15 @@
-import type { ExecRecord } from "../snapshot/SnapshotContext";
-import { unsnapshottable } from "../snapshot/Unsnapshottable";
 import { UnitType } from "@openfront/engine-api/game/GameTypes";
-import { CAPITAL_LOCKING_STRUCTURES, STACK_RADIUS } from "@openfront/engine-lib/configuration/SuperforkUnits";
-import { Execution, Game, Player, Unit } from "../game/Game";
 import {
   RENDERABLE_NAME_CHARS,
   UsernameSchema,
 } from "@openfront/engine-api/Schemas";
+import {
+  CAPITAL_LOCKING_STRUCTURES,
+  STACK_RADIUS,
+} from "@openfront/engine-lib/configuration/SuperforkUnits";
+import { Execution, Game, Player, Unit } from "../game/Game";
+import type { ExecRecord } from "../snapshot/SnapshotContext";
+import { unsnapshottable } from "../snapshot/Unsnapshottable";
 import { TrainStationExecution } from "./TrainStationExecution";
 
 /**
@@ -180,7 +183,9 @@ export const MAX_CAPITAL_NAME_LENGTH = 20;
 // charset.
 const CAPITAL_NAME_PATTERN = new RegExp(`^[${RENDERABLE_NAME_CHARS}]+$`, "u");
 function isValidCapitalName(name: string): boolean {
-  return UsernameSchema.safeParse(name).success && CAPITAL_NAME_PATTERN.test(name);
+  return (
+    UsernameSchema.safeParse(name).success && CAPITAL_NAME_PATTERN.test(name)
+  );
 }
 
 /**

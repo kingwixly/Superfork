@@ -1,4 +1,3 @@
-import { GAME_ROUTE } from "@openfront/shared/GameRoute";
 import { GameID } from "@openfront/engine-api/Schemas";
 import { simpleHash } from "@openfront/engine-lib/Util";
 import { ClusterConfig } from "@openfront/shared/ClusterConfig";
@@ -7,6 +6,7 @@ import {
   JwksSchema,
   parseGameEnv,
 } from "@openfront/shared/configuration/Env";
+import { GAME_ROUTE } from "@openfront/shared/GameRoute";
 import { ServerList } from "@openfront/shared/ServerList";
 import { JWK } from "jose";
 import { z } from "zod";

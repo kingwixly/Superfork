@@ -1,4 +1,3 @@
-
 /**
  * Conquest ledger (superfork).
  *
@@ -85,6 +84,6 @@ export class ConquestLedger {
     this.buckets.clear();
     this.tileBucket.clear();
   }
-}import { TileRef } from "@openfront/engine-api/game/GameMap";
+}
+import { TileRef } from "@openfront/engine-api/game/GameMap";
 import { PlayerID } from "@openfront/engine-api/game/GameTypes";
-

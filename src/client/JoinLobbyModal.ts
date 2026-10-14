@@ -1,8 +1,11 @@
-import { GAME_ROUTE, GAME_ROUTE_ALTERNATION } from "@openfront/shared/GameRoute";
 import { GAME_ID_REGEX, GameConfig } from "@openfront/engine-api/Schemas";
 import { GameMode, GameType } from "@openfront/engine-api/game/GameTypes";
 import { assetUrl } from "@openfront/shared/AssetUrls";
 import { EventBus } from "@openfront/shared/EventBus";
+import {
+  GAME_ROUTE,
+  GAME_ROUTE_ALTERNATION,
+} from "@openfront/shared/GameRoute";
 import {
   ClientInfo,
   GameInfo,

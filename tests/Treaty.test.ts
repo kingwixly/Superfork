@@ -1,5 +1,14 @@
 import { PlayerInfo, PlayerType } from "@openfront/engine-api/game/GameTypes";
-import { clearTreaties, pendingInviteFor, treatiesOf, TREATY_MAX_SIZE, TreatyCreateExecution, TreatyInviteExecution, TreatyLeaveExecution, TreatyResponseExecution } from "@openfront/engine/execution/TreatyExecution";
+import {
+  clearTreaties,
+  pendingInviteFor,
+  treatiesOf,
+  TREATY_MAX_SIZE,
+  TreatyCreateExecution,
+  TreatyInviteExecution,
+  TreatyLeaveExecution,
+  TreatyResponseExecution,
+} from "@openfront/engine/execution/TreatyExecution";
 import { Game, Player } from "@openfront/engine/game/Game";
 import { setup } from "./util/Setup";
 

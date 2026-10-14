@@ -1,5 +1,8 @@
 import { TileRef } from "@openfront/engine-api/game/GameMap";
-import { UnitType, CivilianAircraft } from "@openfront/engine-api/game/GameTypes";
+import {
+  CivilianAircraft,
+  UnitType,
+} from "@openfront/engine-api/game/GameTypes";
 import { Unit } from "../game/Game";
 import { AircraftExecution } from "./AircraftExecution";
 

@@ -1,7 +1,19 @@
-import { PlayerInfo, PlayerType, UnitType } from "@openfront/engine-api/game/GameTypes";
+import {
+  PlayerInfo,
+  PlayerType,
+  UnitType,
+} from "@openfront/engine-api/game/GameTypes";
 import { PseudoRandom } from "@openfront/engine-lib/PseudoRandom";
-import { EMBASSY_SLOW_DURATION, EMBASSY_TROOP_PENALTY } from "@openfront/engine-lib/configuration/SuperforkUnits";
-import { clearPendingEmbassies, EmbassyRequestExecution, EmbassyResponseExecution, pendingEmbassyBetween } from "@openfront/engine/execution/EmbassyExecution";
+import {
+  EMBASSY_SLOW_DURATION,
+  EMBASSY_TROOP_PENALTY,
+} from "@openfront/engine-lib/configuration/SuperforkUnits";
+import {
+  clearPendingEmbassies,
+  EmbassyRequestExecution,
+  EmbassyResponseExecution,
+  pendingEmbassyBetween,
+} from "@openfront/engine/execution/EmbassyExecution";
 import { PlayerExecution } from "@openfront/engine/execution/PlayerExecution";
 import { NationDiplomacyBehavior } from "@openfront/engine/execution/nation/NationDiplomacyBehavior";
 import { Game, Player } from "@openfront/engine/game/Game";

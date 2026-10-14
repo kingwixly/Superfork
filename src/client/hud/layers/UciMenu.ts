@@ -1,7 +1,6 @@
-import { SendKickPlayerIntentEvent } from "../../LobbyEvents";
-import { MAX_UCI_ANNOUNCEMENT, UciIntent } from "@openfront/engine-api/Schemas";
 import { GameType, PlayerType } from "@openfront/engine-api/game/GameTypes";
 import { GameUpdateType } from "@openfront/engine-api/game/GameUpdates";
+import { MAX_UCI_ANNOUNCEMENT, UciIntent } from "@openfront/engine-api/Schemas";
 import { EventBus } from "@openfront/shared/EventBus";
 import { GAME_ROUTE } from "@openfront/shared/GameRoute";
 import { html, LitElement, nothing, TemplateResult } from "lit";
@@ -11,6 +10,7 @@ import { ClientEnv } from "../../ClientEnv";
 import { Controller } from "../../Controller";
 import { BeginTerritorySelectionEvent } from "../../controllers/TerritorySelectionController";
 import { showInGameConfirm } from "../../InGameModal";
+import { SendKickPlayerIntentEvent } from "../../LobbyEvents";
 import { SendUciAuthEvent, SendUciIntentEvent } from "../../Transport";
 import { translateText } from "../../Utils";
 import { GameView, PlayerView } from "../../view";

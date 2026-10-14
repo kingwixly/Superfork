@@ -1,6 +1,10 @@
 import { PlayerInfo, PlayerType } from "@openfront/engine-api/game/GameTypes";
 import { AttackExecution } from "@openfront/engine/execution/AttackExecution";
-import { canPuppet, PuppetCommandExecution, PuppetLiberateExecution } from "@openfront/engine/execution/PuppetExecution";
+import {
+  canPuppet,
+  PuppetCommandExecution,
+  PuppetLiberateExecution,
+} from "@openfront/engine/execution/PuppetExecution";
 import { Game, Player } from "@openfront/engine/game/Game";
 import { setup } from "./util/Setup";
 

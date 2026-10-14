@@ -1,5 +1,9 @@
 import { PlayerInfo, PlayerType } from "@openfront/engine-api/game/GameTypes";
-import { airspaceOwner, canFlyOver, pathCrossesRestrictedAirspace } from "@openfront/engine/game/Airspace";
+import {
+  airspaceOwner,
+  canFlyOver,
+  pathCrossesRestrictedAirspace,
+} from "@openfront/engine/game/Airspace";
 import { Game, Player } from "@openfront/engine/game/Game";
 import { setup } from "./util/Setup";
 

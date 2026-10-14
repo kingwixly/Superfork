@@ -1,4 +1,3 @@
-import { BANK_ACCRUAL_DENOMINATOR, BANK_ACCRUAL_NUMERATOR } from "@openfront/engine-lib/configuration/SuperforkUnits";
 import { GameMap, TileRef } from "@openfront/engine-api/game/GameMap";
 import {
   Cell,
@@ -6,6 +5,10 @@ import {
   Structures,
   UnitType,
 } from "@openfront/engine-api/game/GameTypes";
+import {
+  BANK_ACCRUAL_DENOMINATOR,
+  BANK_ACCRUAL_NUMERATOR,
+} from "@openfront/engine-lib/configuration/SuperforkUnits";
 import { zInt, zPlayerRef } from "@openfront/engine-lib/snapshot/SnapshotType";
 import { getMode, simpleHash } from "@openfront/engine-lib/Util";
 import { z } from "zod";
