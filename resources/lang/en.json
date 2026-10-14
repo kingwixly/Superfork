@@ -1203,6 +1203,8 @@
     "section_terrain": "Terrain",
     "structure_dots_desc": "Collapse structure icons into small dots when zoomed out",
     "structure_dots_label": "Structure dots",
+    "structure_sprites_desc": "Show detailed building art instead of shape icons when zoomed in",
+    "structure_sprites_label": "Building sprites",
     "territory_alpha_desc": "How opaque the territory fill is (lower lets terrain show through)",
     "territory_alpha_label": "Territory opacity",
     "territory_sat_desc": "How vivid the territory fill colors are (lower mutes them)",

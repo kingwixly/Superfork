@@ -216,6 +216,26 @@ export interface RenderSettings {
      * (HSV value multiplier) instead of the flat iconR/G/B color. 0 = off.
      */
     iconDarken: number;
+    /**
+     * Superfork: old-style colour building sprites once zoomed in. Above
+     * `zoom` (pixels per tile) the polygon icons cross-fade, over
+     * `fadeRange`, into a sprite on a player-coloured diamond footprint, as
+     * the pre-WebGL StructureLayer drew them. Sizes are in tiles.
+     */
+    sprites: {
+      enabled: boolean;
+      zoom: number;
+      fadeRange: number;
+      /** Sprite width/height in tiles. */
+      size: number;
+      /** How far the sprite sits above the structure's tile, in tiles. */
+      liftY: number;
+      /** Diamond (L1) radius of the border-coloured footprint, in tiles. */
+      borderRadius: number;
+      /** Diamond radius of the inner territory-coloured footprint. */
+      territoryRadius: number;
+      territoryAlpha: number;
+    };
   };
   structureLevel: {
     scale: number;

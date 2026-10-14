@@ -52,7 +52,7 @@ const iconAtlasUrl = assetUrl("atlases/icon-atlas.png");
  * Structure types in atlas column order.
  * Index = atlas column index.
  */
-const STRUCTURE_ORDER = [
+export const STRUCTURE_ORDER = [
   UT_CITY,
   UT_PORT,
   UT_FACTORY,
@@ -388,7 +388,12 @@ export class StructurePass {
     this.affiliationTex = tex;
   }
 
-  draw(cameraMatrix: Float32Array, zoom: number): void {
+  /**
+   * @param structureAlpha Superfork: multiplier on the real structures'
+   *   alpha, so they cross-fade into StructureSpritePass when zoomed in.
+   *   Ghost previews always draw at full strength.
+   */
+  draw(cameraMatrix: Float32Array, zoom: number, structureAlpha = 1): void {
     const hasGhost =
       this.ghost !== null && this.typeToAtlasCol.has(this.ghost.ghostType);
     if (this.instanceCount === 0 && !hasGhost) return;
@@ -450,10 +455,12 @@ export class StructurePass {
     gl.bindVertexArray(this.vao);
 
     // --- Real structures ---
-    if (this.instanceCount > 0) {
+    if (this.instanceCount > 0 && structureAlpha > 0) {
       gl.uniform1f(this.uGhostAlpha, 1.0);
       gl.uniform3f(this.uOutlineColor, 0, 0, 0);
+      gl.uniform1f(this.uIconAlpha, ss.iconAlpha * structureAlpha);
       gl.drawArraysInstanced(gl.TRIANGLES, 0, 6, this.instanceCount);
+      gl.uniform1f(this.uIconAlpha, ss.iconAlpha);
     }
 
     // --- Ghost structure (1 translucent instance with outline) ---

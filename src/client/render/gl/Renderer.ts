@@ -59,6 +59,7 @@ import { SpawnOverlayPass } from "./passes/SpawnOverlayPass";
 import { SpiralRibbonPass } from "./passes/SpiralRibbonPass";
 import { StructureLevelPass } from "./passes/StructureLevelPass";
 import { StructurePass } from "./passes/StructurePass";
+import { spriteBlend, StructureSpritePass } from "./passes/StructureSpritePass";
 import { TerrainPass } from "./passes/TerrainPass";
 import { TerritoryPass } from "./passes/TerritoryPass";
 import { TrailPass } from "./passes/TrailPass";
@@ -130,6 +131,7 @@ export class GPURenderer {
   private lightmapPass: LightmapPass;
   private nightCompositePass: NightCompositePass;
   private structurePass: StructurePass;
+  private structureSpritePass: StructureSpritePass;
   private structureLevelPass: StructureLevelPass;
   private unitPass: UnitPass;
   private namePass: NamePass;
@@ -570,6 +572,12 @@ export class GPURenderer {
       this.effectTex,
       this.settings,
     );
+    this.structureSpritePass = new StructureSpritePass(
+      gl,
+      header,
+      this.paletteTex,
+      this.settings,
+    );
     this.structureLevelPass = new StructureLevelPass(gl, header, this.settings);
     this.unitPass = new UnitPass(
       gl,
@@ -632,6 +640,7 @@ export class GPURenderer {
     this.territoryPass.setAffiliationTex(affTex);
     this.unitPass.setAffiliationTex(affTex);
     this.structurePass.setAffiliationTex(affTex);
+    this.structureSpritePass.setAffiliationTex(affTex);
     this.trailPass.setAffiliationTex(affTex);
     this.coordinateGridPass = new CoordinateGridPass(
       gl,
@@ -951,6 +960,7 @@ export class GPURenderer {
   updateStructures(units: Map<number, UnitState>): void {
     this.lastStructures = units;
     this.structurePass.updateStructures(units);
+    this.structureSpritePass.updateStructures(units);
     this.structureLevelPass.updateStructures(units);
     this.samRadiusPass.updateStructures(units);
     this.unitPass.setStructures(units);
@@ -1126,6 +1136,7 @@ export class GPURenderer {
   }
   setHighlightStructureTypes(unitTypes: string[] | null): void {
     this.structurePass.setHighlightTypes(unitTypes);
+    this.structureSpritePass.setHighlightTypes(unitTypes);
     this.structureLevelPass.setHighlightTypes(unitTypes);
     this.samHighlightVisible =
       unitTypes !== null &&
@@ -1159,6 +1170,7 @@ export class GPURenderer {
     this.borderStampPass.setAltView(active);
     this.unitPass.setAltView(active);
     this.structurePass.setAltView(active);
+    this.structureSpritePass.setAltView(active);
     this.trailPass.setAltView(active);
   }
 
@@ -1369,7 +1381,16 @@ export class GPURenderer {
     this.rangeCirclePass.draw(cam);
     this.nukeTrajectoryPass.draw(cam);
     this.crosshairPass.draw(cam);
-    if (pe.structure) this.structurePass.draw(cam, zoom);
+    if (pe.structure) {
+      // Superfork: old-style building sprites when zoomed in; the polygon
+      // icons fade out as the sprites fade in. Until the sprite atlas has
+      // loaded, the polygons stay at full strength.
+      const spriteT = this.structureSpritePass.isReady()
+        ? spriteBlend(this.settings, zoom)
+        : 0;
+      this.structureSpritePass.draw(cam, zoom);
+      this.structurePass.draw(cam, zoom, 1 - spriteT);
+    }
     if (pe.structure) this.structureLevelPass.draw(cam, zoom);
     // Small-player glow draws after structures so buildings can't hide it.
     this.smallPlayerGlowPass.draw(cam);
@@ -1507,6 +1528,7 @@ export class GPURenderer {
     this.samRadiusPass.dispose();
     this.crosshairPass.dispose();
     this.structurePass.dispose();
+    this.structureSpritePass.dispose();
     this.structureLevelPass.dispose();
     this.unitPass.dispose();
     this.namePass.dispose();

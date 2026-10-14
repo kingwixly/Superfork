@@ -45,6 +45,9 @@ export function applyGraphicsOverrides(
   if (overrides.structure?.classicNumbers !== undefined) {
     settings.structureLevel.classicFont = overrides.structure.classicNumbers;
   }
+  if (overrides.structure?.sprites !== undefined) {
+    settings.structure.sprites.enabled = overrides.structure.sprites;
+  }
   if (overrides.structure?.showDots === false) {
     // Zoom is always > 0, so a threshold of 0 means the dots LOD never
     // triggers — structures stay as full icons at every zoom level.

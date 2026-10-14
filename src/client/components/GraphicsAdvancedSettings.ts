@@ -535,6 +535,14 @@ export class GraphicsAdvancedSettings extends LitElement {
     this.patchStructure({ showDots: !this.currentShowDots() });
   }
 
+  private currentStructureSprites(): boolean {
+    return this.userSettings.graphicsOverrides().structure?.sprites ?? true;
+  }
+
+  private onToggleStructureSprites() {
+    this.patchStructure({ sprites: !this.currentStructureSprites() });
+  }
+
   // ---- Map ----
 
   private currentNavalHighlight(): boolean {
@@ -1169,6 +1177,14 @@ export class GraphicsAdvancedSettings extends LitElement {
         id="structure-dots-toggle"
         .checked=${this.currentShowDots()}
         @change=${this.onToggleShowDots}
+      ></setting-toggle>
+
+      <setting-toggle
+        label=${translateText("graphics_setting.structure_sprites_label")}
+        description=${translateText("graphics_setting.structure_sprites_desc")}
+        id="structure-sprites-toggle"
+        .checked=${this.currentStructureSprites()}
+        @change=${this.onToggleStructureSprites}
       ></setting-toggle>
 
       <!-- 🗺️ Map -->

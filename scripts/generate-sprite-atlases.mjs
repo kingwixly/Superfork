@@ -36,6 +36,13 @@
  * therefore a **white silhouette on transparent**, not colour art. Detailed
  * colour sprites cannot be shown through this pass without a new render path.
  *
+ * ## Colour sprites (zoomed in)
+ *
+ * `structure-sprite-atlas.png` is the full-colour counterpart, packed from
+ * `resources/icons/structures_hd/` in the same column order. It feeds
+ * `StructureSpritePass`, which draws the old-style building sprites once the
+ * camera is zoomed in. Its RGB is used as-is.
+ *
  * Usage:  node scripts/generate-sprite-atlases.mjs [--check]
  *         --check verifies the committed atlas matches the sources and exits
  *         non-zero if not, without writing. Useful in CI.
@@ -72,6 +79,8 @@ const COLUMNS = [
 const CELL = 64;
 const SRC_DIR = join(ROOT, "resources/icons/structures");
 const OUT = join(ROOT, "resources/atlases/icon-atlas.png");
+const SPRITE_SRC_DIR = join(ROOT, "resources/icons/structures_hd");
+const SPRITE_OUT = join(ROOT, "resources/atlases/structure-sprite-atlas.png");
 
 /**
  * Unit atlas columns appended by the superfork.
@@ -150,10 +159,10 @@ async function buildUnitAtlas() {
     .toBuffer();
 }
 
-async function buildStructureAtlas() {
+async function buildStructureAtlas(srcDir = SRC_DIR) {
   const composites = [];
   for (let i = 0; i < COLUMNS.length; i++) {
-    const file = join(SRC_DIR, `${COLUMNS[i]}.png`);
+    const file = join(srcDir, `${COLUMNS[i]}.png`);
     if (!existsSync(file)) {
       throw new Error(`missing source icon: ${file}`);
     }
@@ -181,25 +190,33 @@ async function buildStructureAtlas() {
 
 const check = process.argv.includes("--check");
 const buf = await buildStructureAtlas();
+const spriteBuf = await buildStructureAtlas(SPRITE_SRC_DIR);
 const unitBuf = await buildUnitAtlas();
 
 if (check) {
-  const existing = await readFile(OUT).catch(() => null);
   // Compare decoded pixels rather than file bytes: PNG encoders differ, and a
   // re-encode with identical pixels is not a real difference.
-  const a = await sharp(buf).raw().toBuffer();
-  const b = existing ? await sharp(existing).raw().toBuffer() : null;
-  if (!b || !a.equals(b)) {
-    console.error("icon-atlas.png is out of date — run without --check");
-    process.exit(1);
+  for (const [out, fresh] of [
+    [OUT, buf],
+    [SPRITE_OUT, spriteBuf],
+  ]) {
+    const existing = await readFile(out).catch(() => null);
+    const a = await sharp(fresh).raw().toBuffer();
+    const b = existing ? await sharp(existing).raw().toBuffer() : null;
+    if (!b || !a.equals(b)) {
+      console.error(`${out} is out of date — run without --check`);
+      process.exit(1);
+    }
   }
-  console.log(`icon-atlas.png up to date (${COLUMNS.length} columns)`);
+  console.log(`structure atlases up to date (${COLUMNS.length} columns)`);
 } else {
   await mkdir(dirname(OUT), { recursive: true });
   await writeFile(OUT, buf);
   console.log(
     `wrote ${OUT} — ${COLUMNS.length} columns x ${CELL}px (${COLUMNS.join(", ")})`,
   );
+  await writeFile(SPRITE_OUT, spriteBuf);
+  console.log(`wrote ${SPRITE_OUT} — colour sprites, same columns`);
   await writeFile(UNIT_OUT, unitBuf);
   console.log(
     `wrote ${UNIT_OUT} — +${UNIT_COLUMNS.length} columns x ${UNIT_CELL}px (${UNIT_COLUMNS.join(", ")})`,

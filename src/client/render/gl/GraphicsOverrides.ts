@@ -34,6 +34,8 @@ export const GraphicsOverridesSchema = z
         // When false, structures keep their full icon at any zoom instead of
         // collapsing to dots when zoomed out (forces dotsZoomThreshold to 0).
         showDots: z.boolean(),
+        // Superfork: old-style colour building sprites when zoomed in.
+        sprites: z.boolean(),
       })
       .partial(),
     mapOverlay: z

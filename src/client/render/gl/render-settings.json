@@ -185,7 +185,17 @@
     "iconR": 1.0,
     "iconG": 1.0,
     "iconB": 1.0,
-    "iconDarken": 0
+    "iconDarken": 0,
+    "sprites": {
+      "enabled": true,
+      "zoom": 4.3,
+      "fadeRange": 0.8,
+      "size": 16,
+      "liftY": 4,
+      "borderRadius": 8.25,
+      "territoryRadius": 6.75,
+      "territoryAlpha": 0.51
+    }
   },
   "structureLevel": {
     "scale": 1,
