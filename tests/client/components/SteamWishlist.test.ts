@@ -18,16 +18,15 @@ import "../../../src/client/components/SteamWishlist";
 import type { SteamWishlist } from "../../../src/client/components/SteamWishlist";
 
 describe("steam-wishlist", () => {
-  it("gives the widget's iframe Steam's light color scheme on the dark page", async () => {
+  // Superfork strips third-party embeds (Phase 32): no Steam iframe at all.
+  it("renders no Steam iframe", async () => {
     const el = document.createElement("steam-wishlist") as SteamWishlist;
     el.campaign = "test";
     document.body.appendChild(el);
     try {
       await el.updateComplete;
       const iframe = el.querySelector("iframe");
-      expect(iframe).not.toBeNull();
-      // A scheme differing from the embedded page's paints a white backdrop.
-      expect(iframe!.style.colorScheme).toBe("light");
+      expect(iframe).toBeNull();
     } finally {
       el.remove();
     }

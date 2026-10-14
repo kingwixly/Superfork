@@ -146,6 +146,8 @@ const baseUnit: UnitState = {
   samUpgradeStartRange: null,
   samUpgradeTargetLevel: null,
   samUpgradeDuration: null,
+  disabled: false,
+  capitalName: "",
 };
 
 const unitAlternatives: { [K in keyof UnitFields]: UnitFields[K] } = {
@@ -175,6 +177,8 @@ const unitAlternatives: { [K in keyof UnitFields]: UnitFields[K] } = {
   samUpgradeStartRange: 70.5,
   samUpgradeTargetLevel: 2,
   samUpgradeDuration: 150,
+  disabled: true,
+  capitalName: "Birnin Zana",
 };
 
 function roundTripFull<T>(

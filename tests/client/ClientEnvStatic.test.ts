@@ -153,24 +153,19 @@ describe("a page carrying only environment values", () => {
     // Both shapes are served (the SPA fallback and the static Worker), and
     // the join flow re-resolves the worker from the id — so a page that
     // cannot know a worker count still hands out a working link.
-    expect(ClientEnv.gamePath("dAbCd12345")).toBe("/game/dAbCd12345");
+    // SuperFront builds /g/ links (GAME_ROUTE); /game/ is still accepted.
+    expect(ClientEnv.gamePath("dAbCd12345")).toBe("/g/dAbCd12345");
 
     ClientEnv.applyServerList(LIST, "d");
     // Own letter: this page's picked server answers the count.
-    expect(ClientEnv.gamePath("dAbCd12345")).toMatch(
-      /^\/w\d+\/game\/dAbCd12345$/,
-    );
+    expect(ClientEnv.gamePath("dAbCd12345")).toMatch(/^\/w\d+\/g\/dAbCd12345$/);
     // Foreign letter: its own server's count, not ours.
-    expect(ClientEnv.gamePath("cAbCd12345")).toMatch(
-      /^\/w\d+\/game\/cAbCd12345$/,
-    );
+    expect(ClientEnv.gamePath("cAbCd12345")).toMatch(/^\/w\d+\/g\/cAbCd12345$/);
     // A letter no list knows falls back to this page's own count, as every
     // id did before letters existed. The link still resolves: the join flow
     // re-resolves the worker from the id, and an id whose letter nothing
     // serves lands in the not-found path either way.
-    expect(ClientEnv.gamePath("zAbCd12345")).toMatch(
-      /^\/w\d+\/game\/zAbCd12345$/,
-    );
+    expect(ClientEnv.gamePath("zAbCd12345")).toMatch(/^\/w\d+\/g\/zAbCd12345$/);
   });
 
   it("reports the version of the server a game lives on", () => {

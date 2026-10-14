@@ -105,6 +105,7 @@ export function applyUnitUpdateInPlace(target: UnitState, u: UnitUpdate): void {
   target.veterancy = u.warshipState?.veterancy ?? 0;
   target.hasTrainStation = u.hasTrainStation;
   target.trainType = trainTypeToNum(u.trainType);
+  target.capitalName = u.capitalName ?? "";
   target.loaded = u.loaded ?? null;
   target.samUpgradeStartTick = u.samUpgrade?.upgradeStartTick ?? null;
   target.samUpgradeStartRange = u.samUpgrade?.startRange ?? null;

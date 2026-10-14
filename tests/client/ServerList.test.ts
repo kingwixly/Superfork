@@ -1905,12 +1905,16 @@ describe("redirectToGameVersion", () => {
     const loc = stubLocation("openfront.io", "/");
     await withList();
     expect(redirectToGameVersion("cAbCd12345")).toBe(true);
-    expect(loc.href).toBe(`/v/${SHORT_OLD}/game/cAbCd12345`);
+    expect(loc.href).toBe(
+      `/v/${SHORT_OLD}/g/cAbCd12345` /* SuperFront's /g/ route */,
+    );
 
     const other = stubLocation("openfront.io", "/game/dAbCd12345", "?spectate");
     await withList();
     expect(redirectToGameVersion("cAbCd12345")).toBe(true);
-    expect(other.href).toBe(`/v/${SHORT_OLD}/game/cAbCd12345`);
+    expect(other.href).toBe(
+      `/v/${SHORT_OLD}/g/cAbCd12345` /* SuperFront's /g/ route */,
+    );
   });
 
   it("stays put when the game's server runs this build", async () => {

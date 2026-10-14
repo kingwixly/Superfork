@@ -99,9 +99,9 @@ describe("openReplayViewer", () => {
   });
 
   test("on a replay shell the client-side replay is the shell's own page", () => {
-    // /game/<id> only exists on the game-server origin.
+    // /g/<id> only exists on the game-server origin (SuperFront's route).
     expect(classicReplayHref("abcd1234")).toMatch(
-      /\/game\/abcd1234\?classic-replay=abcd1234$/,
+      /\/g\/abcd1234\?classic-replay=abcd1234$/,
     );
     shell.host = true;
     expect(classicReplayHref("abcd1234")).toBe(

@@ -437,7 +437,7 @@ describe("version_mismatch on a pinned /v/<commit>/ page", () => {
     });
 
     expect(window.location.href).toBe(
-      "https://falk2-a.openfront.io/game/game1234",
+      "https://falk2-a.openfront.io/g/game1234", // SuperFront builds /g/ links
     );
     expect(reloadForUpdate).not.toHaveBeenCalled();
   });
@@ -621,7 +621,7 @@ describe("version_mismatch takes the versioned page on this host first", () => {
     sendMismatch("unknown");
 
     expect(window.location.href).toBe(
-      "https://falk2-a.openfront.io/game/game1234",
+      "https://falk2-a.openfront.io/g/game1234", // SuperFront builds /g/ links
     );
     for (let i = 0; i < 10; i++) await Promise.resolve();
     expect(reloadForUpdate).not.toHaveBeenCalled();

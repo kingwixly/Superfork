@@ -175,7 +175,7 @@ describe("WinModal pattern promotion", () => {
     expect(modal.textContent ?? "").not.toContain("Support OpenFront");
   });
 
-  it("drops the ad-free pitch in the desktop shell, which has no ads", async () => {
+  it("shows no promos in the browser or the desktop shell", async () => {
     const render = async () => {
       modal = document.createElement("win-modal") as WinModal;
       Object.assign(modal as unknown as { rand: number; isWin: boolean }, {
@@ -187,14 +187,17 @@ describe("WinModal pattern promotion", () => {
       return modal.textContent ?? "";
     };
 
-    expect(await render()).toContain("win_modal.territory_pattern");
+    // Superfork disables upstream's promos everywhere.
+    let text = await render();
+    expect(text).not.toContain("win_modal.territory_pattern");
+    expect(text).not.toContain("win_modal.support_openfront");
     modal?.remove();
 
     window.openfrontDesktop = {};
     try {
-      const text = await render();
-      expect(text).toContain("win_modal.support_openfront");
+      text = await render();
       expect(text).not.toContain("win_modal.territory_pattern");
+      expect(text).not.toContain("win_modal.support_openfront");
     } finally {
       delete window.openfrontDesktop;
     }

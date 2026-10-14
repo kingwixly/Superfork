@@ -415,7 +415,8 @@ export const UNIT_FIELDS: readonly FieldDef<UnitFields>[] = [
     ["samUpgradeStartRange", maybe(F64, null)],
     ["samUpgradeTargetLevel", maybe(F64, null)],
     ["samUpgradeDuration", maybe(F64, null)],
-  ),
+  ), // Superfork: EMP knock-out and the player-given capital name.
+  field(["disabled", BOOL], ["capitalName", STRING]),
 ];
 
 for (const [name, schema] of [

@@ -255,9 +255,9 @@ describe("Client.initialize() booted from Main.ts module scope", () => {
   it("runs the signed-out boot: onUserMe(false) and the missing-version warn", () => {
     // renderNavVersion() === 0 branch (line 411).
     expect(warnSpy).toHaveBeenCalledWith("Game version element not found");
-    // userAuth() === false → onUserMe(false) (line 735), which flips the ad
-    // entitlement on for a signed-out web player.
-    expect(window.adsEnabled).toBe(true);
+    // userAuth() === false → onUserMe(false). Superfork runs no ads, so the
+    // entitlement stays off even for a signed-out web player.
+    expect(window.adsEnabled).toBe(false);
   });
 
   it("clears the stale achievements.pushed record", () => {
@@ -399,9 +399,7 @@ describe("Client.initialize() booted from Main.ts module scope", () => {
       const rewritten = calls[calls.length - 1][2] as string;
       // Shape-matched rather than just "not pinned", so this cannot pass by
       // catching some other replaceState.
-      expect(rewritten).toMatch(
-        /^(\/streamer-mode|\/(w\d+\/)?game\/dAbCd12345)$/,
-      );
+      expect(rewritten).toMatch(/^(\/streamer-mode|\/(w\d+\/)?g\/dAbCd12345)$/);
 
       // And the in-game entry once the join lands.
       await vi.waitFor(() => expect(mocks.joinLobby).toHaveBeenCalled());
@@ -685,7 +683,7 @@ describe("Client.initialize() booted from Main.ts module scope", () => {
       resolveJoin();
       // The in-game entry, which Main keeps as the game's URL.
       await vi.waitFor(() =>
-        expect(window.location.href).toMatch(/game\/AbCd5678/),
+        expect(window.location.href).toMatch(/\/g\/AbCd5678/),
       );
       const gameUrl = window.location.href;
       const replaceSpy = vi.spyOn(history, "replaceState");
