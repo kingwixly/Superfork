@@ -1,17 +1,8 @@
-import {
-  BLINDING_DURATION,
-  BLINDING_RADIUS,
-  CAPITAL_STRIKE_TROOP_LOSS,
-} from "../src/core/configuration/SuperforkUnits";
-import { capitalPromotionLockedUntil } from "../src/core/execution/CapitalExecution";
-import { ConstructionExecution } from "../src/core/execution/ConstructionExecution";
-import {
-  Game,
-  Player,
-  PlayerInfo,
-  PlayerType,
-  UnitType,
-} from "../src/core/game/Game";
+import { PlayerInfo, PlayerType, UnitType } from "@openfront/engine-api/game/GameTypes";
+import { BLINDING_DURATION, BLINDING_RADIUS, CAPITAL_STRIKE_TROOP_LOSS } from "@openfront/engine-lib/configuration/SuperforkUnits";
+import { capitalPromotionLockedUntil } from "@openfront/engine/execution/CapitalExecution";
+import { ConstructionExecution } from "@openfront/engine/execution/ConstructionExecution";
+import { Game, Player } from "@openfront/engine/game/Game";
 import { setup } from "./util/Setup";
 
 let game: Game;

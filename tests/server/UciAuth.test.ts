@@ -1,5 +1,5 @@
+import { Intent } from "@openfront/engine-api/Schemas";
 import { describe, expect, it } from "vitest";
-import { Intent } from "../../src/core/Schemas";
 import {
   authorizeIntent,
   IntentActor,
@@ -64,7 +64,12 @@ describe("UCI intent authorization", () => {
     isAdminBot: false,
     ...over,
   });
-  const started = { isPublic: true, isListed: true, hasStarted: true };
+  const started = {
+    isPublic: true,
+    isListed: true,
+    isQueued: false,
+    hasStarted: true,
+  };
   const uci: Intent = { type: "uci", action: "gold", enabled: true };
 
   it("relays uci intents only from a proven UCI admin", () => {

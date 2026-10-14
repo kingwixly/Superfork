@@ -15,10 +15,10 @@
  *  - sets UIState.territorySelection so other click handlers stand down.
  */
 
-import { EventBus } from "../../core/EventBus";
-import { Cell, PlayerID } from "../../core/game/Game";
-import { TileRef } from "../../core/game/GameMap";
-import { MAX_CEDE_TILES } from "../../core/Schemas";
+import { MAX_CEDE_TILES } from "@openfront/engine-api/Schemas";
+import { TileRef } from "@openfront/engine-api/game/GameMap";
+import { Cell, PlayerID } from "@openfront/engine-api/game/GameTypes";
+import { EventBus } from "@openfront/shared/EventBus";
 import { Controller } from "../Controller";
 import { MouseUpEvent } from "../InputHandler";
 import { TransformHandler } from "../TransformHandler";

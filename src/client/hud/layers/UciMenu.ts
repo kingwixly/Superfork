@@ -1,20 +1,17 @@
+import { SendKickPlayerIntentEvent } from "../../LobbyEvents";
+import { MAX_UCI_ANNOUNCEMENT, UciIntent } from "@openfront/engine-api/Schemas";
+import { GameType, PlayerType } from "@openfront/engine-api/game/GameTypes";
+import { GameUpdateType } from "@openfront/engine-api/game/GameUpdates";
+import { EventBus } from "@openfront/shared/EventBus";
+import { GAME_ROUTE } from "@openfront/shared/GameRoute";
 import { html, LitElement, nothing, TemplateResult } from "lit";
 import { customElement, state } from "lit/decorators.js";
-import { EventBus } from "../../../core/EventBus";
-import { GameType, PlayerType } from "../../../core/game/Game";
-import { GameUpdateType } from "../../../core/game/GameUpdates";
-import { GAME_ROUTE } from "../../../core/GameRoute";
-import { MAX_UCI_ANNOUNCEMENT, UciIntent } from "../../../core/Schemas";
 import { createNextLobby, verifyUciPassword } from "../../Api";
 import { ClientEnv } from "../../ClientEnv";
 import { Controller } from "../../Controller";
 import { BeginTerritorySelectionEvent } from "../../controllers/TerritorySelectionController";
 import { showInGameConfirm } from "../../InGameModal";
-import {
-  SendKickPlayerIntentEvent,
-  SendUciAuthEvent,
-  SendUciIntentEvent,
-} from "../../Transport";
+import { SendUciAuthEvent, SendUciIntentEvent } from "../../Transport";
 import { translateText } from "../../Utils";
 import { GameView, PlayerView } from "../../view";
 

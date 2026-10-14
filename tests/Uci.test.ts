@@ -1,21 +1,13 @@
-import { AttackExecution } from "../src/core/execution/AttackExecution";
-import { NationAllianceBehavior } from "../src/core/execution/nation/NationAllianceBehavior";
-import { NationEmojiBehavior } from "../src/core/execution/nation/NationEmojiBehavior";
-import {
-  UCI_GOLD_FLOOR,
-  UciExecution,
-} from "../src/core/execution/UciExecution";
-import {
-  Game,
-  Player,
-  PlayerInfo,
-  PlayerType,
-  UnitType,
-} from "../src/core/game/Game";
-import { GameUpdateType } from "../src/core/game/GameUpdates";
-import { isAttackLocked } from "../src/core/game/Uci";
-import { PseudoRandom } from "../src/core/PseudoRandom";
-import { UciIntent } from "../src/core/Schemas";
+import { UciIntent } from "@openfront/engine-api/Schemas";
+import { PlayerInfo, PlayerType, UnitType } from "@openfront/engine-api/game/GameTypes";
+import { GameUpdateType } from "@openfront/engine-api/game/GameUpdates";
+import { PseudoRandom } from "@openfront/engine-lib/PseudoRandom";
+import { AttackExecution } from "@openfront/engine/execution/AttackExecution";
+import { UCI_GOLD_FLOOR, UciExecution } from "@openfront/engine/execution/UciExecution";
+import { NationAllianceBehavior } from "@openfront/engine/execution/nation/NationAllianceBehavior";
+import { NationEmojiBehavior } from "@openfront/engine/execution/nation/NationEmojiBehavior";
+import { Game, Player } from "@openfront/engine/game/Game";
+import { isAttackLocked } from "@openfront/engine/game/Uci";
 import { setup } from "./util/Setup";
 
 let game: Game;

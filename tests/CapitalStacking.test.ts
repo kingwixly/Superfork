@@ -1,14 +1,6 @@
-import {
-  DemoteCapitalExecution,
-  PromoteCapitalExecution,
-} from "../src/core/execution/CapitalExecution";
-import {
-  Game,
-  Player,
-  PlayerInfo,
-  PlayerType,
-  UnitType,
-} from "../src/core/game/Game";
+import { PlayerInfo, PlayerType, UnitType } from "@openfront/engine-api/game/GameTypes";
+import { DemoteCapitalExecution, PromoteCapitalExecution } from "@openfront/engine/execution/CapitalExecution";
+import { Game, Player } from "@openfront/engine/game/Game";
 import { setup } from "./util/Setup";
 
 let game: Game;

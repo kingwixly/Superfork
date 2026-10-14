@@ -5,7 +5,7 @@ import { describe, expect, test } from "vitest";
 const ROOT = path.join(__dirname, "..");
 const BEHAVIOR = path.join(
   ROOT,
-  "src/core/execution/nation/NationStructureBehavior.ts",
+  "packages/engine/src/execution/nation/NationStructureBehavior.ts",
 );
 
 /**
@@ -62,10 +62,10 @@ describe("Nation AI covers superfork structures", () => {
 
 const WARSHIP = path.join(
   ROOT,
-  "src/core/execution/nation/NationWarshipBehavior.ts",
+  "packages/engine/src/execution/nation/NationWarshipBehavior.ts",
 );
-const AIR = path.join(ROOT, "src/core/execution/nation/NationAirBehavior.ts");
-const NATION = path.join(ROOT, "src/core/execution/NationExecution.ts");
+const AIR = path.join(ROOT, "packages/engine/src/execution/nation/NationAirBehavior.ts");
+const NATION = path.join(ROOT, "packages/engine/src/execution/NationExecution.ts");
 
 describe("Nation AI fields superfork units", () => {
   const warship = readFileSync(WARSHIP, "utf8");
@@ -113,7 +113,7 @@ describe("Nation AI fields superfork units", () => {
 
 const DIPLOMACY = path.join(
   ROOT,
-  "src/core/execution/nation/NationDiplomacyBehavior.ts",
+  "packages/engine/src/execution/nation/NationDiplomacyBehavior.ts",
 );
 
 describe("Nation AI diplomacy is conservative", () => {

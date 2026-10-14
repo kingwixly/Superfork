@@ -1,6 +1,7 @@
-import { SanctionExecution } from "../src/core/execution/SanctionExecution";
-import { canFlyOver } from "../src/core/game/Airspace";
-import { Game, Player, PlayerInfo, PlayerType } from "../src/core/game/Game";
+import { PlayerInfo, PlayerType } from "@openfront/engine-api/game/GameTypes";
+import { SanctionExecution } from "@openfront/engine/execution/SanctionExecution";
+import { canFlyOver } from "@openfront/engine/game/Airspace";
+import { Game, Player } from "@openfront/engine/game/Game";
 import { setup } from "./util/Setup";
 
 let game: Game;

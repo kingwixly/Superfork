@@ -1,7 +1,4 @@
-import { html, LitElement } from "lit";
-import { customElement, state } from "lit/decorators.js";
-import { EventBus } from "../../../core/EventBus";
-import { MessageType, Tick } from "../../../core/game/Game";
+import { MessageType, Tick } from "@openfront/engine-api/game/GameTypes";
 import {
   AllianceExtensionUpdate,
   AllianceRequestReplyUpdate,
@@ -9,7 +6,10 @@ import {
   BrokeAllianceUpdate,
   DisplayMessageUpdate,
   GameUpdateType,
-} from "../../../core/game/GameUpdates";
+} from "@openfront/engine-api/game/GameUpdates";
+import { EventBus } from "@openfront/shared/EventBus";
+import { html, LitElement } from "lit";
+import { customElement, state } from "lit/decorators.js";
 import { Controller } from "../../Controller";
 import { PlaySoundEffectEvent } from "../../sound/Sounds";
 import { GoToPlayerEvent } from "../../TransformHandler";
@@ -322,16 +322,20 @@ export class ActionableEvents extends LitElement implements Controller {
         {
           text: translateText("events_display.accept_alliance"),
           className: "btn",
-          action: () =>
+          action: () => {
+            this.eventBus.emit(new PlaySoundEffectEvent("alliance-accepted"));
             this.eventBus.emit(
               new SendAllianceRequestIntentEvent(recipient, requestor),
-            ),
+            );
+          },
         },
         {
           text: translateText("events_display.reject_alliance"),
           className: "btn-info",
-          action: () =>
-            this.eventBus.emit(new SendAllianceRejectIntentEvent(requestor)),
+          action: () => {
+            this.eventBus.emit(new PlaySoundEffectEvent("alliance-declined"));
+            this.eventBus.emit(new SendAllianceRejectIntentEvent(requestor));
+          },
         },
       ],
       type: MessageType.ALLIANCE_REQUEST,

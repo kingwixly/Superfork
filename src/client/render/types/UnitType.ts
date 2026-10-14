@@ -1,9 +1,3 @@
-import {
-  BLINDING_RADIUS,
-  BUNKER_BUSTER_RADIUS,
-  EMP_RADIUS,
-  NEUTRON_RADIUS,
-} from "../../../core/configuration/SuperforkUnits";
 /**
  * Canonical unit type string constants.
  *
@@ -116,6 +110,18 @@ export const SMOOTHED_NUKE_TYPES: ReadonlySet<string> = new Set([
   UT_EMP_BOMB,
 ]);
 
+/** Units that leave a trail on the map (TrailManager). */
+export const TRAIL_TYPES: ReadonlySet<string> = new Set([
+  UT_TRANSPORT,
+  UT_ATOM_BOMB,
+  UT_HYDROGEN_BOMB,
+  UT_MIRV,
+  UT_MIRV_WARHEAD,
+  // Superfork warheads.
+  UT_NEUTRON_BOMB,
+  UT_EMP_BOMB,
+]);
+
 /** Blast radii (in tiles) matching upstream DefaultConfig.nukeMagnitudes(). */
 export const NUKE_MAGNITUDES: Readonly<
   Record<string, { inner: number; outer: number }>
@@ -181,4 +187,5 @@ export const ALL_UNIT_TYPES = [
   UT_BLINDING_BOMB,
   UT_BUNKER_BUSTER,
   UT_AA_MISSILE,
-] as const;
+] as const;import { BLINDING_RADIUS, BUNKER_BUSTER_RADIUS, EMP_RADIUS, NEUTRON_RADIUS } from "@openfront/engine-lib/configuration/SuperforkUnits";
+

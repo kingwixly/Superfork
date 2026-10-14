@@ -1,10 +1,7 @@
-import { AttackExecution } from "../src/core/execution/AttackExecution";
-import {
-  canPuppet,
-  PuppetCommandExecution,
-  PuppetLiberateExecution,
-} from "../src/core/execution/PuppetExecution";
-import { Game, Player, PlayerInfo, PlayerType } from "../src/core/game/Game";
+import { PlayerInfo, PlayerType } from "@openfront/engine-api/game/GameTypes";
+import { AttackExecution } from "@openfront/engine/execution/AttackExecution";
+import { canPuppet, PuppetCommandExecution, PuppetLiberateExecution } from "@openfront/engine/execution/PuppetExecution";
+import { Game, Player } from "@openfront/engine/game/Game";
 import { setup } from "./util/Setup";
 
 let game: Game;

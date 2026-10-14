@@ -1,9 +1,8 @@
 import { LitElement, html, type TemplateResult } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { ClientEnv } from "src/client/ClientEnv";
-import { UserSettings } from "../../core/game/UserSettings";
-import { GAME_ROUTE } from "../../core/GameRoute";
-import { crazyGamesSDK } from "../CrazyGamesSDK";
+import { gamePortal } from "../GamePortal";
+import { UserSettings } from "../UserSettings";
 import { copyToClipboard, showToast, translateText } from "../Utils";
 
 @customElement("copy-button")
@@ -64,7 +63,11 @@ export class CopyButton extends LitElement {
   }
 
   private async buildCopyUrl(): Promise<string> {
-    let url = `${window.location.origin}/${ClientEnv.workerPath(this.lobbyId)}/${GAME_ROUTE}/${this.lobbyId}`;
+    // ClientEnv.shareOrigin(), not window.location: this string goes to the
+    // clipboard and then to another player, and under the desktop shell the
+    // document's own origin is `app://openfront` — a link only that one
+    // Electron process can open. See deriveShareOrigin.
+    let url = `${ClientEnv.shareOrigin()}${ClientEnv.gamePath(this.lobbyId)}`;
     if (this.includeLobbyQuery) {
       url += `?lobby&s=${encodeURIComponent(this.lobbySuffix)}`;
     }
@@ -73,8 +76,8 @@ export class CopyButton extends LitElement {
 
   private async resolveCopyText(): Promise<string | null> {
     if (this.copyText) return this.copyText;
-    if (crazyGamesSDK.isOnCrazyGames()) {
-      return crazyGamesSDK.createInviteLink(this.lobbyId);
+    if (gamePortal.isOnGamePortal()) {
+      return gamePortal.createInviteLink(this.lobbyId);
     }
     if (!this.lobbyId) return "";
     return await this.buildCopyUrl();

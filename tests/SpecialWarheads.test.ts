@@ -1,20 +1,8 @@
-import {
-  ASBM_WARHEAD_COUNT,
-  ASBMExecution,
-} from "../src/core/execution/ASBMExecution";
-import { ConstructionExecution } from "../src/core/execution/ConstructionExecution";
-import {
-  EMP_DISABLE_DURATION,
-  NEUTRON_KILL_SHARE,
-  SpecialWarheadExecution,
-} from "../src/core/execution/SpecialWarheadExecution";
-import {
-  Game,
-  Player,
-  PlayerInfo,
-  PlayerType,
-  UnitType,
-} from "../src/core/game/Game";
+import { PlayerInfo, PlayerType, UnitType } from "@openfront/engine-api/game/GameTypes";
+import { ASBM_WARHEAD_COUNT, ASBMExecution } from "@openfront/engine/execution/ASBMExecution";
+import { ConstructionExecution } from "@openfront/engine/execution/ConstructionExecution";
+import { EMP_DISABLE_DURATION, NEUTRON_KILL_SHARE, SpecialWarheadExecution } from "@openfront/engine/execution/SpecialWarheadExecution";
+import { Game, Player } from "@openfront/engine/game/Game";
 import { setup } from "./util/Setup";
 
 let game: Game;

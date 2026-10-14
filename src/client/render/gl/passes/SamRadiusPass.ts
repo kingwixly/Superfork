@@ -13,7 +13,7 @@
  *   enemy → red    (1, 0, 0)
  */
 
-import { WARSHIP_INTERCEPT_RANGE } from "../../../../core/configuration/SuperforkUnits";
+import { WARSHIP_INTERCEPT_RANGE } from "@openfront/engine-lib/configuration/SuperforkUnits";
 import type { UnitState } from "../../types";
 import { UT_SAM_LAUNCHER, UT_WARSHIP } from "../../types";
 import { DynamicInstanceBuffer } from "../DynamicBuffer";
@@ -197,7 +197,7 @@ export class SAMRadiusPass {
     this.gl = gl;
     this.mapW = mapW;
     this.settings = settings;
-    this.program = createProgram(gl, vertSrc, fragSrc);
+    this.program = createProgram(gl, vertSrc, fragSrc, "SamRadiusPass");
 
     this.uCamera = gl.getUniformLocation(this.program, "uCamera")!;
     this.uTime = gl.getUniformLocation(this.program, "uTime")!;

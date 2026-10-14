@@ -1,17 +1,8 @@
-import { CedeLandExecution } from "../src/core/execution/CedeLandExecution";
-import { SanctionExecution } from "../src/core/execution/SanctionExecution";
-import {
-  clearTreaties,
-  treatiesOf,
-  TreatyCreateExecution,
-} from "../src/core/execution/TreatyExecution";
-import {
-  Game,
-  Player,
-  PlayerInfo,
-  PlayerType,
-  UnitType,
-} from "../src/core/game/Game";
+import { PlayerInfo, PlayerType, UnitType } from "@openfront/engine-api/game/GameTypes";
+import { CedeLandExecution } from "@openfront/engine/execution/CedeLandExecution";
+import { SanctionExecution } from "@openfront/engine/execution/SanctionExecution";
+import { clearTreaties, treatiesOf, TreatyCreateExecution } from "@openfront/engine/execution/TreatyExecution";
+import { Game, Player } from "@openfront/engine/game/Game";
 import { setup } from "./util/Setup";
 
 let game: Game;

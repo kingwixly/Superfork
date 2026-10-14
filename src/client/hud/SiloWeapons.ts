@@ -1,4 +1,3 @@
-import { UnitType } from "../../core/game/Game";
 
 /**
  * Everything launched from a Missile Silo. The UI only knew about the three
@@ -20,4 +19,5 @@ export const ARC_WEAPONS: ReadonlySet<UnitType> = new Set([
   UnitType.HydrogenBomb,
   UnitType.NeutronBomb,
   UnitType.EMPBomb,
-]);
+]);import { UnitType } from "@openfront/engine-api/game/GameTypes";
+
