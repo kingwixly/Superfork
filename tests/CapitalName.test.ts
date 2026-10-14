@@ -1,16 +1,15 @@
 import {
+  PlayerInfo,
+  PlayerType,
+  UnitType,
+} from "@openfront/engine-api/game/GameTypes";
+import {
   capitalDisplayName,
   MAX_CAPITAL_NAME_LENGTH,
   PromoteCapitalExecution,
   RenameCapitalExecution,
-} from "../src/core/execution/CapitalExecution";
-import {
-  Game,
-  Player,
-  PlayerInfo,
-  PlayerType,
-  UnitType,
-} from "../src/core/game/Game";
+} from "@openfront/engine/execution/CapitalExecution";
+import { Game, Player } from "@openfront/engine/game/Game";
 import { setup } from "./util/Setup";
 
 let game: Game;

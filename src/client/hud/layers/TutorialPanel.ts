@@ -1,13 +1,18 @@
+import {
+  PlayerType,
+  Relation,
+  UnitType,
+} from "@openfront/engine-api/game/GameTypes";
+import { renderNumber } from "@openfront/engine-lib/Format";
+import { EventBus } from "@openfront/shared/EventBus";
 import { LitElement, html, nothing } from "lit";
 import { customElement, state } from "lit/decorators.js";
-import { EventBus } from "../../../core/EventBus";
-import { PlayerType, Relation, UnitType } from "../../../core/game/Game";
-import { UserSettings } from "../../../core/game/UserSettings";
 import { Controller } from "../../Controller";
 import { Platform } from "../../Platform";
 import { GoToPlayerEvent } from "../../TransformHandler";
 import { UIState } from "../../UIState";
-import { renderNumber, translateText } from "../../Utils";
+import { UserSettings } from "../../UserSettings";
+import { textDirection, translateText } from "../../Utils";
 import { GameView } from "../../view";
 import { PlayerView } from "../../view/PlayerView";
 import {
@@ -413,6 +418,7 @@ export class TutorialPanel extends LitElement implements Controller {
     if (!this.active) return nothing;
     return html`
       <div
+        dir=${textDirection()}
         class="pointer-events-auto w-full sm:rounded-lg bg-gray-800/92 backdrop-blur-sm shadow-lg text-white text-base p-2 sm:mb-1"
         @contextmenu=${(e: MouseEvent) => e.preventDefault()}
       >
@@ -512,12 +518,18 @@ export class TutorialPanel extends LitElement implements Controller {
           ? nothing
           : html`<span class="shrink-0">${done ? "✓" : "•"}</span>`}
         ${step.bullets
-          ? html`<ul class="list-disc ml-4 flex flex-col gap-1">
+          ? html`<ul class="list-disc ms-4 flex flex-col gap-1">
               ${step.bullets.map(
-                (b) => html`<li>${translateText(`tutorial.step.${b}`)}</li>`,
+                // dir=auto keeps step text on its content's side while the
+                // panel chrome mirrors — untranslated steps (English fallback)
+                // then keep their punctuation on the correct end.
+                (b) =>
+                  html`<li dir="auto">
+                    ${translateText(`tutorial.step.${b}`)}
+                  </li>`,
               )}
             </ul>`
-          : html`<span>${this.stepText(step, done)}</span>`}
+          : html`<span dir="auto">${this.stepText(step, done)}</span>`}
       </p>
     `;
   }

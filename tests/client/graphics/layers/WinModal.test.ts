@@ -1,3 +1,4 @@
+import { RankedType } from "@openfront/engine-api/game/GameTypes";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   fetchCosmetics,
@@ -6,7 +7,6 @@ import {
 } from "../../../../src/client/Cosmetics";
 import "../../../../src/client/hud/layers/WinModal";
 import type { WinModal } from "../../../../src/client/hud/layers/WinModal";
-import { RankedType } from "../../../../src/core/game/Game";
 
 vi.mock("../../../../src/client/Utils", () => ({
   translateText: vi.fn((key: string) => {
@@ -35,10 +35,9 @@ vi.mock("../../../../src/client/Cosmetics", async (importOriginal) => ({
   resolveCosmetics: vi.fn(() => []),
 }));
 
-vi.mock("../../../../src/client/CrazyGamesSDK", () => ({
-  crazyGamesSDK: {
+vi.mock("../../../../src/client/GamePortal", () => ({
+  gamePortal: {
     happytime: vi.fn(),
-    requestAd: vi.fn(),
     gameplayStop: vi.fn(),
   },
 }));
@@ -174,5 +173,33 @@ describe("WinModal pattern promotion", () => {
       "win_modal.support_openfront",
     );
     expect(modal.textContent ?? "").not.toContain("Support OpenFront");
+  });
+
+  it("shows no promos in the browser or the desktop shell", async () => {
+    const render = async () => {
+      modal = document.createElement("win-modal") as WinModal;
+      Object.assign(modal as unknown as { rand: number; isWin: boolean }, {
+        rand: 0.75,
+        isWin: true,
+      });
+      document.body.appendChild(modal);
+      await modal.updateComplete;
+      return modal.textContent ?? "";
+    };
+
+    // Superfork disables upstream's promos everywhere.
+    let text = await render();
+    expect(text).not.toContain("win_modal.territory_pattern");
+    expect(text).not.toContain("win_modal.support_openfront");
+    modal?.remove();
+
+    window.openfrontDesktop = {};
+    try {
+      text = await render();
+      expect(text).not.toContain("win_modal.territory_pattern");
+      expect(text).not.toContain("win_modal.support_openfront");
+    } finally {
+      delete window.openfrontDesktop;
+    }
   });
 });

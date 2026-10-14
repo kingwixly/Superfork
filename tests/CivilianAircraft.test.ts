@@ -1,12 +1,11 @@
-import { AirBaseExecution } from "../src/core/execution/AirBaseExecution";
-import { CivilianAircraftExecution } from "../src/core/execution/CivilianAircraftExecution";
 import {
-  Game,
-  Player,
   PlayerInfo,
   PlayerType,
   UnitType,
-} from "../src/core/game/Game";
+} from "@openfront/engine-api/game/GameTypes";
+import { AirBaseExecution } from "@openfront/engine/execution/AirBaseExecution";
+import { CivilianAircraftExecution } from "@openfront/engine/execution/CivilianAircraftExecution";
+import { Game, Player } from "@openfront/engine/game/Game";
 import { setup } from "./util/Setup";
 
 let game: Game;

@@ -1,16 +1,15 @@
 import {
-  BANK_ACCRUAL_DENOMINATOR,
-  BANK_ACCRUAL_NUMERATOR,
-  BANK_RESERVE_CAP,
-} from "../src/core/configuration/SuperforkUnits";
-import { PlayerExecution } from "../src/core/execution/PlayerExecution";
-import {
-  Game,
-  Player,
   PlayerInfo,
   PlayerType,
   UnitType,
-} from "../src/core/game/Game";
+} from "@openfront/engine-api/game/GameTypes";
+import {
+  BANK_ACCRUAL_DENOMINATOR,
+  BANK_ACCRUAL_NUMERATOR,
+  BANK_RESERVE_CAP,
+} from "@openfront/engine-lib/configuration/SuperforkUnits";
+import { PlayerExecution } from "@openfront/engine/execution/PlayerExecution";
+import { Game, Player } from "@openfront/engine/game/Game";
 import { setup } from "./util/Setup";
 
 let game: Game;
@@ -115,7 +114,7 @@ describe("Bank", () => {
 describe("Bank withdrawal", () => {
   test("the owner can take their own reserve", async () => {
     const { WithdrawBankExecution } =
-      await import("../src/core/execution/BankExecution");
+      await import("@openfront/engine/execution/BankExecution");
     player.conquer(game.ref(7, 10));
     const bank = player.buildUnit(UnitType.Bank, game.ref(7, 10), {});
     bank.addBankReserve(3_000_000n);
@@ -132,7 +131,7 @@ describe("Bank withdrawal", () => {
 
   test("withdrawing twice yields nothing the second time", async () => {
     const { WithdrawBankExecution } =
-      await import("../src/core/execution/BankExecution");
+      await import("@openfront/engine/execution/BankExecution");
     player.conquer(game.ref(7, 10));
     const bank = player.buildUnit(UnitType.Bank, game.ref(7, 10), {});
     bank.addBankReserve(1_000_000n);
@@ -146,7 +145,7 @@ describe("Bank withdrawal", () => {
 
   test("you cannot withdraw from a bank you do not own", async () => {
     const { WithdrawBankExecution } =
-      await import("../src/core/execution/BankExecution");
+      await import("@openfront/engine/execution/BankExecution");
     player.conquer(game.ref(7, 10));
     const bank = player.buildUnit(UnitType.Bank, game.ref(7, 10), {});
     bank.addBankReserve(2_000_000n);

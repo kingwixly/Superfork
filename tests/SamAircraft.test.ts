@@ -1,11 +1,10 @@
-import { SAMLauncherExecution } from "../src/core/execution/SAMLauncherExecution";
 import {
-  Game,
-  Player,
   PlayerInfo,
   PlayerType,
   UnitType,
-} from "../src/core/game/Game";
+} from "@openfront/engine-api/game/GameTypes";
+import { SAMLauncherExecution } from "@openfront/engine/execution/SAMLauncherExecution";
+import { Game, Player } from "@openfront/engine/game/Game";
 import { setup } from "./util/Setup";
 
 let game: Game;

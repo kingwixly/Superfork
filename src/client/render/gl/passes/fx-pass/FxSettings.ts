@@ -6,7 +6,7 @@
 import {
   BLINDING_RADIUS,
   BUNKER_BUSTER_RADIUS,
-} from "../../../../../core/configuration/SuperforkUnits";
+} from "@openfront/engine-lib/configuration/SuperforkUnits";
 import type { NukeExplosionRenderParams } from "../../../types";
 import {
   UT_ASBM_WARHEAD,

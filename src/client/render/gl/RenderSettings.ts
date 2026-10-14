@@ -19,6 +19,11 @@ export interface ThemeSettings {
   teamColors: Record<string, string>;
   humanColors: string[];
   nationColors: string[];
+  /**
+   * The pre-v34 tribe (bot) color pool, used instead of the flat Bot team
+   * color when the classicBotColors graphics override is on.
+   */
+  classicBotColors: string[];
   /** Used when the primary palettes are exhausted. */
   fallbackColors: string[];
   /** Border = territory color darkened by this absolute amount. */
@@ -211,6 +216,26 @@ export interface RenderSettings {
      * (HSV value multiplier) instead of the flat iconR/G/B color. 0 = off.
      */
     iconDarken: number;
+    /**
+     * Superfork: old-style colour building sprites once zoomed in. Above
+     * `zoom` (pixels per tile) the polygon icons cross-fade, over
+     * `fadeRange`, into a sprite on a player-coloured diamond footprint, as
+     * the pre-WebGL StructureLayer drew them. Sizes are in tiles.
+     */
+    sprites: {
+      enabled: boolean;
+      zoom: number;
+      fadeRange: number;
+      /** Sprite width/height in tiles. */
+      size: number;
+      /** How far the sprite sits above the structure's tile, in tiles. */
+      liftY: number;
+      /** Diamond (L1) radius of the border-coloured footprint, in tiles. */
+      borderRadius: number;
+      /** Diamond radius of the inner territory-coloured footprint. */
+      territoryRadius: number;
+      territoryAlpha: number;
+    };
   };
   structureLevel: {
     scale: number;
@@ -293,6 +318,7 @@ export interface RenderSettings {
     hoverGlowWidth: number;
     /** Peak opacity of the hover glow (0 disables it). */
     hoverGlowAlpha: number;
+    flagAlpha: number;
   };
   fx: {
     shockwaveRingWidth: number;

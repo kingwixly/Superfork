@@ -1,10 +1,11 @@
+import { PlayerInfo, PlayerType } from "@openfront/engine-api/game/GameTypes";
 import {
   CeasefireProposeExecution,
   CeasefireResponseExecution,
   clearPendingCeasefires,
   liberate,
-} from "../src/core/execution/CeasefireExecution";
-import { Game, Player, PlayerInfo, PlayerType } from "../src/core/game/Game";
+} from "@openfront/engine/execution/CeasefireExecution";
+import { Game, Player } from "@openfront/engine/game/Game";
 import { setup } from "./util/Setup";
 
 let game: Game;

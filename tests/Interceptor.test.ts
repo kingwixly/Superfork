@@ -1,16 +1,15 @@
-import { InterceptorExecution } from "../src/core/execution/InterceptorExecution";
+import {
+  PlayerInfo,
+  PlayerType,
+  UnitType,
+} from "@openfront/engine-api/game/GameTypes";
+import { InterceptorExecution } from "@openfront/engine/execution/InterceptorExecution";
 import {
   INTERCEPT_FAILURE_PERCENT,
   InterceptorMissileExecution,
   mirvInterceptAttempts,
-} from "../src/core/execution/InterceptorMissileExecution";
-import {
-  Game,
-  Player,
-  PlayerInfo,
-  PlayerType,
-  UnitType,
-} from "../src/core/game/Game";
+} from "@openfront/engine/execution/InterceptorMissileExecution";
+import { Game, Player } from "@openfront/engine/game/Game";
 import { setup } from "./util/Setup";
 
 let game: Game;

@@ -1,23 +1,22 @@
 import {
+  PlayerInfo,
+  PlayerType,
+  UnitType,
+} from "@openfront/engine-api/game/GameTypes";
+import { PseudoRandom } from "@openfront/engine-lib/PseudoRandom";
+import {
   EMBASSY_SLOW_DURATION,
   EMBASSY_TROOP_PENALTY,
-} from "../src/core/configuration/SuperforkUnits";
+} from "@openfront/engine-lib/configuration/SuperforkUnits";
 import {
   clearPendingEmbassies,
   EmbassyRequestExecution,
   EmbassyResponseExecution,
   pendingEmbassyBetween,
-} from "../src/core/execution/EmbassyExecution";
-import { NationDiplomacyBehavior } from "../src/core/execution/nation/NationDiplomacyBehavior";
-import { PlayerExecution } from "../src/core/execution/PlayerExecution";
-import {
-  Game,
-  Player,
-  PlayerInfo,
-  PlayerType,
-  UnitType,
-} from "../src/core/game/Game";
-import { PseudoRandom } from "../src/core/PseudoRandom";
+} from "@openfront/engine/execution/EmbassyExecution";
+import { PlayerExecution } from "@openfront/engine/execution/PlayerExecution";
+import { NationDiplomacyBehavior } from "@openfront/engine/execution/nation/NationDiplomacyBehavior";
+import { Game, Player } from "@openfront/engine/game/Game";
 import { setup } from "./util/Setup";
 
 let game: Game;

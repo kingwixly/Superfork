@@ -1,3 +1,4 @@
+import { PlayerInfo, PlayerType } from "@openfront/engine-api/game/GameTypes";
 import {
   clearTreaties,
   pendingInviteFor,
@@ -7,8 +8,8 @@ import {
   TreatyInviteExecution,
   TreatyLeaveExecution,
   TreatyResponseExecution,
-} from "../src/core/execution/TreatyExecution";
-import { Game, Player, PlayerInfo, PlayerType } from "../src/core/game/Game";
+} from "@openfront/engine/execution/TreatyExecution";
+import { Game, Player } from "@openfront/engine/game/Game";
 import { setup } from "./util/Setup";
 
 let game: Game;

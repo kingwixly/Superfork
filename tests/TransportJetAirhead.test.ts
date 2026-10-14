@@ -1,6 +1,10 @@
-import { PlayerExecution } from "../src/core/execution/PlayerExecution";
-import { TransportJetExecution } from "../src/core/execution/TransportJetExecution";
-import { PlayerInfo, PlayerType, UnitType } from "../src/core/game/Game";
+import {
+  PlayerInfo,
+  PlayerType,
+  UnitType,
+} from "@openfront/engine-api/game/GameTypes";
+import { PlayerExecution } from "@openfront/engine/execution/PlayerExecution";
+import { TransportJetExecution } from "@openfront/engine/execution/TransportJetExecution";
 import { setup } from "./util/Setup";
 
 describe("Transport jet landings", () => {

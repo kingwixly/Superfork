@@ -26,6 +26,9 @@ export function applyGraphicsOverrides(
   if (overrides.name?.hoverGlowAlpha !== undefined) {
     settings.name.hoverGlowAlpha = overrides.name.hoverGlowAlpha;
   }
+  if (overrides.cosmetics?.flagOpacity !== undefined) {
+    settings.name.flagAlpha = overrides.cosmetics.flagOpacity;
+  }
   if (overrides.structure?.iconSize !== undefined) {
     settings.structure.iconSize = overrides.structure.iconSize;
   }
@@ -41,6 +44,9 @@ export function applyGraphicsOverrides(
 
   if (overrides.structure?.classicNumbers !== undefined) {
     settings.structureLevel.classicFont = overrides.structure.classicNumbers;
+  }
+  if (overrides.structure?.sprites !== undefined) {
+    settings.structure.sprites.enabled = overrides.structure.sprites;
   }
   if (overrides.structure?.showDots === false) {
     // Zoom is always > 0, so a threshold of 0 means the dots LOD never

@@ -1,5 +1,3 @@
-import { UnitType } from "../../core/game/Game";
-
 /**
  * Everything launched from a Missile Silo. The UI only knew about the three
  * vanilla nukes, so the superfork warheads were never greyed out without a
@@ -21,3 +19,4 @@ export const ARC_WEAPONS: ReadonlySet<UnitType> = new Set([
   UnitType.NeutronBomb,
   UnitType.EMPBomb,
 ]);
+import { UnitType } from "@openfront/engine-api/game/GameTypes";

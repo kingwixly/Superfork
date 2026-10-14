@@ -185,7 +185,17 @@
     "iconR": 1.0,
     "iconG": 1.0,
     "iconB": 1.0,
-    "iconDarken": 0
+    "iconDarken": 0,
+    "sprites": {
+      "enabled": true,
+      "zoom": 4.3,
+      "fadeRange": 0.8,
+      "size": 16,
+      "liftY": 4,
+      "borderRadius": 8.25,
+      "territoryRadius": 6.75,
+      "territoryAlpha": 0.51
+    }
   },
   "structureLevel": {
     "scale": 1,
@@ -258,7 +268,8 @@
     "statusOutlineWidth": 6,
     "hoverFadeAlpha": 0.5,
     "hoverGlowWidth": 5,
-    "hoverGlowAlpha": 0.75
+    "hoverGlowAlpha": 0.75,
+    "flagAlpha": 1
   },
   "fx": {
     "shockwaveRingWidth": 0.04,
@@ -385,24 +396,24 @@
       "intensity": 1.2
     },
     "Port": {
-      "radius": 12,
-      "intensity": 1
+      "radius": 18,
+      "intensity": 1.2
     },
     "Factory": {
-      "radius": 12,
-      "intensity": 1
+      "radius": 18,
+      "intensity": 1.2
     },
     "Defense Post": {
-      "radius": 10,
-      "intensity": 0.9
+      "radius": 18,
+      "intensity": 1.2
     },
     "SAM Launcher": {
-      "radius": 10,
-      "intensity": 0.9
+      "radius": 18,
+      "intensity": 1.2
     },
     "Missile Silo": {
-      "radius": 10,
-      "intensity": 0.9
+      "radius": 18,
+      "intensity": 1.2
     },
     "Transport": {
       "radius": 6,

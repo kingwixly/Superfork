@@ -9,8 +9,8 @@
  *     structure levels → bars → bloom → trails → missiles → fx → conquest → names
  */
 
-import type { Config } from "../../../core/configuration/Config";
-import type { MapLayer } from "../../../core/game/TerrainMapLoader";
+import type { MapLayer } from "@openfront/engine-api/game/MapFiles";
+import type { Config } from "@openfront/engine-lib/configuration/Config";
 import { translateText } from "../../Utils";
 import type { SpiralRibbon } from "../frame/SpiralTrails";
 import type {
@@ -59,6 +59,7 @@ import { SpawnOverlayPass } from "./passes/SpawnOverlayPass";
 import { SpiralRibbonPass } from "./passes/SpiralRibbonPass";
 import { StructureLevelPass } from "./passes/StructureLevelPass";
 import { StructurePass } from "./passes/StructurePass";
+import { spriteBlend, StructureSpritePass } from "./passes/StructureSpritePass";
 import { TerrainPass } from "./passes/TerrainPass";
 import { TerritoryPass } from "./passes/TerritoryPass";
 import { TrailPass } from "./passes/TrailPass";
@@ -130,6 +131,7 @@ export class GPURenderer {
   private lightmapPass: LightmapPass;
   private nightCompositePass: NightCompositePass;
   private structurePass: StructurePass;
+  private structureSpritePass: StructureSpritePass;
   private structureLevelPass: StructureLevelPass;
   private unitPass: UnitPass;
   private namePass: NamePass;
@@ -570,6 +572,12 @@ export class GPURenderer {
       this.effectTex,
       this.settings,
     );
+    this.structureSpritePass = new StructureSpritePass(
+      gl,
+      header,
+      this.paletteTex,
+      this.settings,
+    );
     this.structureLevelPass = new StructureLevelPass(gl, header, this.settings);
     this.unitPass = new UnitPass(
       gl,
@@ -632,6 +640,7 @@ export class GPURenderer {
     this.territoryPass.setAffiliationTex(affTex);
     this.unitPass.setAffiliationTex(affTex);
     this.structurePass.setAffiliationTex(affTex);
+    this.structureSpritePass.setAffiliationTex(affTex);
     this.trailPass.setAffiliationTex(affTex);
     this.coordinateGridPass = new CoordinateGridPass(
       gl,
@@ -769,7 +778,37 @@ export class GPURenderer {
     patternData: Uint8Array,
   ): void {
     this.updatePalette(paletteData);
+    this.uploadPatterns(patternMeta, patternData);
 
+    this.namePass.addPlayers(players, this.paletteData);
+    for (const p of players) {
+      if (p.team !== null) this.playerTeams.set(p.smallID, p.team);
+    }
+    // Renderer was constructed with players: [] (real list arrives via this
+    // method), so team mode must be re-evaluated whenever new players arrive
+    // — otherwise team games never enable the skin-tint branch.
+    this.territoryPass.setTeamMode(this.playerTeams.size > 0);
+  }
+
+  /**
+   * Re-upload already-registered players' palette, patterns, flags and crowns
+   * after the cosmetics visibility settings change.
+   */
+  updatePlayerCosmetics(
+    players: PlayerStatic[],
+    paletteData: Float32Array,
+    patternMeta: Float32Array,
+    patternData: Uint8Array,
+  ): void {
+    this.updatePalette(paletteData);
+    this.uploadPatterns(patternMeta, patternData);
+    this.namePass.updatePlayerCosmetics(players);
+  }
+
+  private uploadPatterns(
+    patternMeta: Float32Array,
+    patternData: Uint8Array,
+  ): void {
     const gl = this.gl;
     const palW = getPaletteSize();
 
@@ -798,15 +837,6 @@ export class GPURenderer {
       gl.UNSIGNED_BYTE,
       patternData,
     );
-
-    this.namePass.addPlayers(players, this.paletteData);
-    for (const p of players) {
-      if (p.team !== null) this.playerTeams.set(p.smallID, p.team);
-    }
-    // Renderer was constructed with players: [] (real list arrives via this
-    // method), so team mode must be re-evaluated whenever new players arrive
-    // — otherwise team games never enable the skin-tint branch.
-    this.territoryPass.setTeamMode(this.playerTeams.size > 0);
   }
 
   /**
@@ -848,13 +878,17 @@ export class GPURenderer {
   }
 
   /**
-   * Map a player to a pre-registered skin layer. URLs not registered via
-   * `initSkinAtlas` are silently dropped. If the image is still decoding the
-   * layer renders transparent (zero-init) until decode completes.
+   * Map a player to a pre-registered skin layer, or clear it with null. URLs
+   * not registered via `initSkinAtlas` are silently dropped. If the image is
+   * still decoding the layer renders transparent (zero-init) until decode
+   * completes.
    */
-  setPlayerSkin(smallID: number, url: string): void {
-    const layer = this.skinAtlas.getLayer(url);
-    if (layer < 0) return;
+  setPlayerSkin(smallID: number, url: string | null): void {
+    let layer = -1;
+    if (url !== null) {
+      layer = this.skinAtlas.getLayer(url);
+      if (layer < 0) return;
+    }
     this.skinLayerCpu[smallID] = layer + 1;
     this.uploadSkinLayerTex();
   }
@@ -926,6 +960,7 @@ export class GPURenderer {
   updateStructures(units: Map<number, UnitState>): void {
     this.lastStructures = units;
     this.structurePass.updateStructures(units);
+    this.structureSpritePass.updateStructures(units);
     this.structureLevelPass.updateStructures(units);
     this.samRadiusPass.updateStructures(units);
     this.unitPass.setStructures(units);
@@ -1101,6 +1136,7 @@ export class GPURenderer {
   }
   setHighlightStructureTypes(unitTypes: string[] | null): void {
     this.structurePass.setHighlightTypes(unitTypes);
+    this.structureSpritePass.setHighlightTypes(unitTypes);
     this.structureLevelPass.setHighlightTypes(unitTypes);
     this.samHighlightVisible =
       unitTypes !== null &&
@@ -1134,11 +1170,8 @@ export class GPURenderer {
     this.borderStampPass.setAltView(active);
     this.unitPass.setAltView(active);
     this.structurePass.setAltView(active);
+    this.structureSpritePass.setAltView(active);
     this.trailPass.setAltView(active);
-  }
-
-  setShowPatterns(active: boolean): void {
-    this.territoryPass.setShowPatterns(active);
   }
 
   setGridView(active: boolean): void {
@@ -1348,7 +1381,16 @@ export class GPURenderer {
     this.rangeCirclePass.draw(cam);
     this.nukeTrajectoryPass.draw(cam);
     this.crosshairPass.draw(cam);
-    if (pe.structure) this.structurePass.draw(cam, zoom);
+    if (pe.structure) {
+      // Superfork: old-style building sprites when zoomed in; the polygon
+      // icons fade out as the sprites fade in. Until the sprite atlas has
+      // loaded, the polygons stay at full strength.
+      const spriteT = this.structureSpritePass.isReady()
+        ? spriteBlend(this.settings, zoom)
+        : 0;
+      this.structureSpritePass.draw(cam, zoom);
+      this.structurePass.draw(cam, zoom, 1 - spriteT);
+    }
     if (pe.structure) this.structureLevelPass.draw(cam, zoom);
     // Small-player glow draws after structures so buildings can't hide it.
     this.smallPlayerGlowPass.draw(cam);
@@ -1451,7 +1493,12 @@ export class GPURenderer {
   // Lifecycle
   // ---------------------------------------------------------------------------
 
-  dispose(): void {
+  /**
+   * @param releaseContext Also drop the WebGL context itself. Must be false
+   *   when disposing *because* the context was lost — see the call in
+   *   MapRenderer.handleContextLost.
+   */
+  dispose({ releaseContext = true }: { releaseContext?: boolean } = {}): void {
     this.stopLoop();
     for (const p of this.mapLayerPasses.values()) p.dispose();
     this.mapLayerPasses.clear();
@@ -1481,6 +1528,7 @@ export class GPURenderer {
     this.samRadiusPass.dispose();
     this.crosshairPass.dispose();
     this.structurePass.dispose();
+    this.structureSpritePass.dispose();
     this.structureLevelPass.dispose();
     this.unitPass.dispose();
     this.namePass.dispose();
@@ -1506,6 +1554,8 @@ export class GPURenderer {
     // Deleting GL resources isn't enough — the context itself counts against
     // the browser's WebGL context limit until it's GC'd, which is unreliable
     // on mobile. Explicitly drop it so repeated game starts don't overflow.
-    this.gl.getExtension("WEBGL_lose_context")?.loseContext();
+    if (releaseContext) {
+      this.gl.getExtension("WEBGL_lose_context")?.loseContext();
+    }
   }
 }

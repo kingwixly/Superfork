@@ -1,11 +1,10 @@
-import { FighterJetExecution } from "../src/core/execution/FighterJetExecution";
 import {
-  Game,
-  Player,
   PlayerInfo,
   PlayerType,
   UnitType,
-} from "../src/core/game/Game";
+} from "@openfront/engine-api/game/GameTypes";
+import { FighterJetExecution } from "@openfront/engine/execution/FighterJetExecution";
+import { Game, Player } from "@openfront/engine/game/Game";
 import { setup } from "./util/Setup";
 
 let game: Game;

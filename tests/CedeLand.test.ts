@@ -1,5 +1,6 @@
-import { CedeLandExecution } from "../src/core/execution/CedeLandExecution";
-import { Game, Player, PlayerInfo, PlayerType } from "../src/core/game/Game";
+import { PlayerInfo, PlayerType } from "@openfront/engine-api/game/GameTypes";
+import { CedeLandExecution } from "@openfront/engine/execution/CedeLandExecution";
+import { Game, Player } from "@openfront/engine/game/Game";
 import { setup } from "./util/Setup";
 
 let game: Game;

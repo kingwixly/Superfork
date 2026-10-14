@@ -1,6 +1,6 @@
+import { GameType } from "@openfront/engine-api/game/GameTypes";
+import { createGameWireContext } from "@openfront/shared/ZbinWire";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { GameType } from "../../src/core/game/Game";
-import { createGameWireContext } from "../../src/core/ZbinWire";
 import {
   hashUciPassword,
   resetUciAuthForTests,

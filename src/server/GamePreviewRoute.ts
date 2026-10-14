@@ -1,12 +1,13 @@
+import { GAME_ID_REGEX } from "@openfront/engine-api/Schemas";
+import { GAME_ROUTE, LEGACY_GAME_ROUTE } from "@openfront/shared/GameRoute";
+import { replacer } from "@openfront/shared/SharedUtil";
+import { GameInfo } from "@openfront/shared/WireSchemas";
 import type { Express, Request, RequestHandler } from "express";
 import fsPromises from "fs/promises";
 import { parse } from "node-html-parser";
 import path from "path";
 import type { Logger } from "winston";
 import { z } from "zod";
-import { GAME_ROUTE, LEGACY_GAME_ROUTE } from "../core/GameRoute";
-import { GAME_ID_REGEX, GameInfo } from "../core/Schemas";
-import { replacer } from "../core/Util";
 import type { GameManager } from "./GameManager";
 import {
   buildPreview,

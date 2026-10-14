@@ -1,9 +1,9 @@
-import { describe, expect, test } from "vitest";
 import {
   GAME_ROUTE,
   GAME_ROUTE_ALTERNATION,
   rewriteLegacyGameApi,
-} from "../src/core/GameRoute";
+} from "@openfront/shared/GameRoute";
+import { describe, expect, test } from "vitest";
 
 describe("Match URL segment", () => {
   test("the emitted segment no longer contains 'game'", () => {
