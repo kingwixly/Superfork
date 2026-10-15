@@ -191,6 +191,27 @@ describe("access gate", () => {
       expect((await new Browser(base).check()).status).toBe(204);
     });
 
+    test("superfork: marks the admin for the workers, and only the admin", async () => {
+      await start();
+      const admin = await adminLogin();
+      const r = await admin.check();
+      expect(r.status).toBe(204);
+      expect(r.headers["x-sf-developer"]).toBe("1");
+
+      const player = new Browser(base);
+      await player.req("GET", "/__gate/status");
+      await player.req("POST", "/__gate/request", { note: "Sam" });
+      const list = await admin.req("GET", "/__gate/admin/requests");
+      await admin.req(
+        "POST",
+        `/__gate/admin/requests/${list.json.requests[0].id}/approve`,
+        {},
+      );
+      const p = await player.check();
+      expect(p.status).toBe(204);
+      expect(p.headers["x-sf-developer"]).toBeUndefined();
+    });
+
     test("responses are never cacheable", async () => {
       await start();
       const r = await new Browser(base).check();

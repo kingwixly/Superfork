@@ -5,6 +5,10 @@ import {
   Cosmetics,
   findEffectForSlot,
 } from "@openfront/shared/CosmeticSchemas";
+import {
+  DEVELOPER_FLAG_CODE,
+  DEVELOPER_FLARE,
+} from "@openfront/shared/DeveloperFlag";
 import { decodePatternData } from "@openfront/shared/PatternDecoder";
 import {
   PlayerColor,
@@ -236,6 +240,12 @@ export class PrivilegeCheckerImpl implements PrivilegeChecker {
       throw new Error(`No flares for flag ${key}`);
     } else if (flagRef.startsWith("country:")) {
       const code = flagRef.slice("country:".length);
+      if (code === DEVELOPER_FLAG_CODE) {
+        if (!flares.includes(DEVELOPER_FLARE)) {
+          throw new Error(`developer flag requires the developer flare`);
+        }
+        return `/flags/${code}.svg`;
+      }
       if (!countryCodes.includes(code)) {
         throw new Error(`invalid country code`);
       }

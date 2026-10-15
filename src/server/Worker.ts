@@ -1,6 +1,11 @@
 import { ID, isValidGameID } from "@openfront/engine-api/Schemas";
 import { CloseCode, CloseReason } from "@openfront/shared/CloseCodes";
 import { GameEnv } from "@openfront/shared/configuration/Env";
+import {
+  DEVELOPER_FLAG_REF,
+  DEVELOPER_FLARE,
+  DEVELOPER_HEADER,
+} from "@openfront/shared/DeveloperFlag";
 import { GAME_ROUTE, rewriteLegacyGameApi } from "@openfront/shared/GameRoute";
 import { generateID, replacer } from "@openfront/shared/SharedUtil";
 import {
@@ -842,9 +847,24 @@ export async function startWorker() {
         }
         const resolvedClanTag = resolution.tag;
 
+        // Superfork: the developer-only flag. nginx sets the header from the
+        // join gate's admin session; anyone else wearing the flag just has it
+        // dropped instead of being refused entry.
+        const isDeveloper = req.headers[DEVELOPER_HEADER] === "1";
+        const cosmeticRefs = { ...(clientMsg.cosmetics ?? {}) };
+        if (cosmeticRefs.flag === DEVELOPER_FLAG_REF && !isDeveloper) {
+          log.warn("Dropped developer flag from a non-developer", {
+            persistentID: persistentId,
+            gameID: clientMsg.gameID,
+          });
+          delete cosmeticRefs.flag;
+        }
         const cosmeticResult = privilegeRefresher
           .get()
-          .isAllowed(flares ?? [], clientMsg.cosmetics ?? {});
+          .isAllowed(
+            isDeveloper ? [...(flares ?? []), DEVELOPER_FLARE] : (flares ?? []),
+            cosmeticRefs,
+          );
 
         if (cosmeticResult.type === "forbidden") {
           log.warn(`Forbidden: ${cosmeticResult.reason}`, {

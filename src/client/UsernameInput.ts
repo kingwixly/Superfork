@@ -5,6 +5,7 @@ import { customElement, property, state } from "lit/decorators.js";
 import { translateText } from "../client/Utils";
 import { getUserMe, invalidateUserMe } from "./Api";
 import { checkClanTagOwnership } from "./ClanApi";
+import "./components/FlagQuickPicker";
 import { verifiedBadge } from "./components/ui/VerifiedBadge";
 import { gamePortal } from "./GamePortal";
 import { showInGameAlert, showInGameConfirm } from "./InGameModal";
@@ -801,6 +802,7 @@ export class UsernameInput extends LitElement {
       <!-- The name field takes whatever the tag picker and trailing button
            leave, so the row always fills the strip. -->
       <div class="flex items-center w-full h-full gap-1.5 sm:gap-2">
+        <flag-quick-picker class="shrink-0 h-full"></flag-quick-picker>
         ${this.renderClanControl()} ${this.renderNameControl()}
       </div>
       <!-- One positioned slot, stacked. An error and the reservation reminder
