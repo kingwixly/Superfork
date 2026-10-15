@@ -43,6 +43,13 @@
  * `StructureSpritePass`, which draws the old-style building sprites once the
  * camera is zoomed in. Its RGB is used as-is.
  *
+ * It has one row per level tier (SPRITE_TIERS rows). Row 0 is
+ * `structures_hd/<name>.png`; row N is `structures_hd/levels/<name>_<N+1>.png`
+ * (e.g. `levels/city_2.png` for tier 2). A missing tier reuses the tier below
+ * it, so a building with no level art looks the same at every level. Which
+ * level reaches which tier is `structure.sprites.levelTiers` in
+ * render-settings.json.
+ *
  * Usage:  node scripts/generate-sprite-atlases.mjs [--check]
  *         --check verifies the committed atlas matches the sources and exits
  *         non-zero if not, without writing. Useful in CI.
@@ -81,6 +88,9 @@ const SRC_DIR = join(ROOT, "resources/icons/structures");
 const OUT = join(ROOT, "resources/atlases/icon-atlas.png");
 const SPRITE_SRC_DIR = join(ROOT, "resources/icons/structures_hd");
 const SPRITE_OUT = join(ROOT, "resources/atlases/structure-sprite-atlas.png");
+const SPRITE_LEVEL_DIR = join(SPRITE_SRC_DIR, "levels");
+/** Rows in the colour sprite atlas. MUST match SPRITE_TIERS in StructureSpritePass.ts. */
+const SPRITE_TIERS = 4;
 
 /**
  * Unit atlas columns appended by the superfork.
@@ -159,10 +169,10 @@ async function buildUnitAtlas() {
     .toBuffer();
 }
 
-async function buildStructureAtlas(srcDir = SRC_DIR) {
+async function buildStructureAtlas() {
   const composites = [];
   for (let i = 0; i < COLUMNS.length; i++) {
-    const file = join(srcDir, `${COLUMNS[i]}.png`);
+    const file = join(SRC_DIR, `${COLUMNS[i]}.png`);
     if (!existsSync(file)) {
       throw new Error(`missing source icon: ${file}`);
     }
@@ -188,9 +198,46 @@ async function buildStructureAtlas(srcDir = SRC_DIR) {
     .toBuffer();
 }
 
+/** Colour sprite atlas: COLUMNS across, SPRITE_TIERS level tiers down. */
+async function buildSpriteAtlas() {
+  const composites = [];
+  for (let i = 0; i < COLUMNS.length; i++) {
+    let file = join(SPRITE_SRC_DIR, `${COLUMNS[i]}.png`);
+    for (let tier = 0; tier < SPRITE_TIERS; tier++) {
+      if (tier > 0) {
+        const levelFile = join(
+          SPRITE_LEVEL_DIR,
+          `${COLUMNS[i]}_${tier + 1}.png`,
+        );
+        // Missing tier: keep the previous tier's file.
+        if (existsSync(levelFile)) file = levelFile;
+      }
+      if (!existsSync(file)) throw new Error(`missing sprite: ${file}`);
+      const meta = await sharp(file).metadata();
+      if (meta.width !== CELL || meta.height !== CELL) {
+        throw new Error(
+          `${file} is ${meta.width}x${meta.height}, expected ${CELL}x${CELL}`,
+        );
+      }
+      composites.push({ input: file, left: i * CELL, top: tier * CELL });
+    }
+  }
+  return sharp({
+    create: {
+      width: CELL * COLUMNS.length,
+      height: CELL * SPRITE_TIERS,
+      channels: 4,
+      background: { r: 0, g: 0, b: 0, alpha: 0 },
+    },
+  })
+    .composite(composites)
+    .png({ compressionLevel: 9 })
+    .toBuffer();
+}
+
 const check = process.argv.includes("--check");
 const buf = await buildStructureAtlas();
-const spriteBuf = await buildStructureAtlas(SPRITE_SRC_DIR);
+const spriteBuf = await buildSpriteAtlas();
 const unitBuf = await buildUnitAtlas();
 
 if (check) {
@@ -216,7 +263,9 @@ if (check) {
     `wrote ${OUT} — ${COLUMNS.length} columns x ${CELL}px (${COLUMNS.join(", ")})`,
   );
   await writeFile(SPRITE_OUT, spriteBuf);
-  console.log(`wrote ${SPRITE_OUT} — colour sprites, same columns`);
+  console.log(
+    `wrote ${SPRITE_OUT} — colour sprites, same columns x ${SPRITE_TIERS} level tiers`,
+  );
   await writeFile(UNIT_OUT, unitBuf);
   console.log(
     `wrote ${UNIT_OUT} — +${UNIT_COLUMNS.length} columns x ${UNIT_CELL}px (${UNIT_COLUMNS.join(", ")})`,
