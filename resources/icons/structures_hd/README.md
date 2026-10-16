@@ -40,7 +40,7 @@ base sprite's (`city`, `defense_post`, `international_airport`, …).
 - After adding or changing art, run `node scripts/generate-sprite-atlases.mjs`
   to rebuild `resources/atlases/structure-sprite-atlas.png`, then commit both.
 
-Currently shipped: `levels/capital_4.png`, the metropolis capital (was
+Drawn by `python3 scripts/level-sprites/draw.py` (city, port, missile_silo, sam_launcher tiers 2-4: each tier is a more advanced building, never more copies). Also shipped: `levels/capital_4.png`, the metropolis capital (was
 `capital_metropolis.png`), at level 10+.
 
 ## Alternates
