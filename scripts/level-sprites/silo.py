@@ -32,10 +32,9 @@ def square_pad(c, n, p):
 
 def lid(c, cx, cy, w, h, pal, bolts=True):
     """Round blast lid swung open, standing behind the shaft (like the photo)."""
-    c.d.ellipse([cx - w - 1, cy - h, cx + w - 1, cy + h], fill=pal['deep'])      # thickness
+    # Face-on, like the photo: no side edge, just the rim ring and the face.
     c.d.ellipse([cx - w, cy - h, cx + w, cy + h], fill=pal['rim'])
     c.d.ellipse([cx - w + 2, cy - h + 2, cx + w - 2, cy + h - 2], fill=pal['face'])
-    c.d.ellipse([cx - w + 2, cy - h + 2, cx + w - 2, cy + h - 2], outline=pal['edge'])
     if bolts:
         for a in range(0, 360, 45):
             r = math.radians(a)
@@ -86,12 +85,13 @@ def ciws(c, x, y):
     c.d.ellipse([x, y - 4, x + 2, y - 1], fill=hexc('#b9c0c6'))
     c.line((x - 1, y - 2), (x - 5, y - 5), STEEL['edge'])
 
-def array_panel(c, x, y):
-    """Phased-array radar face, tilted back."""
-    c.poly([(x, y), (x + 5, y - 2), (x + 5, y + 4), (x, y + 6)], STEEL['rim'])
-    c.poly([(x + 1, y + 1), (x + 4, y), (x + 4, y + 3), (x + 1, y + 4)], hexc('#22303f'))
-    for (dx, dy) in ((2, 1), (3, 2), (2, 3)): c.px(x + dx, y + dy, hexc('#7fd0ff'))
-    c.line((x + 2, y + 6), (x + 2, y + 9), STEEL['edge'])
+def radar_dish(c, x, y):
+    """Tracking radar: a dish on a pedestal, facing up and to the left."""
+    c.d.rectangle([x - 1, y - 3, x + 1, y], fill=STEEL['face'])                 # pedestal
+    c.d.ellipse([x - 4, y - 9, x + 2, y - 3], fill=hexc('#d2d7dc'))             # dish
+    c.d.ellipse([x - 3, y - 8, x + 1, y - 4], fill=hexc('#a3aab1'))             # dish hollow
+    c.line((x - 1, y - 6), (x - 3, y - 8), STEEL['edge'])                       # feed arm
+    c.px(x - 3, y - 8, hexc('#ff2c00'))
 
 def hazard_ring(c, cx, cy, rw, rh):
     for n, a in enumerate(range(10, 171, 16)):
@@ -135,7 +135,7 @@ def t4():
     cx, cy = 16, 22
     star_pad(c, cx, cy, 13, dict(hi=hexc('#9aa7b5'), top=hexc('#6b7686'), mid=hexc('#4a5361'),
                                   dark=hexc('#323946'), deep=hexc('#20252e')))
-    array_panel(c, cx - 13, cy - 11)
+    radar_dish(c, cx - 10, cy - 2)
     ciws(c, cx + 10, cy - 1)
     # hydraulic rams holding the steel lid
     c.line((cx + 3, cy - 2), (cx + 2, cy - 8), STEEL['bolt']); c.line((cx + 7, cy - 2), (cx + 9, cy - 7), STEEL['bolt'])
