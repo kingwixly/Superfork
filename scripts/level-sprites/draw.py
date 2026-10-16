@@ -4,9 +4,10 @@ Missile Silo and SAM Launcher.
 
 Each tier is a different, more advanced building rather than more copies of
 the old one: modern glass city -> high-tech skyline -> neon arcology spire;
-jib crane -> container gantry -> tractor-beam gantry; hardened silo ->
-MIRV silo -> alloy silo with glowing seams (always the original's
-star pad, cone and warhead, never a rocket); tube battery -> phased-array battery ->
+jib crane -> container gantry -> tractor-beam gantry; open-hatch silo ->
+hardened site with radar and comms -> modern site with phased-array radar
+and point defence (the original's star pad, a shaft, the lid swung open,
+the warhead rising out); tube battery -> phased-array battery ->
 rail turret.
 
 Drawn at 32x32 with a small isometric pixel kit (kit.py), then doubled to
