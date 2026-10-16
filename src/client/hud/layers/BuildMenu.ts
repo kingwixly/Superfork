@@ -31,6 +31,7 @@ const warshipIcon = assetUrl("images/BattleshipIconWhite.svg");
 const cityIcon = assetUrl("images/CityIconWhite.svg");
 const factoryIcon = assetUrl("images/FactoryIconWhite.svg");
 const bankIcon = assetUrl("images/BankIconWhite.svg");
+const labIcon = assetUrl("images/LabIconWhite.svg");
 const destroyerIcon = assetUrl("images/DestroyerIconWhite.svg");
 const corvetteIcon = assetUrl("images/CorvetteIconWhite.svg");
 const carrierIcon = assetUrl("images/CarrierIconWhite.svg");
@@ -143,6 +144,13 @@ export const buildTable: BuildItemDisplay[][] = [
       icon: bankIcon,
       description: "build_menu.desc.bank",
       key: "unit_type.bank",
+      countable: true,
+    },
+    {
+      unitType: UnitType.Lab,
+      icon: labIcon,
+      description: "build_menu.desc.lab",
+      key: "unit_type.lab",
       countable: true,
     },
     {
@@ -323,6 +331,7 @@ export const buildCategories: BuildCategory[] = [
       UnitType.DefensePost,
       UnitType.SAMLauncher,
       UnitType.MissileSilo,
+      UnitType.Lab,
     ],
   },
   {
@@ -641,7 +650,8 @@ export class BuildMenu extends LitElement implements Controller {
   private visibleRows(): BuildItemDisplay[][] {
     const cat = buildCategories[this.activeTab];
     const enabled = (i: BuildItemDisplay) =>
-      !this.game?.config()?.isUnitDisabled(i.unitType);
+      !this.game?.config()?.isUnitDisabled(i.unitType) &&
+      this.game?.myPlayer()?.hasUnlocked(i.unitType) !== false;
     let items = cat ? categoryItems(cat).filter(enabled) : [];
     if (items.length === 0) items = flattenedBuildTable.filter(enabled);
 

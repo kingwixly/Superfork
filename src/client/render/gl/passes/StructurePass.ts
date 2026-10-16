@@ -25,6 +25,7 @@ import {
   UT_EMBASSY,
   UT_FACTORY,
   UT_INTERNATIONAL_AIRPORT,
+  UT_LAB,
   UT_MISSILE_SILO,
   UT_PORT,
   UT_SAM_LAUNCHER,
@@ -69,6 +70,7 @@ export const STRUCTURE_ORDER = [
   UT_AIRFIELD, // Phase 3
   UT_INTERNATIONAL_AIRPORT, // Phase 3
   UT_EMBASSY, // Phase 5
+  UT_LAB, // Progression
 ] as const;
 
 const ATLAS_COLS = STRUCTURE_ORDER.length;

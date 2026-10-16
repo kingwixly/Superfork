@@ -109,6 +109,23 @@ PATTERNS = {
                 ["toxic_night", "ocean_foam", "ember_ash"]),
     "tiger_stripes": ("legendary", 48, 48, 0, lambda x, y: math.sin((x + 4 * math.sin(y / 48 * 4 * math.pi) + 2 * math.sin(y / 48 * 10 * math.pi)) / 48 * 8 * math.pi) > 0.45,
                       ["ember_ash", "glacier_white", "royal_gold"]),
+    # Second batch.
+    "zigzag": ("common", 12, 8, 0, lambda x, y: (y - abs((x % 12) - 6)) % 8 < 2,
+               ["sunset_violet", "navy_gold", "jade_gold"]),
+    "plaid": ("uncommon", 16, 16, 0,
+              lambda x, y: (x % 16 in (2, 3, 9)) != (y % 16 in (2, 3, 9)) or (x % 16 == 13 and y % 2 == 0),
+              ["crimson_ivory", "forest_bark", "arctic_navy"]),
+    "scales": ("rare", 12, 8, 0,
+               lambda x, y: abs(math.hypot((x + (6 if y >= 4 else 0)) % 12 - 6, (y % 4) - 4) - 5) < 1.0,
+               ["jade_gold", "ocean_foam", "sunset_violet"]),
+    "crosshatch": ("uncommon", 10, 10, 0, lambda x, y: (x + y) % 10 == 0 or (x - y) % 10 == 0,
+                   ["midnight_steel", "sand_dune", "arctic_navy"]),
+    "dunes": ("rare", 40, 20, 0,
+              lambda x, y: math.sin(x / 40 * 2 * math.pi + y / 20 * 2 * math.pi * 2) > 0.3 and (y % 5 != 0),
+              ["sand_dune", "sunset_violet", "ember_ash"]),
+    "lattice": ("epic", 16, 16, 0,
+                lambda x, y: (x % 8 in (0, 1) or y % 8 in (0, 1)) and not (x % 8 in (0, 1) and y % 8 in (0, 1)),
+                ["royal_gold", "jade_gold", "arctic_navy", "toxic_night"]),
 }
 
 PALETTES = {
@@ -123,6 +140,9 @@ PALETTES = {
     "rose_cream": ("#C94C6E", "#F7E1D7"),
     "glacier_white": ("#5FA8D3", "#F4FAFF"),
     "toxic_night": ("#141414", "#7CFC3A"),
+    "sunset_violet": ("#F97362", "#5B2A86"),
+    "arctic_navy": ("#E8F1F8", "#1D2F5C"),
+    "jade_gold": ("#0F766E", "#E6B422"),
 }
 
 
@@ -179,6 +199,25 @@ CROWNS = {
         '<path d="M106 64 Q116 40 124 18 Q104 30 94 46" fill="#E9E1CF" stroke="#20252E" stroke-width="4" stroke-linejoin="round"/>'
         '<rect x="58" y="26" width="12" height="78" fill="#5C6676"/>'
         '<rect x="22" y="94" width="84" height="12" fill="#C98A12" stroke="#20252E" stroke-width="4"/>')),
+    "masquerade_mask": ("uncommon", crown_svg(
+        '<path d="M8 86 Q64 30 120 86 Q100 74 64 98 Q28 74 8 86 Z" fill="#2B2522" stroke="#E6B422" stroke-width="5" stroke-linejoin="round"/>'
+        '<path d="M28 82 Q64 52 100 82" fill="none" stroke="#E6B422" stroke-width="3"/>'
+        '<circle cx="64" cy="70" r="7" fill="#C81E3A" stroke="#E6B422" stroke-width="3"/>')),
+    "jeweled_circlet": ("epic", crown_svg(
+        '<path d="M14 92 Q64 64 114 92 L114 104 Q64 78 14 104 Z" fill="url(#g)" stroke="#5A3A05" stroke-width="4" stroke-linejoin="round"/>'
+        '<path d="M64 58 L74 74 L64 88 L54 74 Z" fill="#22D3EE" stroke="#0E4A59" stroke-width="3"/>'
+        '<circle cx="34" cy="86" r="6" fill="#C81E3A" stroke="#5A3A05" stroke-width="2"/>'
+        '<circle cx="94" cy="86" r="6" fill="#C81E3A" stroke="#5A3A05" stroke-width="2"/>')),
+    "bramble_crown": ("rare", crown_svg(
+        '<ellipse cx="64" cy="88" rx="50" ry="18" fill="none" stroke="#3F2A1A" stroke-width="10"/>'
+        '<ellipse cx="64" cy="88" rx="50" ry="18" fill="none" stroke="#6B4A2B" stroke-width="5"/>'
+        + "".join(f'<path d="M{x} {88 + dy} l{-6 if i % 2 else 6} -16" stroke="#3F2A1A" stroke-width="4" stroke-linecap="round"/>'
+                  for i, (x, dy) in enumerate([(22, -6), (40, -14), (58, -18), (76, -18), (94, -14), (110, -6)])))),
+    "admiral_cap": ("rare", crown_svg(
+        '<path d="M14 82 Q64 40 114 82 L108 92 L20 92 Z" fill="#F4F6F8" stroke="#1D2F5C" stroke-width="5" stroke-linejoin="round"/>'
+        '<rect x="20" y="90" width="88" height="12" rx="3" fill="#1D2F5C"/>'
+        '<path d="M22 104 Q64 120 106 104" fill="none" stroke="#111827" stroke-width="8" stroke-linecap="round"/>'
+        '<circle cx="64" cy="72" r="9" fill="url(#g)" stroke="#5A3A05" stroke-width="3"/>')),
 }
 
 
@@ -267,6 +306,44 @@ def skin_anchor():
     return finish(im)
 
 
+def skin_atom():
+    im = skin_canvas(); d = ImageDraw.Draw(im); c = SK
+    col = (230, 240, 255, 190)
+    for a in (0, 60, 120):
+        e = Image.new("RGBA", im.size, (0, 0, 0, 0)); ed = ImageDraw.Draw(e)
+        ed.ellipse([c - 900, c - 330, c + 900, c + 330], outline=col, width=60)
+        im.alpha_composite(e.rotate(a, center=(c, c)))
+    d = ImageDraw.Draw(im)
+    d.ellipse([c - 170, c - 170, c + 170, c + 170], fill=(255, 220, 120, 220))
+    return finish(im)
+
+
+def skin_tower():
+    im = skin_canvas(); d = ImageDraw.Draw(im); c = SK
+    col = (235, 232, 220, 195)
+    d.rectangle([c - 380, c - 420, c + 380, c + 820], fill=col)
+    for i in range(5):
+        x = c - 380 + i * 190
+        d.rectangle([x, c - 620, x + 110, c - 420], fill=col)
+    d.rectangle([c - 130, c + 450, c + 130, c + 820], fill=(0, 0, 0, 0))
+    d.pieslice([c - 130, c + 320, c + 130, c + 580], 180, 360, fill=(0, 0, 0, 0))
+    d.rectangle([c - 60, c - 250, c + 60, c - 50], fill=(0, 0, 0, 0))
+    return finish(im)
+
+
+def skin_wings():
+    im = skin_canvas(); d = ImageDraw.Draw(im); c = SK
+    col = (245, 240, 225, 190)
+    for s_ in (-1, 1):
+        for i in range(5):
+            y = c - 300 + i * 150
+            x0 = c + s_ * 120
+            x1 = c + s_ * (900 - i * 130)
+            d.polygon([(x0, y), (x1, y - 120 + i * 40), (x1 - s_ * 60, y + 90), (x0, y + 120)], fill=col)
+    d.ellipse([c - 150, c - 400, c + 150, c + 500], fill=(255, 214, 90, 210))
+    return finish(im)
+
+
 SKINS = {
     "compass_rose": ("rare", skin_compass),
     "crossed_swords": ("rare", skin_crossed_swords),
@@ -274,6 +351,9 @@ SKINS = {
     "crescent_night": ("epic", skin_crescent),
     "knight_shield": ("legendary", skin_shield),
     "admiralty_anchor": ("legendary", skin_anchor),
+    "split_atom": ("epic", skin_atom),
+    "watchtower": ("rare", skin_tower),
+    "gilded_wings": ("legendary", skin_wings),
 }
 
 
@@ -297,6 +377,7 @@ EFFECTS = {
         "golden_wake": ("rare", grad(["#FFE27A", "#C98A12"], 4, 2)),
         "ghost_wake": ("uncommon", trans(["#FFFFFF", "#9FB3C8"], 1.5)),
         "toxic_wake": ("rare", grad(["#7CFC3A", "#1E5F12"], 2, 6)),
+        "sunset_wake": ("uncommon", grad(["#F97362", "#FDE047", "#A855F7"], 3, 3)),
     },
     "nukeTrail": {
         "inferno_trail": ("epic", grad(["#FDE047", "#F97316", "#B91C1C"], 2, 8)),
@@ -304,6 +385,8 @@ EFFECTS = {
                                        "radius": 2.5, "strands": 3, "rotationSpeed": 6}),
         "frost_trail": ("rare", grad(["#FFFFFF", "#58B4E8"], 3, 5)),
         "strobe_trail": ("uncommon", trans(["#FF3B30", "#FFFFFF"], 6)),
+        "jade_helix": ("epic", {"type": "spiral", "colors": ["#0F766E", "#5EEAD4", "#E6B422"],
+                                "radius": 2, "strands": 2, "rotationSpeed": 4}),
     },
     "nukeExplosion": {
         "golden_shockwave": ("epic", {"type": "shockwave", "nukeType": "atom", "colors": ["#FFF3B0", "#E6B422", "#C2410C"],
@@ -323,6 +406,7 @@ EFFECTS = {
         "gilded_structures": ("epic", grad(["#FFF3B0", "#E6B422", "#8A5A06"], 1, 0.6)),
         "prism_structures": ("legendary", trans(RAINBOW, 1.2)),
         "steel_structures": ("rare", grad(["#E5E9F0", "#7C8798"], 1, 0.4)),
+        "jade_structures": ("epic", grad(["#5EEAD4", "#0F766E", "#E6B422"], 1, 0.5)),
     },
     "warship": {
         "dreadnought_steel": ("rare", grad(["#B9C2CF", "#3B4452"], 1, 0.5)),

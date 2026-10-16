@@ -21,6 +21,18 @@ import {
   AttackUpdate,
   PlayerUpdate,
 } from "@openfront/engine-api/game/GameUpdates";
+import {
+  buffEffects,
+  combineEffects,
+  Effects,
+  GOVERNMENT_IDS,
+  GovernmentId,
+  GOVERNMENTS,
+  NO_EFFECTS,
+  Progression,
+  unitUnlocked,
+  unlockedGovernments,
+} from "@openfront/engine-api/game/Progression";
 import { PlayerLike } from "@openfront/engine-api/game/ReadViews";
 import { PatternDecoder } from "@openfront/shared/PatternDecoder";
 import { createRandomName } from "@openfront/shared/SharedUtil";
@@ -442,6 +454,57 @@ export class PlayerView implements PlayerLike {
   numTilesOwned(): number {
     return this.state.tilesOwned;
   }
+  /** Superfork: the research tree etc. this player brought in. */
+  private progressionRules(): Progression | null {
+    if (!this.game.config().progressionActive()) return null;
+    if (this.type() !== PlayerType.Human) return null;
+    return this.game.progressionOf(this.clientID());
+  }
+
+  /** Superfork: whether the research tree lets this player build `type`. */
+  hasUnlocked(type: UnitType): boolean {
+    return unitUnlocked(this.progressionRules(), type);
+  }
+
+  /** Superfork: governments this player may switch to. */
+  availableGovernments(): GovernmentId[] {
+    if (!this.game.config().progressionActive()) return [...GOVERNMENT_IDS];
+    if (this.type() !== PlayerType.Human) return [...GOVERNMENT_IDS];
+    return unlockedGovernments(this.game.progressionOf(this.clientID()));
+  }
+
+  government(): GovernmentId {
+    const g = this.game.governmentOf(this.smallID());
+    if (g.changedAt !== -Infinity) return g.government;
+    // Before any change: the starting government, as the engine picks it.
+    const start = this.game.progressionOf(this.clientID())?.government;
+    return start !== undefined && this.availableGovernments().includes(start)
+      ? start
+      : "standard";
+  }
+
+  governmentChangedAt(): number {
+    return this.game.governmentOf(this.smallID()).changedAt;
+  }
+
+  governmentEffectiveAt(): number {
+    return this.game.governmentOf(this.smallID()).effectiveAt;
+  }
+
+  /** Government and research-buff multipliers (mirrors PlayerImpl). */
+  effects(): Effects {
+    const gov =
+      this.game.ticks() >= this.governmentEffectiveAt()
+        ? GOVERNMENTS[this.government()].effects
+        : NO_EFFECTS;
+    return combineEffects(gov, buffEffects(this.progressionRules()));
+  }
+
+  /** Research points this player's labs have made this match. */
+  researchPoints(): number {
+    return this.game.researchOf(this.smallID());
+  }
+
   /** Superfork: provinces plus puppets (feeds the troop and gold bonuses). */
   provinceCount(): number {
     if (!this.game.config().provincesEnabled()) return 0;

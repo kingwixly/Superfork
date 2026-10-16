@@ -118,6 +118,8 @@ export enum GameUpdateType {
   // Superfork (appended)
   Province,
   Puppet,
+  Government,
+  Research,
 }
 
 export type GameUpdate =
@@ -145,7 +147,27 @@ export type GameUpdate =
   | GamePausedUpdate
   | DonateEventUpdate
   | ProvinceUpdate
-  | PuppetUpdate;
+  | PuppetUpdate
+  | GovernmentUpdate
+  | ResearchUpdate;
+
+/** Superfork: a nation changed government. */
+export interface GovernmentUpdate {
+  type: GameUpdateType.Government;
+  playerID: number;
+  government: string;
+  /** Tick it was chosen (the switch cooldown runs from here). */
+  changedAt: number;
+  /** Tick it takes effect. */
+  effectiveAt: number;
+}
+
+/** Superfork: research points a nation's labs have made this match. */
+export interface ResearchUpdate {
+  type: GameUpdateType.Research;
+  playerID: number;
+  points: number;
+}
 
 /**
  * Superfork: a province as the simulation last saw it. Sent when a province

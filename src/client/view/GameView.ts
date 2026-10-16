@@ -17,6 +17,10 @@ import {
   GameUpdateViewData,
   SpawnPhaseEndUpdate,
 } from "@openfront/engine-api/game/GameUpdates";
+import type {
+  GovernmentId,
+  Progression,
+} from "@openfront/engine-api/game/Progression";
 import { GameLike, UnitPredicate } from "@openfront/engine-api/game/ReadViews";
 import { ClientID, GameID } from "@openfront/engine-api/Schemas";
 import { Config } from "@openfront/engine-lib/configuration/Config";
@@ -158,6 +162,9 @@ export class GameView implements GameLike {
     this.unitGrid = new UnitGrid<UnitView>(this._map);
     this._cosmetics = new Map(
       humans.map((h) => [h.clientID, h.cosmetics ?? {}]),
+    );
+    this._progressions = new Map(
+      humans.map((h) => [h.clientID, h.progression ?? null]),
     );
 
     // Nation-type players carry their own flag on the wire (PlayerUpdate.nationFlag,
@@ -404,6 +411,16 @@ export class GameView implements GameLike {
     }
     for (const pu of gu.updates[GameUpdateType.Puppet] ?? []) {
       this.provinceStore().applyPuppet(pu);
+    }
+    for (const g of gu.updates[GameUpdateType.Government] ?? []) {
+      this._governments.set(g.playerID, {
+        government: g.government as GovernmentId,
+        changedAt: g.changedAt,
+        effectiveAt: g.effectiveAt,
+      });
+    }
+    for (const r of gu.updates[GameUpdateType.Research] ?? []) {
+      this._research.set(r.playerID, r.points);
     }
     gu.updates[GameUpdateType.Unit].forEach((update) => {
       let unit = this._units.get(update.id);
@@ -719,6 +736,35 @@ export class GameView implements GameLike {
 
   myClientID(): ClientID | undefined {
     return this._myClientID;
+  }
+
+  // Superfork progression, as the simulation reports it.
+  private _progressions: Map<string, Progression | null> = new Map();
+  private _governments = new Map<
+    number,
+    { government: GovernmentId; changedAt: number; effectiveAt: number }
+  >();
+  private _research = new Map<number, number>();
+
+  /** The research tree etc. a human brought into this game. */
+  progressionOf(clientID: string | null): Progression | null {
+    if (clientID === null) return null;
+    return this._progressions.get(clientID) ?? null;
+  }
+
+  /** A nation's government; "standard" until it changes. */
+  governmentOf(smallID: number) {
+    return (
+      this._governments.get(smallID) ?? {
+        government: "standard" as GovernmentId,
+        changedAt: -Infinity,
+        effectiveAt: 0,
+      }
+    );
+  }
+
+  researchOf(smallID: number): number {
+    return this._research.get(smallID) ?? 0;
   }
 
   /** Superfork: provinces and puppets as last reported by the simulation. */

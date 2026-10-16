@@ -5,6 +5,7 @@ import {
   attackMenuElement,
   buildMenuElement,
   COLORS,
+  MenuElement,
   MenuElementParams,
   rootMenuElement,
   Slot,
@@ -81,6 +82,13 @@ vi.mock("dompurify", () => ({
     sanitize: vi.fn((str: string) => str),
   },
 }));
+
+/** The attack ring opens on categories; flatten them for item checks. */
+function flatAttacks(params: MenuElementParams): MenuElement[] {
+  return attackMenuElement.subMenu!(params).flatMap((i) =>
+    i.id.startsWith("attack_cat_") ? i.subMenu!(params) : [i],
+  );
+}
 
 describe("RadialMenuElements", () => {
   let mockParams: MenuElementParams;
@@ -208,7 +216,7 @@ describe("RadialMenuElements", () => {
       } as unknown as PlayerView;
       mockParams.selected = enemyPlayer;
 
-      const subMenu = attackMenuElement.subMenu!(mockParams);
+      const subMenu = flatAttacks(mockParams);
 
       expect(subMenu).toBeDefined();
       expect(subMenu.length).toBeGreaterThan(0);
@@ -238,7 +246,7 @@ describe("RadialMenuElements", () => {
       } as unknown as PlayerView;
       mockParams.selected = enemyPlayer;
 
-      const subMenu = attackMenuElement.subMenu!(mockParams);
+      const subMenu = flatAttacks(mockParams);
 
       const constructionUnitTypes = [UnitType.City, UnitType.Factory];
       const returnedUnitTypes = subMenu.map((item) => {
@@ -251,6 +259,28 @@ describe("RadialMenuElements", () => {
       constructionUnitTypes.forEach((unitType) => {
         expect(returnedUnitTypes).not.toContain(unitType);
       });
+    });
+
+    it("opens on categories, not on every attack at once", () => {
+      mockParams.selected = {
+        id: () => 2,
+        isPlayer: vi.fn(() => true),
+      } as unknown as PlayerView;
+      const top = attackMenuElement.subMenu!(mockParams);
+      expect(top.map((i) => i.id)).toContain("attack_cat_nukes");
+      expect(top.find((i) => i.id === "attack_Atom Bomb")).toBeUndefined();
+    });
+
+    it("hides attacks the research tree hasn't unlocked", () => {
+      mockParams.selected = {
+        id: () => 2,
+        isPlayer: vi.fn(() => true),
+      } as unknown as PlayerView;
+      (mockPlayer as any).hasUnlocked = (t: UnitType) =>
+        t !== UnitType.HydrogenBomb;
+      const ids = flatAttacks(mockParams).map((i) => i.id);
+      expect(ids).toContain("attack_Atom Bomb");
+      expect(ids).not.toContain(`attack_${UnitType.HydrogenBomb}`);
     });
 
     it("should handle undefined params in submenu", () => {
@@ -533,7 +563,7 @@ describe("RadialMenuElements", () => {
       } as unknown as PlayerView;
       mockParams.selected = enemyPlayer;
 
-      const subMenu = attackMenuElement.subMenu!(mockParams);
+      const subMenu = flatAttacks(mockParams);
 
       const atomBombElement = subMenu.find(
         (item) => item.id === "attack_Atom Bomb",
@@ -622,7 +652,7 @@ describe("RadialMenuElements", () => {
       } as unknown as PlayerView;
       mockParams.selected = enemyPlayer;
 
-      const subMenu = attackMenuElement.subMenu!(mockParams);
+      const subMenu = flatAttacks(mockParams);
       const atomBombElement = subMenu.find(
         (item) => item.id === "attack_Atom Bomb",
       );
@@ -721,7 +751,7 @@ describe("RadialMenuElements", () => {
       } as unknown as PlayerView;
       mockParams.selected = enemyPlayer;
 
-      const subMenu = attackMenuElement.subMenu!(mockParams);
+      const subMenu = flatAttacks(mockParams);
       const atomBombElement = subMenu.find(
         (item) => item.id === "attack_Atom Bomb",
       );
@@ -757,7 +787,7 @@ describe("RadialMenuElements", () => {
       } as unknown as PlayerView;
       mockParams.selected = enemyPlayer;
 
-      const subMenu = attackMenuElement.subMenu!(mockParams);
+      const subMenu = flatAttacks(mockParams);
       const atomBombElement = subMenu.find(
         (item) => item.id === "attack_Atom Bomb",
       );

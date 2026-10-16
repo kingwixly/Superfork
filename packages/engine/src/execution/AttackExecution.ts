@@ -350,7 +350,10 @@ export class AttackExecution implements Execution {
     // Superfork: an embassy seizure halves the attacker's throughput for a
     // few seconds. Applied to the budget rather than to troop counts so it
     // slows the advance without destroying the army.
-    let tickBudget = this._owner.isTroopSlowed() ? 0.5 : 1;
+    let tickBudget =
+      (this._owner.isTroopSlowed() ? 0.5 : 1) *
+      // Superfork: governments speed attacks up or slow them down.
+      this._owner.effects().attackSpeed;
 
     while (tickBudget > 0) {
       if (troopCount < 1) {
@@ -392,7 +395,8 @@ export class AttackExecution implements Execution {
           this.attackLogicInput(troopCount, tileToConquer, borderSize),
         );
       tickBudget -= tickFraction;
-      troopCount -= attackerTroopLoss;
+      // Superfork: a tougher defender (government, research) costs more.
+      troopCount -= attackerTroopLoss * (targetPlayer?.effects().defense ?? 1);
       this.attack.setTroops(troopCount);
       if (targetPlayer) {
         targetPlayer.removeTroops(defenderTroopLoss);

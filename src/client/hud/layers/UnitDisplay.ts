@@ -168,7 +168,10 @@ export class UnitDisplay extends LitElement implements Controller {
 
     const cat = buildCategories[this.activeTab] ?? buildCategories[0];
     const items = categoryItems(cat).filter(
-      (i) => !this.game.config().isUnitDisabled(i.unitType),
+      (i) =>
+        !this.game.config().isUnitDisabled(i.unitType) &&
+        // Superfork: locked gear doesn't appear until researched.
+        myPlayer.hasUnlocked(i.unitType) !== false,
     );
     // Digit hotkeys follow the visible tab (see UIState.buildBarItems).
     if (this.uiState) {
@@ -236,6 +239,8 @@ export class UnitDisplay extends LitElement implements Controller {
     }
     const selected = this.uiState.ghostStructure === unitType;
     const hovered = this._hoveredUnit === unitType;
+    // Superfork: gear the research tree hasn't unlocked for this player.
+    const locked = this.game.myPlayer()?.hasUnlocked(unitType) === false;
     const displayHotkey = hotkey
       .replace("Digit", "")
       .replace("Key", "")
@@ -266,6 +271,13 @@ export class UnitDisplay extends LitElement implements Controller {
                 <div class="p-2">
                   ${translateText("build_menu.desc." + structureKey)}
                 </div>
+                ${locked
+                  ? html`<div
+                      class="mt-1 px-2 py-1 text-[11px] text-amber-300 border-t border-white/10"
+                    >
+                      🔒 ${translateText("progress.locked_hint")}
+                    </div>`
+                  : null}
                 ${unitType === UnitType.Warship
                   ? html`<div
                       class="mt-1 px-2 py-1 text-[10px] text-cyan-300 border-t border-white/10"
@@ -326,7 +338,7 @@ export class UnitDisplay extends LitElement implements Controller {
             this.eventBus?.emit(new ToggleStructureEvent(null))}
         >
           ${html`<div class="ml-0.5 text-[10px] relative -top-1 text-gray-400">
-            ${displayHotkey}
+            ${locked ? "🔒" : displayHotkey}
           </div>`}
           <div class="flex items-center gap-0.5 pt-0.5">
             <img src=${icon} alt=${structureKey} class="align-middle size-5" />

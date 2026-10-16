@@ -51,6 +51,16 @@ import { logger } from "./Logger";
 import { registerPlayerProfileRoute } from "./PlayerProfileRoute";
 import { resolveVerifiedJoin } from "./Privilege";
 
+import type { Progression } from "@openfront/engine-api/game/Progression";
+import { ADMIN_FLARES } from "@openfront/shared/BundledCosmetics";
+import {
+  decodeGuest,
+  GUEST_COOKIE,
+  guestProgression,
+} from "@openfront/shared/GuestProgress";
+import { accountForSession } from "./accounts/AccountClient";
+import { readCookie } from "./accounts/AccountRoutes";
+import { SESSION_COOKIE } from "./accounts/AccountStore";
 import { MapPlaylist } from "./MapPlaylist";
 import { setNoStoreHeaders } from "./NoStoreHeaders";
 import { PrivilegeRefresher } from "./PrivilegeRefresher";
@@ -851,6 +861,22 @@ export async function startWorker() {
         // join gate's admin session; anyone else wearing the flag just has it
         // dropped instead of being refused entry.
         const isDeveloper = req.headers[DEVELOPER_HEADER] === "1";
+
+        // Superfork progression: an account's (via the master), or a guest's
+        // own cookie. Admins skip the research tree and own every cosmetic.
+        const account = await accountForSession(
+          readCookie(req.headers.cookie, SESSION_COOKIE),
+          isDeveloper,
+        );
+        const guest = decodeGuest(readCookie(req.headers.cookie, GUEST_COOKIE));
+        const baseProgression = account?.progression ?? guestProgression(guest);
+        const progression: Progression = isDeveloper
+          ? { ...baseProgression, bypass: true }
+          : baseProgression;
+        const ownedFlares = isDeveloper
+          ? [...ADMIN_FLARES]
+          : (account?.owned ?? guest.o);
+
         const cosmeticRefs = { ...(clientMsg.cosmetics ?? {}) };
         if (isDeveloperFlagRef(cosmeticRefs.flag) && !isDeveloper) {
           log.warn("Dropped developer flag from a non-developer", {
@@ -862,7 +888,11 @@ export async function startWorker() {
         const cosmeticResult = privilegeRefresher
           .get()
           .isAllowed(
-            isDeveloper ? [...(flares ?? []), DEVELOPER_FLARE] : (flares ?? []),
+            [
+              ...(flares ?? []),
+              ...ownedFlares,
+              ...(isDeveloper ? [DEVELOPER_FLARE] : []),
+            ],
             cosmeticRefs,
           );
 
@@ -918,6 +948,9 @@ export async function startWorker() {
           clientMsg.platform,
           levelBadge,
         );
+
+        client.accountId = account?.id ?? null;
+        client.progression = progression;
 
         const joinResult = gm.joinClient(client, clientMsg.gameID);
 

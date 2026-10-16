@@ -46,6 +46,7 @@ import {
   purchaseOutcomeMessage,
   startPurchase,
 } from "./Payments";
+import { loadProgress, ownedFlares } from "./Progress";
 import { STEAM_TIER_CHANGE_IN_APP } from "./SubscriptionPolicy";
 import { UserSettings } from "./UserSettings";
 import { translateText } from "./Utils";
@@ -75,13 +76,17 @@ export function usingBundledCosmetics(): boolean {
 }
 
 /**
- * The player's flares. Superfork: with the bundled catalog, every item in it is
- * free, so everyone holds its wildcards.
+ * The player's flares. Superfork: with the bundled catalog, the ones bought
+ * with SuperFront coins (see Progress.ts).
  */
 export function playerFlares(userMeResponse: UserMeResponse | false): string[] {
   const own =
     userMeResponse === false ? [] : (userMeResponse.player.flares ?? []);
-  return __cosmeticsBundled ? [...own, ...BUNDLED_FREE_FLARES] : own;
+  // Superfork: with the bundled catalog, ownership is SuperFront's own
+  // (bought with coins; admins own it all), not the closed API's.
+  return __cosmeticsBundled
+    ? [...own, ...BUNDLED_FREE_FLARES, ...ownedFlares()]
+    : own;
 }
 
 /**
@@ -1467,6 +1472,9 @@ export async function getPlayerCosmeticsRefs(
   opts: { verified?: boolean } = {},
 ): Promise<PlayerCosmeticRefs> {
   const userSettings = new UserSettings();
+  // Superfork: what this player owns (account or guest cookie) must be known
+  // before their selections are checked against it.
+  await loadProgress();
   // Resolve the profile first: getUserMe activates the per-player cosmetics
   // scope (UserSettings.setPlayerId), which must happen before selections are
   // read below.

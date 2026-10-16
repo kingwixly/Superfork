@@ -1,4 +1,5 @@
 import { Tick } from "@openfront/engine-api/game/GameTypes";
+import type { Progression } from "@openfront/engine-api/game/Progression";
 import { ClientID, Winner } from "@openfront/engine-api/Schemas";
 import { TokenPayload } from "@openfront/shared/ApiSchemas";
 import {
@@ -22,6 +23,11 @@ export class Client {
 
   /** Proved the UCI password on this connection. */
   public uciAdmin = false;
+
+  /** Superfork: the player's account id, null for a guest. */
+  public accountId: string | null = null;
+  /** Superfork: the research tree etc. this player brings into the game. */
+  public progression: Progression | undefined = undefined;
 
   constructor(
     public readonly clientID: ClientID,

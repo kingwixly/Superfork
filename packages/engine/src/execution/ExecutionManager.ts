@@ -52,6 +52,7 @@ import { MoveWarshipExecution } from "./MoveWarshipExecution";
 import { NationExecution } from "./NationExecution";
 import { NoOpExecution } from "./NoOpExecution";
 import { PauseExecution } from "./PauseExecution";
+import { SetGovernmentExecution } from "./LabExecution";
 import { ProvinceExecution } from "./ProvinceExecution";
 import {
   PuppetCommandExecution,
@@ -126,6 +127,8 @@ export class Executor {
         return new RecallAircraftExecution(player, intent.unitIds);
       case "province":
         return new ProvinceExecution(player, intent);
+      case "set_government":
+        return new SetGovernmentExecution(player, intent.government);
       case "puppet_offer":
         return new PuppetOfferExecution(player, intent.target);
       case "puppet_response":

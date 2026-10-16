@@ -1,5 +1,10 @@
 {
   "colorPalettes": {
+    "arctic_navy": {
+      "name": "arctic_navy",
+      "primaryColor": "#E8F1F8",
+      "secondaryColor": "#1D2F5C"
+    },
     "crimson_ivory": {
       "name": "crimson_ivory",
       "primaryColor": "#A3162B",
@@ -19,6 +24,11 @@
       "name": "glacier_white",
       "primaryColor": "#5FA8D3",
       "secondaryColor": "#F4FAFF"
+    },
+    "jade_gold": {
+      "name": "jade_gold",
+      "primaryColor": "#0F766E",
+      "secondaryColor": "#E6B422"
     },
     "midnight_steel": {
       "name": "midnight_steel",
@@ -49,6 +59,11 @@
       "name": "sand_dune",
       "primaryColor": "#C9A86A",
       "secondaryColor": "#7A5634"
+    },
+    "sunset_violet": {
+      "name": "sunset_violet",
+      "primaryColor": "#F97362",
+      "secondaryColor": "#5B2A86"
     },
     "toxic_night": {
       "name": "toxic_night",
@@ -341,6 +356,136 @@
           "isArchived": false
         }
       ]
+    },
+    "zigzag": {
+      "name": "zigzag",
+      "product": null,
+      "rarity": "common",
+      "artist": "SuperFront",
+      "pattern": "AFAYQAAOsIExDGbAAxgA",
+      "colorPalettes": [
+        {
+          "name": "sunset_violet",
+          "isArchived": false
+        },
+        {
+          "name": "navy_gold",
+          "isArchived": false
+        },
+        {
+          "name": "jade_gold",
+          "isArchived": false
+        }
+      ]
+    },
+    "plaid": {
+      "name": "plaid",
+      "product": null,
+      "rarity": "uncommon",
+      "artist": "SuperFront",
+      "pattern": "AHA4DCIMAvP98_0MIgwCDCIMAgwi8_0MIgwCDCIMAgwiDAI",
+      "colorPalettes": [
+        {
+          "name": "crimson_ivory",
+          "isArchived": false
+        },
+        {
+          "name": "forest_bark",
+          "isArchived": false
+        },
+        {
+          "name": "arctic_navy",
+          "isArchived": false
+        }
+      ]
+    },
+    "scales": {
+      "name": "scales",
+      "product": null,
+      "rarity": "rare",
+      "artist": "SuperFront",
+      "pattern": "AFAYvOfgBmzAHo87sAEb",
+      "colorPalettes": [
+        {
+          "name": "jade_gold",
+          "isArchived": false
+        },
+        {
+          "name": "ocean_foam",
+          "isArchived": false
+        },
+        {
+          "name": "sunset_violet",
+          "isArchived": false
+        }
+      ]
+    },
+    "crosshatch": {
+      "name": "crosshatch",
+      "product": null,
+      "rarity": "uncommon",
+      "artist": "SuperFront",
+      "pattern": "AEAgAQhIECJQgAAFIgQJCA",
+      "colorPalettes": [
+        {
+          "name": "midnight_steel",
+          "isArchived": false
+        },
+        {
+          "name": "sand_dune",
+          "isArchived": false
+        },
+        {
+          "name": "arctic_navy",
+          "isArchived": false
+        }
+      ]
+    },
+    "dunes": {
+      "name": "dunes",
+      "product": null,
+      "rarity": "rare",
+      "artist": "SuperFront",
+      "pattern": "ADBJAAAAAAD_fwAAwP8HAAD8fwAAwP8HAAD8_wAAAAAAAAD8_wcAwP9_AAD8_wcAwP9_AAAAAAAAAP9_AADA_wcAAPx_AADA_wcAAPz_AAAAAAAAAPz_BwDA_38AAPz_BwDA_38AAA",
+      "colorPalettes": [
+        {
+          "name": "sand_dune",
+          "isArchived": false
+        },
+        {
+          "name": "sunset_violet",
+          "isArchived": false
+        },
+        {
+          "name": "ember_ash",
+          "isArchived": false
+        }
+      ]
+    },
+    "lattice": {
+      "name": "lattice",
+      "product": null,
+      "rarity": "epic",
+      "artist": "SuperFront",
+      "pattern": "AHA4_Pz8_AMDAwMDAwMDAwMDA_z8_PwDAwMDAwMDAwMDAwM",
+      "colorPalettes": [
+        {
+          "name": "royal_gold",
+          "isArchived": false
+        },
+        {
+          "name": "jade_gold",
+          "isArchived": false
+        },
+        {
+          "name": "arctic_navy",
+          "isArchived": false
+        },
+        {
+          "name": "toxic_night",
+          "isArchived": false
+        }
+      ]
     }
   },
   "flags": {},
@@ -386,6 +531,34 @@
       "rarity": "legendary",
       "artist": "SuperFront",
       "url": "/cosmetics/crowns/iron_helm.svg"
+    },
+    "masquerade_mask": {
+      "name": "masquerade_mask",
+      "product": null,
+      "rarity": "uncommon",
+      "artist": "SuperFront",
+      "url": "/cosmetics/crowns/masquerade_mask.svg"
+    },
+    "jeweled_circlet": {
+      "name": "jeweled_circlet",
+      "product": null,
+      "rarity": "epic",
+      "artist": "SuperFront",
+      "url": "/cosmetics/crowns/jeweled_circlet.svg"
+    },
+    "bramble_crown": {
+      "name": "bramble_crown",
+      "product": null,
+      "rarity": "rare",
+      "artist": "SuperFront",
+      "url": "/cosmetics/crowns/bramble_crown.svg"
+    },
+    "admiral_cap": {
+      "name": "admiral_cap",
+      "product": null,
+      "rarity": "rare",
+      "artist": "SuperFront",
+      "url": "/cosmetics/crowns/admiral_cap.svg"
     }
   },
   "skins": {
@@ -430,6 +603,27 @@
       "rarity": "legendary",
       "artist": "SuperFront",
       "url": "/cosmetics/skins/admiralty_anchor.png"
+    },
+    "split_atom": {
+      "name": "split_atom",
+      "product": null,
+      "rarity": "epic",
+      "artist": "SuperFront",
+      "url": "/cosmetics/skins/split_atom.png"
+    },
+    "watchtower": {
+      "name": "watchtower",
+      "product": null,
+      "rarity": "rare",
+      "artist": "SuperFront",
+      "url": "/cosmetics/skins/watchtower.png"
+    },
+    "gilded_wings": {
+      "name": "gilded_wings",
+      "product": null,
+      "rarity": "legendary",
+      "artist": "SuperFront",
+      "url": "/cosmetics/skins/gilded_wings.png"
     }
   },
   "effects": {
@@ -492,6 +686,19 @@
           "colorSize": 2,
           "movementSpeed": 6
         }
+      },
+      "sunset_wake": {
+        "name": "sunset_wake",
+        "product": null,
+        "rarity": "uncommon",
+        "artist": "SuperFront",
+        "effectType": "transportShipTrail",
+        "attributes": {
+          "type": "gradient",
+          "colors": ["#F97362", "#FDE047", "#A855F7"],
+          "colorSize": 3,
+          "movementSpeed": 3
+        }
       }
     },
     "nukeTrail": {
@@ -545,6 +752,20 @@
           "type": "transition",
           "colors": ["#FF3B30", "#FFFFFF"],
           "frequency": 6
+        }
+      },
+      "jade_helix": {
+        "name": "jade_helix",
+        "product": null,
+        "rarity": "epic",
+        "artist": "SuperFront",
+        "effectType": "nukeTrail",
+        "attributes": {
+          "type": "spiral",
+          "colors": ["#0F766E", "#5EEAD4", "#E6B422"],
+          "radius": 2,
+          "strands": 2,
+          "rotationSpeed": 4
         }
       }
     },
@@ -703,6 +924,19 @@
           "colors": ["#E5E9F0", "#7C8798"],
           "colorSize": 1,
           "movementSpeed": 0.4
+        }
+      },
+      "jade_structures": {
+        "name": "jade_structures",
+        "product": null,
+        "rarity": "epic",
+        "artist": "SuperFront",
+        "effectType": "structures",
+        "attributes": {
+          "type": "gradient",
+          "colors": ["#5EEAD4", "#0F766E", "#E6B422"],
+          "colorSize": 1,
+          "movementSpeed": 0.5
         }
       }
     },

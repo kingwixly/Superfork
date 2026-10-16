@@ -160,6 +160,8 @@ export interface Stats {
   // Record where the player spawned. Last write wins: a player may re-pick
   // during the spawn phase, and only the final pick matters.
   recordSpawnTile(player: Player, tile: TileRef): void;
+  /** Superfork: research points the player's labs have made so far. */
+  recordResearch(player: Player, points: number): void;
 
   // Alliances still standing when the game ended. Called for every player
   // from GameImpl.setWinner, beside recordFinalTiles.
