@@ -723,7 +723,10 @@ export class EngineConfig extends Config {
     );
     return BigInt(
       Math.floor(
-        Number(baseRate) * multiplier * (1 + PROVINCE_GOLD_BONUS * provinces),
+        Number(baseRate) *
+          multiplier *
+          (1 + PROVINCE_GOLD_BONUS * provinces) *
+          (player.effects?.().gold ?? 1),
       ),
     );
   }

@@ -224,6 +224,9 @@ export const PlayerStatsSchema = z
     // so compact games index a smaller map). Last write wins: a player may
     // re-pick during the spawn phase.
     spawnTile: zb.uint().optional(),
+    // Superfork: research points this player's labs made (banked to the
+    // research tree after the match). Appended, like everything above.
+    researchPoints: zb.uint().optional(),
   })
   .optional();
 export type PlayerStats = z.infer<typeof PlayerStatsSchema>;

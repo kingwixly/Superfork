@@ -1,3 +1,14 @@
+import {
+  buffEffects,
+  combineEffects,
+  Effects,
+  GovernmentId,
+  GOVERNMENTS,
+  NO_EFFECTS,
+  Progression,
+  unitUnlocked,
+  unlockedGovernments,
+} from "@openfront/engine-api/game/Progression";
 import { TileRef } from "@openfront/engine-api/game/GameMap";
 import {
   AllianceInfo,
@@ -1343,6 +1354,91 @@ export class PlayerImpl implements Player {
     });
   }
 
+  // ------------------------------------------------- superfork progression
+
+  private _government: GovernmentId = "standard";
+  private _governmentChangedAt = -Infinity;
+  private _governmentEffectiveAt = 0;
+  private _research = 0;
+  private _governmentInit = false;
+
+  /** Progression applies to humans in games that didn't unlock everything. */
+  private progressionRules(): Progression | null {
+    if (!this.mg.config().progressionActive()) return null;
+    if (this.type() !== PlayerType.Human) return null;
+    return this.playerInfo.progression ?? null;
+  }
+
+  hasUnlocked(type: UnitType): boolean {
+    return unitUnlocked(this.progressionRules(), type);
+  }
+
+  government(): GovernmentId {
+    if (!this._governmentInit) {
+      this._governmentInit = true;
+      // The starting government, if this player has unlocked it.
+      const start = this.playerInfo.progression?.government;
+      if (start !== undefined && this.governmentUnlocked(start)) {
+        this._government = start;
+      }
+    }
+    return this._government;
+  }
+
+  /** Whether this player may run a government. */
+  governmentUnlocked(id: GovernmentId): boolean {
+    if (!this.mg.config().progressionActive()) return true;
+    if (this.type() !== PlayerType.Human) return true;
+    return unlockedGovernments(this.playerInfo.progression ?? null).includes(
+      id,
+    );
+  }
+
+  governmentChangedAt(): number {
+    return this._governmentChangedAt;
+  }
+
+  governmentEffectiveAt(): number {
+    return this._governmentEffectiveAt;
+  }
+
+  setGovernment(id: GovernmentId, effectiveAt: number): void {
+    this.government();
+    this._government = id;
+    this._governmentChangedAt = this.mg.ticks();
+    this._governmentEffectiveAt = effectiveAt;
+    this.mg.addUpdate({
+      type: GameUpdateType.Government,
+      playerID: this.smallID(),
+      government: id,
+      changedAt: this._governmentChangedAt,
+      effectiveAt,
+    });
+  }
+
+  effects(): Effects {
+    const gov =
+      this.mg.ticks() >= this._governmentEffectiveAt
+        ? GOVERNMENTS[this.government()].effects
+        : NO_EFFECTS;
+    return combineEffects(gov, buffEffects(this.progressionRules()));
+  }
+
+  researchPoints(): number {
+    return this._research;
+  }
+
+  addResearchPoints(points: number): void {
+    if (points <= 0) return;
+    this._research += points;
+    this.mg.stats().recordResearch(this, this._research);
+    this.mg.addUpdate({
+      type: GameUpdateType.Research,
+      playerID: this.smallID(),
+      points: this._research,
+    });
+  }
+
   provinceCount(): number {
     if (!this.mg.config().provincesEnabled()) return 0;
     let puppets = 0;
@@ -1800,6 +1896,10 @@ export class PlayerImpl implements Player {
     if (isAttackLocked(this) && UCI_LOCKED_UNITS.has(unitType)) {
       return false;
     }
+    // Superfork progression: gear the research tree hasn't unlocked yet.
+    if (!this.hasUnlocked(unitType)) {
+      return false;
+    }
 
     return this.canSpawnUnitType(unitType, targetTile, validTiles);
   }
@@ -1838,6 +1938,7 @@ export class PlayerImpl implements Player {
       case UnitType.SAMLauncher:
       case UnitType.City:
       case UnitType.Factory:
+      case UnitType.Lab:
         return this.landBasedStructureSpawn(targetTile, validTiles, unitType);
 
       // ------------------------- Superfork -------------------------

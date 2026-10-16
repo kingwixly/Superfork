@@ -2,6 +2,10 @@ import { zb } from "@openfront/zbin";
 import quickChatData from "resources/QuickChat.json";
 import { z } from "zod";
 import {
+  GovernmentIdSchema,
+  ProgressionSchema,
+} from "./game/Progression";
+import {
   AllPlayers,
   Difficulty,
   Duos,
@@ -74,7 +78,8 @@ export type Intent =
   | RecallAircraftIntent
   | ProvinceIntent
   | PuppetOfferIntent
-  | PuppetResponseIntent;
+  | PuppetResponseIntent
+  | SetGovernmentIntent;
 
 export type AttackIntent = z.infer<typeof AttackIntentSchema>;
 
@@ -96,6 +101,7 @@ export type ProvinceIntent = z.infer<typeof ProvinceIntentSchema>;
 export type ProvinceAction = z.infer<typeof ProvinceActionSchema>;
 export type PuppetOfferIntent = z.infer<typeof PuppetOfferIntentSchema>;
 export type PuppetResponseIntent = z.infer<typeof PuppetResponseIntentSchema>;
+export type SetGovernmentIntent = z.infer<typeof SetGovernmentIntentSchema>;
 export type UciAction = z.infer<typeof UciActionSchema>;
 export type TreatyCreateIntent = z.infer<typeof TreatyCreateIntentSchema>;
 export type TreatyInviteIntent = z.infer<typeof TreatyInviteIntentSchema>;
@@ -365,6 +371,9 @@ export const GameConfigSchema = z.object({
   waterNukes: z.boolean().nullable().optional(),
   // Superfork: player-drawn provinces. Off by default.
   provinces: z.boolean().nullable().optional(),
+  // Superfork: everyone has the whole research tree; no coins or RP are
+  // paid out for the game.
+  unlockAll: z.boolean().nullable().optional(),
   randomSpawn: z.boolean(),
   maxPlayers: zb.uint().optional(),
   // OFM: allowlist of publicIds allowed to join (admin-only, see create_game).
@@ -907,6 +916,12 @@ export const PuppetOfferIntentSchema = z.object({
   target: MappedID,
 });
 
+/** Change government (must be unlocked; there is a cooldown). */
+export const SetGovernmentIntentSchema = z.object({
+  type: z.literal("set_government"),
+  government: GovernmentIdSchema,
+});
+
 export const PuppetResponseIntentSchema = z.object({
   type: z.literal("puppet_response"),
   requestor: MappedID,
@@ -969,6 +984,7 @@ export const IntentSchema = z.discriminatedUnion("type", [
   ProvinceIntentSchema,
   PuppetOfferIntentSchema,
   PuppetResponseIntentSchema,
+  SetGovernmentIntentSchema,
 ]);
 
 // StampedIntent = Intent with server-stamped clientID (used in turns and execution)
@@ -1004,6 +1020,8 @@ export const PlayerSchema = z.object({
   // game's team list). Feeds deterministic team assignment, so it must be
   // identical for every client (like clanTag/friends).
   teamIndex: zb.uint().optional(),
+  // Superfork: research tree, buffs and starting government. Appended.
+  progression: ProgressionSchema.optional(),
 });
 
 // A purchased bot tribe name in use this game (active names are globally

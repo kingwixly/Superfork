@@ -1,3 +1,7 @@
+import type {
+  Effects,
+  GovernmentId,
+} from "@openfront/engine-api/game/Progression";
 import { GameMap, TileRef } from "@openfront/engine-api/game/GameMap";
 import {
   AllianceInfo,
@@ -105,6 +109,7 @@ export interface UnitParamsMap {
   };
 
   [UnitType.Factory]: Record<string, never>;
+  [UnitType.Lab]: Record<string, never>;
 
   [UnitType.MissileSilo]: Record<string, never>;
 
@@ -685,6 +690,23 @@ export interface Player extends PlayerLike {
   puppets(): Player[];
   /** Superfork: provinces held plus puppets; 0 when provinces are off. */
   provinceCount(): number;
+
+  // Superfork progression (see engine-api/game/Progression.ts).
+  /** Whether the research tree lets this player build `type`. */
+  hasUnlocked(type: UnitType): boolean;
+  government(): GovernmentId;
+  /** Tick the current government was chosen, and when it takes effect. */
+  governmentChangedAt(): number;
+  governmentEffectiveAt(): number;
+  /** Change government now; the caller checks unlocks and cooldowns. */
+  setGovernment(id: GovernmentId, effectiveAt: number): void;
+  /** Whether this player may run a government (tree unlocks). */
+  governmentUnlocked(id: GovernmentId): boolean;
+  /** Government and research-buff multipliers, combined. */
+  effects(): Effects;
+  /** Research points this player's labs have made this match. */
+  researchPoints(): number;
+  addResearchPoints(points: number): void;
 
   /** Owner of an enemy hull near a tile, for ASBM targeting (superfork). */
   asbmTargetNear(tile: TileRef): Player | null;
