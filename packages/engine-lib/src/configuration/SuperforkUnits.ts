@@ -125,6 +125,14 @@ export const CAPITAL_STRIKE_LOCKOUT = s(120);
 
 /** Capital effects, per spec. */
 export const CAPITAL_TROOP_CAP_BONUS = 0.1; // +10% max troop capacity
+
+// Provinces (see packages/engine/src/game/Provinces.ts).
+/** Max troops per province held, uncapped. */
+export const PROVINCE_TROOP_BONUS = 0.05;
+/** Gold income per province held... */
+export const PROVINCE_GOLD_BONUS = 0.05;
+/** ...counting at most this many provinces. */
+export const PROVINCE_GOLD_CAP = 3;
 export const CAPITAL_CAPTURE_TROOP_LOSS = 0.4; // -40% troops when captured
 
 /**

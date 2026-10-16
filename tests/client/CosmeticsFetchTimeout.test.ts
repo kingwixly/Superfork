@@ -1,10 +1,10 @@
+import { bundledCosmetics } from "@openfront/shared/BundledCosmetics";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { getUserMe } from "../../src/client/Api";
 import {
   COSMETICS_FETCH_TIMEOUT_MS,
   fetchCosmetics,
   invalidateCosmetics,
-  prewarmCosmetics,
 } from "../../src/client/Cosmetics";
 
 vi.mock("../../src/client/Api", async (importOriginal) => ({
@@ -71,62 +71,22 @@ describe("fetchCosmetics is bounded", () => {
     expect(COSMETICS_FETCH_TIMEOUT_MS).toBeGreaterThan(0);
   });
 
-  it("resolves to null on the timeout rather than rejecting", async () => {
+  it("falls back to the bundled catalog on the timeout rather than rejecting", async () => {
     fetchMock.mockRejectedValueOnce(abortError());
 
-    // Callers treat a null catalog as "no cosmetics info", not as an error;
-    // a rejection here would propagate into the game-start path instead.
-    await expect(fetchCosmetics()).resolves.toBeNull();
+    // Superfork: with no catalog server, SuperFront's free bundled catalog is
+    // used (the game server falls back to the same one). A rejection here
+    // would propagate into the game-start path instead.
+    await expect(fetchCosmetics()).resolves.toEqual(bundledCosmetics());
   });
 
-  it("does not cache the timeout, so the next caller retries", async () => {
+  it("keeps the bundled catalog rather than waiting out the timeout again", async () => {
     fetchMock.mockRejectedValueOnce(abortError());
 
-    expect(await fetchCosmetics()).toBeNull();
-    expect(await fetchCosmetics()).toEqual(catalog);
-    expect(fetchMock).toHaveBeenCalledTimes(2);
-  });
-});
-
-describe("prewarmCosmetics", () => {
-  let fetchMock: ReturnType<typeof vi.fn>;
-
-  beforeEach(() => {
-    invalidateCosmetics();
-    vi.mocked(getUserMe).mockResolvedValue(false);
-    fetchMock = vi.fn(async () => okResponse());
-    vi.stubGlobal("fetch", fetchMock);
-    vi.spyOn(console, "error").mockImplementation(() => undefined);
-  });
-
-  afterEach(() => {
-    invalidateCosmetics();
-    vi.unstubAllGlobals();
-    vi.restoreAllMocks();
-  });
-
-  // The point of the prewarm: the round trip is spent while the player is
-  // still choosing a map, so the resolution that runs when they finally click
-  // Start answers from memory and issues no request of its own.
-  it("warms the catalog so a later resolution issues no request", async () => {
-    await prewarmCosmetics();
+    expect(await fetchCosmetics()).toEqual(bundledCosmetics());
+    // On SuperFront the server never answers; retrying would put a ten second
+    // wait back on every later caller.
+    expect(await fetchCosmetics()).toEqual(bundledCosmetics());
     expect(fetchMock).toHaveBeenCalledTimes(1);
-
-    expect(await fetchCosmetics()).toEqual(catalog);
-    expect(fetchMock).toHaveBeenCalledTimes(1);
-  });
-
-  it("warms the profile the same resolution reads", async () => {
-    await prewarmCosmetics();
-    expect(vi.mocked(getUserMe)).toHaveBeenCalled();
-  });
-
-  // Callers fire and forget it, so a rejection would surface as an unhandled
-  // promise rejection rather than anywhere it could be handled.
-  it("never rejects", async () => {
-    fetchMock.mockRejectedValueOnce(abortError());
-    vi.mocked(getUserMe).mockRejectedValueOnce(new Error("offline"));
-
-    await expect(prewarmCosmetics()).resolves.toBeUndefined();
   });
 });

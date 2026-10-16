@@ -172,3 +172,156 @@ export class PuppetLiberateExecution implements Execution {
     return false;
   }
 }
+
+/** A nation accepts becoming a puppet when this much weaker than the asker. */
+export const PUPPET_ACCEPT_RATIO = 0.35;
+
+interface PendingPuppetOffer {
+  master: Player;
+  target: Player;
+  createdAt: number;
+}
+
+/** Outstanding puppet offers per game, keyed `master|target`. */
+const pendingOffers = new WeakMap<Game, Map<string, PendingPuppetOffer>>();
+
+function offers(mg: Game): Map<string, PendingPuppetOffer> {
+  let m = pendingOffers.get(mg);
+  if (m === undefined) pendingOffers.set(mg, (m = new Map()));
+  return m;
+}
+
+/** The offer `master` made `target`, if still open. */
+export function pendingPuppetOffer(
+  mg: Game,
+  master: Player,
+  target: Player,
+): PendingPuppetOffer | undefined {
+  return offers(mg).get(`${master.id()}|${target.id()}`);
+}
+
+export function hasPendingPuppetOffers(mg: Game): boolean {
+  return offers(mg).size > 0;
+}
+
+/** Whether an AI nation takes the offer: only when badly outmatched. */
+export function nationAcceptsPuppetOffer(nation: Player, master: Player) {
+  return (
+    nation.troops() < master.troops() * PUPPET_ACCEPT_RATIO &&
+    nation.numTilesOwned() < master.numTilesOwned() * PUPPET_ACCEPT_RATIO
+  );
+}
+
+/**
+ * Offer to take another nation as a puppet. It keeps playing its own country;
+ * it just answers to the master (and, with provinces on, counts as one of the
+ * master's provinces). The target must accept.
+ */
+export class PuppetOfferExecution implements Execution {
+  snapshot(): ExecRecord {
+    return unsnapshottable("PuppetOfferExecution");
+  }
+
+  private active = true;
+
+  constructor(
+    private master: Player,
+    private targetID: string,
+  ) {}
+
+  init(mg: Game, ticks: number): void {
+    this.active = false;
+    if (!canUseSuperforkSystems(this.master.type())) return;
+    if (!mg.hasPlayer(this.targetID)) return;
+    const target = mg.player(this.targetID);
+    if (!canUseSuperforkSystems(target.type())) return;
+    if (target.master() !== null || !canPuppet(this.master, target)) return;
+    offers(mg).set(`${this.master.id()}|${target.id()}`, {
+      master: this.master,
+      target,
+      createdAt: ticks,
+    });
+    mg.displayMessage(
+      "events_display.puppet_offer_sent",
+      MessageType.ALLIANCE_REQUEST,
+      this.master.id(),
+      undefined,
+      { player: target.displayName() },
+    );
+    // focusPlayerID names the master so the client can attach Accept /
+    // Decline buttons that answer the right offer.
+    mg.displayMessage(
+      "events_display.puppet_offer_received",
+      MessageType.ALLIANCE_REQUEST,
+      target.id(),
+      undefined,
+      { player: this.master.displayName() },
+      undefined,
+      this.master.id(),
+    );
+  }
+
+  tick(ticks: number): void {}
+  isActive(): boolean {
+    return this.active;
+  }
+  activeDuringSpawnPhase(): boolean {
+    return false;
+  }
+}
+
+/** Accept or decline becoming someone's puppet. */
+export class PuppetResponseExecution implements Execution {
+  snapshot(): ExecRecord {
+    return unsnapshottable("PuppetResponseExecution");
+  }
+
+  private active = true;
+
+  constructor(
+    private target: Player,
+    private masterID: string,
+    private accept: boolean,
+  ) {}
+
+  init(mg: Game, ticks: number): void {
+    this.active = false;
+    if (!mg.hasPlayer(this.masterID)) return;
+    const master = mg.player(this.masterID);
+    const key = `${master.id()}|${this.target.id()}`;
+    // Only the target answers: the key is directional, so the master can't
+    // find (and accept) its own offer.
+    if (!offers(mg).has(key)) return;
+    offers(mg).delete(key);
+    if (!this.accept || !canPuppet(master, this.target)) {
+      mg.displayMessage(
+        "events_display.puppet_offer_declined",
+        MessageType.ALLIANCE_REJECTED,
+        master.id(),
+        undefined,
+        { player: this.target.displayName() },
+      );
+      return;
+    }
+    this.target.setMaster(master);
+    // A vassal and its master don't fight each other.
+    if (!master.isFriendly(this.target)) {
+      master.createAllianceRequest(this.target)?.accept();
+    }
+    mg.displayMessage(
+      "events_display.puppet_offer_accepted",
+      MessageType.ALLIANCE_ACCEPTED,
+      null,
+      undefined,
+      { puppet: this.target.displayName(), master: master.displayName() },
+    );
+  }
+
+  tick(ticks: number): void {}
+  isActive(): boolean {
+    return this.active;
+  }
+  activeDuringSpawnPhase(): boolean {
+    return false;
+  }
+}

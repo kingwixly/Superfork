@@ -52,9 +52,12 @@ import { MoveWarshipExecution } from "./MoveWarshipExecution";
 import { NationExecution } from "./NationExecution";
 import { NoOpExecution } from "./NoOpExecution";
 import { PauseExecution } from "./PauseExecution";
+import { ProvinceExecution } from "./ProvinceExecution";
 import {
   PuppetCommandExecution,
   PuppetLiberateExecution,
+  PuppetOfferExecution,
+  PuppetResponseExecution,
 } from "./PuppetExecution";
 import { QuickChatExecution } from "./QuickChatExecution";
 import { RetreatExecution } from "./RetreatExecution";
@@ -121,6 +124,16 @@ export class Executor {
         return new MoveAircraftExecution(player, intent.unitIds, intent.tile);
       case "recall_aircraft":
         return new RecallAircraftExecution(player, intent.unitIds);
+      case "province":
+        return new ProvinceExecution(player, intent);
+      case "puppet_offer":
+        return new PuppetOfferExecution(player, intent.target);
+      case "puppet_response":
+        return new PuppetResponseExecution(
+          player,
+          intent.requestor,
+          intent.accept,
+        );
       case "move_warship":
         return new MoveWarshipExecution(player, intent.unitIds, intent.tile);
       case "spawn":

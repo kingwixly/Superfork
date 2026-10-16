@@ -181,6 +181,9 @@ describe("Strike bombers", () => {
     run(3000);
     expect(foe.numTilesOwned()).toBeLessThan(tilesBefore);
     expect(game.owner(target).isPlayer()).toBe(false);
+    // It survives its own bomb and flies another run.
+    expect(me.units(UnitType.LargeBomber).length).toBe(1);
+    expect(me.units(UnitType.LargeBomber)[0].isActive()).toBe(true);
   });
 
   test("every new large bomber costs more, even after losing one", () => {

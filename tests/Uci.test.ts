@@ -245,3 +245,78 @@ describe("UCI", () => {
     expect(foe.isLobbyCreator()).toBe(true);
   });
 });
+
+describe("UCI create country", () => {
+  beforeEach(setupGame);
+
+  /** A closed square outline from (x0,y0) to (x1,y1), as one stroke. */
+  function square(x0: number, y0: number, x1: number, y1: number) {
+    return {
+      points: [
+        game.ref(x0, y0),
+        game.ref(x1, y0),
+        game.ref(x1, y1),
+        game.ref(x0, y1),
+        game.ref(x0, y0),
+      ],
+    };
+  }
+
+  test("painting a closed border founds an AI nation on everything inside", () => {
+    uci({
+      action: "create_country",
+      text: "Freedonia",
+      ...square(10, 10, 40, 40),
+    });
+    const inside = game.owner(game.ref(25, 25));
+    expect(inside.isPlayer()).toBe(true);
+    if (!inside.isPlayer()) return;
+    expect(inside.displayName()).toBe("Freedonia");
+    expect(inside.type()).toBe(PlayerType.Nation);
+    // Border and interior: a 31x31 block.
+    expect(inside.numTilesOwned()).toBe(31 * 31);
+    expect(game.owner(game.ref(5, 5))).toBe(me);
+    // It lives on: it has troops and is still standing a while later.
+    expect(inside.troops()).toBeGreaterThan(0);
+    for (let i = 0; i < 20; i++) game.executeNextTick();
+    expect(inside.isAlive()).toBe(true);
+  });
+
+  test("a spectator can be added as the new country", () => {
+    uci({
+      action: "create_country",
+      text: "Watcher",
+      targetClientID: "spectator_client",
+      ...square(130, 10, 160, 40),
+    });
+    const p = game.playerByClientID("spectator_client");
+    expect(p).not.toBeNull();
+    expect(p!.type()).toBe(PlayerType.Human);
+    expect(p!.isAlive()).toBe(true);
+    expect(game.owner(game.ref(145, 25))).toBe(p);
+  });
+
+  test("a dead player is brought back rather than duplicated", () => {
+    for (const t of [...foe.tiles()]) me.conquer(t);
+    game.executeNextTick();
+    expect(foe.isAlive()).toBe(false);
+    uci({
+      action: "create_country",
+      targetClientID: "foe_client",
+      ...square(130, 10, 160, 40),
+    });
+    expect(game.playerByClientID("foe_client")).toBe(foe);
+    expect(foe.isAlive()).toBe(true);
+    expect(game.owner(game.ref(145, 25))).toBe(foe);
+  });
+
+  test("an open line just takes the line", () => {
+    uci({
+      action: "create_country",
+      points: [game.ref(10, 10), game.ref(40, 10)],
+    });
+    const p = game.owner(game.ref(25, 10));
+    expect(p.isPlayer() && p !== me).toBe(true);
+    expect(game.owner(game.ref(25, 20))).toBe(me);
+  });
+});

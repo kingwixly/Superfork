@@ -87,6 +87,7 @@ import {
   Unit,
 } from "./Game";
 import { PlayerImpl } from "./PlayerImpl";
+import { ProvinceManager } from "./Provinces";
 import { RailNetwork } from "./RailNetwork";
 import {
   createRailNetwork,
@@ -583,6 +584,11 @@ export class GameImpl implements Game {
       );
       if (update !== null) this.addUpdate(update);
     }
+    if (this._provinces !== undefined) {
+      for (const snap of this._provinces.drain()) {
+        this.addUpdate({ type: GameUpdateType.Province, ...snap });
+      }
+    }
     if (this.ticks() % 10 === 0) {
       this.addUpdate({
         type: GameUpdateType.Hash,
@@ -819,6 +825,17 @@ export class GameImpl implements Game {
     return this._conquestLedger;
   }
 
+  /** Superfork: player-drawn provinces. Created lazily; see Provinces.ts. */
+  private _provinces: ProvinceManager | undefined;
+
+  provinces(): ProvinceManager {
+    this._provinces ??= new ProvinceManager(this._map, (id) => {
+      const p = this.playerBySmallID(id);
+      return p.isPlayer() ? (p as Player) : null;
+    });
+    return this._provinces;
+  }
+
   conquer(owner: PlayerImpl, tile: TileRef): void {
     if (!this.isLand(tile)) {
       throw Error(`cannot conquer water`);
@@ -845,6 +862,11 @@ export class GameImpl implements Game {
       this._conquestLedger.forget(tile);
     }
     this._territoryVersion++;
+    this._provinces?.onOwnerChange(
+      tile,
+      this._map.ownerID(tile),
+      owner.smallID(),
+    );
     this._map.setOwnerID(tile, owner.smallID());
     owner._tiles.add(tile);
     owner._lastTileChange = this._ticks;
@@ -869,6 +891,7 @@ export class GameImpl implements Game {
     previousOwner._borderTiles.delete(tile);
 
     this._territoryVersion++;
+    this._provinces?.onOwnerChange(tile, this._map.ownerID(tile), 0);
     this._map.setOwnerID(tile, 0);
     this.updateBorders(tile);
     this.recordTileUpdate(tile);

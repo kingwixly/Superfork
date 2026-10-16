@@ -67,10 +67,12 @@ import {
   SendBoatAttackIntentEvent,
   SendBreakAllianceIntentEvent,
   SendHashEvent,
+  SendProvinceIntentEvent,
   SendSpawnIntentEvent,
   SendTargetPlayerIntentEvent,
   SendUpgradeStructureIntentEvent,
   Transport,
+  UciSpectatorsEvent,
 } from "./Transport";
 import {
   GRAPHICS_KEY,
@@ -1140,6 +1142,9 @@ export class ClientGameRunner {
           Math.floor(performance.now()) - message.sentAt,
         );
       }
+      if (message.type === "uci_spectators") {
+        this.eventBus.emit(new UciSpectatorsEvent(message.spectators));
+      }
       if (message.type === "new_lobby") {
         // The host reused this private lobby: surface the successor id so the
         // group can hop over. NewLobbyPrompt navigates the host and prompts
@@ -1286,6 +1291,23 @@ export class ClientGameRunner {
       const myPlayer = this.gameView.playerByClientID(this.clientID);
       if (myPlayer === null) return;
       this.myPlayer = myPlayer;
+    }
+    // Superfork: Shift+click on an enemy province attacks just that province.
+    if (event.shiftKey && this.gameView.config().provincesEnabled()) {
+      const province = this.gameView.provinceStore().at(tile);
+      if (
+        province !== undefined &&
+        province.ownerID !== this.myPlayer.smallID()
+      ) {
+        this.eventBus.emit(
+          new SendProvinceIntentEvent({
+            action: "attack",
+            provinceId: province.id,
+            troops: this.myPlayer.troops() * this.renderer.uiState.attackRatio,
+          }),
+        );
+        return;
+      }
     }
     this.myPlayer
       .actions(tile, [UnitType.TransportShip])

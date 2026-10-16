@@ -19,6 +19,12 @@ import {
   hasPendingEmbassies,
   pendingEmbassyBetween,
 } from "../EmbassyExecution";
+import {
+  hasPendingPuppetOffers,
+  nationAcceptsPuppetOffer,
+  pendingPuppetOffer,
+  PuppetResponseExecution,
+} from "../PuppetExecution";
 import { SanctionExecution } from "../SanctionExecution";
 
 /** Troop ratio below which a nation considers suing for peace. */
@@ -66,7 +72,8 @@ export class NationDiplomacyBehavior {
       roll ||
       hasPendingCeasefires() ||
       hasPendingEmbassies() ||
-      hasPendingAssistance()
+      hasPendingAssistance() ||
+      hasPendingPuppetOffers(this.game)
     ) {
       this.answerCeasefires();
       this.answerEmbassiesAndAid();
@@ -113,6 +120,16 @@ export class NationDiplomacyBehavior {
             this.player.relation(other) >= Relation.Neutral);
         this.game.addExecution(
           new EmbassyResponseExecution(this.player, other.id(), accept),
+        );
+      }
+
+      // Become someone's puppet only when hopelessly outmatched.
+      if (pendingPuppetOffer(this.game, other, this.player) !== undefined) {
+        const accept =
+          forcedAiAnswer(this.game, other) ??
+          nationAcceptsPuppetOffer(this.player, other);
+        this.game.addExecution(
+          new PuppetResponseExecution(this.player, other.id(), accept),
         );
       }
 

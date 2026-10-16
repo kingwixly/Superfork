@@ -20,6 +20,22 @@ export class MouseUpEvent implements GameEvent {
   constructor(
     public readonly x: number,
     public readonly y: number,
+    /** Superfork: Shift+click on an enemy province attacks just that province. */
+    public readonly shiftKey: boolean = false,
+  ) {}
+}
+
+/**
+ * Superfork: a freehand stroke for the border-painting tools (provinces, the
+ * UCI country creator). While UIState.strokePainting is set, a single-pointer
+ * drag paints instead of panning the map; these carry it in screen
+ * coordinates.
+ */
+export class StrokeEvent implements GameEvent {
+  constructor(
+    public readonly phase: "start" | "move" | "end",
+    public readonly x: number,
+    public readonly y: number,
   ) {}
 }
 
@@ -965,6 +981,11 @@ export class InputHandler {
       this.lastPointerDownY = event.clientY;
 
       this.eventBus.emit(new MouseDownEvent(event.clientX, event.clientY));
+      if (this.uiState.strokePainting === true) {
+        this.eventBus.emit(
+          new StrokeEvent("start", event.clientX, event.clientY),
+        );
+      }
 
       // Start long-press timer for touch devices
       if (event.pointerType === "touch") {
@@ -1088,6 +1109,10 @@ export class InputHandler {
     }
     this.pointerDown = false;
     this.pointers.clear();
+    if (this.uiState.strokePainting === true) {
+      this.eventBus.emit(new StrokeEvent("end", event.clientX, event.clientY));
+      return;
+    }
 
     // Clean up long-press state
     if (this.longPressTimer !== null) {
@@ -1172,7 +1197,7 @@ export class InputHandler {
         this.gameView.inSpawnPhase() || // No Radial Menu during spawn phase, only spawn point selection
         this.uiState.ghostStructure !== null // Block radial menu on left click if building
       ) {
-        this.eventBus.emit(new MouseUpEvent(event.x, event.y));
+        this.eventBus.emit(new MouseUpEvent(event.x, event.y, event.shiftKey));
       } else {
         this.eventBus.emit(new ContextMenuEvent(event.clientX, event.clientY));
       }
@@ -1288,7 +1313,12 @@ export class InputHandler {
 
       // If shift is held OR touch long-press is active OR selection box already
       // started, continue emitting selection box updates
-      if (
+      if (this.uiState.strokePainting === true) {
+        // Painting a border: the drag paints, the map stays put.
+        this.eventBus.emit(
+          new StrokeEvent("move", event.clientX, event.clientY),
+        );
+      } else if (
         this.selectionBoxActive ||
         this.activeKeys.has(this.keybinds.boxSelectWarships) ||
         this.longPressActive
@@ -1486,8 +1516,10 @@ export class InputHandler {
     // Shifted digits and letter binds keep their fixed meanings below.
     const barItems = this.uiState.buildBarItems;
     const digit = shiftKey ? null : this.digitFromKeyCode(code);
-    if (barItems !== undefined && digit !== null && digit !== "0") {
-      return barItems[Number(digit) - 1] ?? null;
+    if (barItems !== undefined && digit !== null) {
+      // 0 sits after 9 on the key row, so it picks the tenth slot.
+      const slot = digit === "0" ? 9 : Number(digit) - 1;
+      return barItems[slot] ?? null;
     }
     for (const { key, type } of buildKeybinds) {
       if (this.keybindMatchesEvent({ code, shiftKey }, this.keybinds[key]))

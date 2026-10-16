@@ -52,7 +52,8 @@ export type ServerMessage =
   | ServerLobbyInfoMessage
   | ServerNewLobbyMessage
   | ServerPongMessage
-  | ServerRedirectMessage;
+  | ServerRedirectMessage
+  | ServerUciSpectatorsMessage;
 
 export type ServerTurnMessage = z.infer<typeof ServerTurnMessageSchema>;
 
@@ -63,6 +64,10 @@ export type ServerStartGameMessage = z.infer<
 export type ServerPingMessage = z.infer<typeof ServerPingMessageSchema>;
 
 export type ServerPongMessage = z.infer<typeof ServerPongMessageSchema>;
+
+export type ServerUciSpectatorsMessage = z.infer<
+  typeof ServerUciSpectatorsMessageSchema
+>;
 
 export type ServerDesyncMessage = z.infer<typeof ServerDesyncSchema>;
 
@@ -587,6 +592,18 @@ export const ServerRedirectMessageSchema = z.object({
   gameID: ID,
 });
 
+/**
+ * Superfork UCI: the game's spectators, sent only to a client that proved
+ * the UCI password, for the country creator's "who takes it" list.
+ */
+export const ServerUciSpectatorsMessageSchema = z.object({
+  type: z.literal("uci_spectators"),
+  spectators: z
+    .object({ clientID: MappedID, username: z.string().max(64) })
+    .array()
+    .max(500),
+});
+
 export const ServerMessageSchema = zb.discriminatedUnion("type", [
   ServerTurnMessageSchema,
   ServerPrestartMessageSchema,
@@ -599,6 +616,7 @@ export const ServerMessageSchema = zb.discriminatedUnion("type", [
   ServerPongMessageSchema,
   // Appended, never inserted: variant order is the wire tag (zbin/README.md).
   ServerRedirectMessageSchema,
+  ServerUciSpectatorsMessageSchema,
 ]);
 
 //

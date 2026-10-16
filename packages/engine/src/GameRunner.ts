@@ -27,6 +27,7 @@ import { simpleHash } from "@openfront/engine-lib/Util";
 import { EngineConfig } from "./configuration/EngineConfig";
 import { DoomsdayClockExecution } from "./execution/DoomsdayClockExecution";
 import { Executor } from "./execution/ExecutionManager";
+import { ProvinceRulesExecution } from "./execution/ProvinceRulesExecution";
 import { RecomputeRailClusterExecution } from "./execution/RecomputeRailClusterExecution";
 import { SpawnTimerExecution } from "./execution/SpawnTimerExecution";
 import { WinCheckExecution } from "./execution/WinCheckExecution";
@@ -189,6 +190,9 @@ export class GameRunner {
       );
     }
     this.game.addExecution(new WinCheckExecution());
+    if (this.game.config().provincesEnabled()) {
+      this.game.addExecution(new ProvinceRulesExecution());
+    }
     if (this.game.config().doomsdayClockConfig().enabled) {
       this.game.addExecution(new DoomsdayClockExecution());
     }
