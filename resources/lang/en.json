@@ -2357,6 +2357,10 @@
     "visit_store": "Visit store"
   },
   "radial_menu": {
+    "attack_cat_air_strikes": "Air strikes",
+    "attack_cat_aircraft": "Aircraft",
+    "attack_cat_naval": "Naval",
+    "attack_cat_nukes": "Missiles & nukes",
     "capital_description": "Promote the nearest city to your capital, or demote it",
     "capital_title": "Capital",
     "corvette_description": "On water: load troops (attack ratio). On land: land the troops it carries",

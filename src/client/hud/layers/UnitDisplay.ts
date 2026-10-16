@@ -168,7 +168,10 @@ export class UnitDisplay extends LitElement implements Controller {
 
     const cat = buildCategories[this.activeTab] ?? buildCategories[0];
     const items = categoryItems(cat).filter(
-      (i) => !this.game.config().isUnitDisabled(i.unitType),
+      (i) =>
+        !this.game.config().isUnitDisabled(i.unitType) &&
+        // Superfork: locked gear doesn't appear until researched.
+        myPlayer.hasUnlocked(i.unitType) !== false,
     );
     // Digit hotkeys follow the visible tab (see UIState.buildBarItems).
     if (this.uiState) {

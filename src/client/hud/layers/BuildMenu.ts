@@ -650,7 +650,8 @@ export class BuildMenu extends LitElement implements Controller {
   private visibleRows(): BuildItemDisplay[][] {
     const cat = buildCategories[this.activeTab];
     const enabled = (i: BuildItemDisplay) =>
-      !this.game?.config()?.isUnitDisabled(i.unitType);
+      !this.game?.config()?.isUnitDisabled(i.unitType) &&
+      this.game?.myPlayer()?.hasUnlocked(i.unitType) !== false;
     let items = cat ? categoryItems(cat).filter(enabled) : [];
     if (items.length === 0) items = flattenedBuildTable.filter(enabled);
 
