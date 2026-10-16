@@ -32,6 +32,7 @@ const makePlayer = (
         : true,
     isTraitor: () => opts?.isTraitor ?? false,
     isDisconnected: () => opts?.isDisconnected ?? false,
+    units: () => [],
   }) as unknown as import("../src/client/view").PlayerView;
 
 const makeParams = (opts?: Partial<MenuElementParams>): MenuElementParams => {

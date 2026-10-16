@@ -97,6 +97,12 @@ export const BANK_ACCRUAL_DENOMINATOR = 1_000_000n;
  * Payload prices are charged per strike, on top of the airframe when a new
  * bomber has to be bought because none is free.
  */
+/**
+ * How far (Manhattan tiles) from a corvette its troops can be landed. The
+ * radial menu offers the corvette within this range, and the engine refuses
+ * a landing order beyond it, so the two can't disagree.
+ */
+export const CORVETTE_LANDING_RANGE = 8;
 export const BLINDING_RADIUS = 30;
 export const BUNKER_BUSTER_RADIUS = 8;
 /** How long a blinding bomb keeps SAMs and silos offline. */

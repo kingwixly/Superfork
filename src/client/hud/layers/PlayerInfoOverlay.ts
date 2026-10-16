@@ -890,7 +890,8 @@ export class PlayerInfoOverlay extends LitElement implements Controller {
           ${unit.hasHealth()
             ? html` <div class="text-sm">Health: ${unit.health()}</div> `
             : ""}
-          ${unit.type() === UnitType.TransportShip
+          ${unit.type() === UnitType.TransportShip ||
+          (unit.type() === UnitType.Corvette && unit.troops() > 0)
             ? html`
                 <div class="text-sm">
                   Troops: ${renderTroops(unit.troops())}

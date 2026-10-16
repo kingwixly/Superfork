@@ -13,6 +13,7 @@ import {
 } from "@openfront/engine-api/game/GameTypes";
 import { Emoji, flattenedEmojiTable } from "@openfront/engine-api/Schemas";
 import { Config } from "@openfront/engine-lib/configuration/Config";
+import { CORVETTE_LANDING_RANGE } from "@openfront/engine-lib/configuration/SuperforkUnits";
 import { renderNumber } from "@openfront/engine-lib/Format";
 import { findClosestBy } from "@openfront/engine-lib/Util";
 import { assetUrl } from "@openfront/shared/AssetUrls";
@@ -794,13 +795,15 @@ function nearestBank(params: MenuElementParams) {
 }
 
 /** Radius, in tiles, within which the radial menu picks up a corvette. */
-const CORVETTE_SELECTION_RADIUS = 8;
+const CORVETTE_SELECTION_RADIUS = CORVETTE_LANDING_RANGE;
 
 /**
  * Corvette troop handling.
  *
- * Over your own water it LOADS a quarter of your army onto the nearest
- * corvette; over anyone's land it LANDS whatever that corvette is carrying.
+ * Over water it LOADS troops onto the nearest corvette (the attack-ratio
+ * slider's share of your army, like a boat); over land it LANDS whatever that
+ * corvette is carrying: an attack on enemy or neutral land, reinforcements
+ * on your own or an ally's.
  * Both verbs on one slot because they are never both meaningful at the same
  * place, and the corvette's whole point is that the two are separated in
  * time - load now, land where and when you choose.
@@ -824,9 +827,10 @@ export const corvetteElement: MenuElement = {
           params.tile,
         );
       } else {
+        const ratio = params.uiState?.attackRatio ?? 0.25;
         params.playerActionHandler.handleLoadCorvette(
           corvette.id(),
-          Math.floor(params.myPlayer.troops() / 4),
+          Math.floor(params.myPlayer.troops() * ratio),
         );
       }
     }
@@ -1216,13 +1220,19 @@ export const rootMenuElement: MenuElement = {
     const showDonateInsteadOfAttack =
       isFriendlyTarget(params) && !isDisconnected && !hasBuildableAttacks;
 
+    // Superfork: the corvette's job is at sea (loading) and on someone else's
+    // land (landing), neither of which is "own territory" - it used to sit
+    // only in the own-territory ring, so it could never do either. Offer it
+    // wherever one of your corvettes is in range, and only then.
+    const corvetteNear = nearestCorvette(params) !== null;
+
     const menuItems: (MenuElement | null)[] = [
       infoMenuElement,
       ...(isOwnTerritory
         ? [
             deleteUnitElement,
             bankWithdrawElement,
-            corvetteElement,
+            corvetteNear ? corvetteElement : null,
             capitalElement,
             allyRequestElement,
             buildMenuElement,
@@ -1236,6 +1246,7 @@ export const rootMenuElement: MenuElement = {
             showDonateInsteadOfAttack
               ? donateGoldRadialElement
               : attackMenuElement,
+            corvetteNear ? corvetteElement : null,
           ]),
     ];
 
