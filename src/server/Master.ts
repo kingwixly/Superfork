@@ -28,6 +28,9 @@ import { startPolling } from "./PollingLoop";
 import { renderAppShell } from "./RenderHtml";
 import { ServerEnv } from "./ServerEnv";
 import { applyStaticAssetCacheControl } from "./StaticAssetCache";
+import { INTERNAL_SECRET_ENV } from "./accounts/AccountClient";
+import { accountRouter } from "./accounts/AccountRoutes";
+import { AccountStore } from "./accounts/AccountStore";
 import { createGateFromEnv } from "./gate/GateFromEnv";
 
 const playlist = new MapPlaylist();
@@ -61,6 +64,19 @@ app.use("/__gate", (req, res, next) => {
 });
 
 app.use(express.json());
+
+// Superfork accounts (coins, research tree). Built in startMaster(), like the
+// gate, so worker processes never open the accounts file.
+let accountRouters: { api: Router; internal: Router } | null = null;
+app.use("/api/account", (req, res, next) => {
+  if (accountRouters === null) return void res.status(503).end();
+  setNoStoreHeaders(res);
+  accountRouters.api(req, res, next);
+});
+app.use("/internal/account", (req, res, next) => {
+  if (accountRouters === null) return void res.status(404).end();
+  accountRouters.internal(req, res, next);
+});
 
 // Serve the shared app shell for the root document.
 app.use(async (req, res, next) => {
@@ -186,6 +202,18 @@ export async function startMaster() {
     warn: (m) => log.warn(m),
     error: (m, e) => log.error(m, e),
   }).router;
+  // A fresh secret per boot for worker -> master account calls; forked
+  // workers inherit it through the environment.
+  process.env[INTERNAL_SECRET_ENV] = crypto.randomBytes(32).toString("hex");
+  accountRouters = accountRouter(
+    new AccountStore(
+      path.join(
+        process.env.GATE_DATA_DIR ?? path.join(process.cwd(), "data", "gate"),
+        "accounts.json",
+      ),
+    ),
+    process.env[INTERNAL_SECRET_ENV]!,
+  );
   log.info(`Setting up ${ServerEnv.numWorkers()} workers...`);
 
   // A server that registers schedules nothing until the API calls it open: a

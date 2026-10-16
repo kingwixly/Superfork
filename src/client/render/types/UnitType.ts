@@ -36,6 +36,7 @@ export const UT_AIRSTRIP = "Airstrip" as const;
 export const UT_AIRFIELD = "Airfield" as const;
 export const UT_INTERNATIONAL_AIRPORT = "International Airport" as const;
 export const UT_EMBASSY = "Embassy" as const;
+export const UT_LAB = "Lab" as const;
 export const UT_NEUTRON_BOMB = "Neutron Bomb" as const;
 export const UT_EMP_BOMB = "EMP Burst" as const;
 export const UT_ASBM_WARHEAD = "ASBM Warhead" as const;
@@ -89,6 +90,7 @@ export const STRUCTURE_TYPES: ReadonlySet<string> = new Set([
   UT_AIRFIELD,
   UT_INTERNATIONAL_AIRPORT,
   UT_EMBASSY,
+  UT_LAB,
 ]);
 
 export const NUKE_TYPES: ReadonlySet<string> = new Set([

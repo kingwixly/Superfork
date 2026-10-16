@@ -1,4 +1,4 @@
-import { RankedType } from "@openfront/engine-api/game/GameTypes";
+import { GameType, RankedType } from "@openfront/engine-api/game/GameTypes";
 import { GameUpdateType } from "@openfront/engine-api/game/GameUpdates";
 import type { GameXpEligible, Progress } from "@openfront/shared/ApiSchemas";
 import { Pattern } from "@openfront/shared/CosmeticSchemas";
@@ -33,6 +33,7 @@ import {
   momentShareText,
   momentShareUrl,
 } from "../../MomentShare";
+import { reportGameEnd } from "../../Progress";
 import { MAX_PRESTIGE, reachedLegendThisGame } from "../../Progression";
 import { resolveXpAccount } from "../../ProgressionAccount";
 import { fetchProgressionConfig, pollGameXp } from "../../ProgressionApi";
@@ -135,6 +136,14 @@ export class WinModal extends LitElement implements Controller {
         <h2 class="m-0 mb-4 text-[26px] text-center text-white shrink-0">
           ${this._title || ""}
         </h2>
+        ${this.earned !== null && (this.earned.coins > 0 || this.earned.rp > 0)
+          ? html`<p class="-mt-2 mb-3 text-center text-sm text-amber-200">
+              ${translateText("progress.earned", {
+                coins: this.earned.coins,
+                rp: this.earned.rp,
+              })}
+            </p>`
+          : ""}
         <div class="min-h-0 flex-1 overflow-y-auto pr-0.5">
           <game-xp-panel
             .view=${this.xpView}
@@ -748,6 +757,11 @@ export class WinModal extends LitElement implements Controller {
     const updates = this.game.updatesSinceLastTick();
     const winUpdates = updates?.[GameUpdateType.Win] ?? [];
     if (winUpdates.length > 0) void this.updateXp(true);
+    if (winUpdates.length > 0 || (this.hasShownDeathModal && !this.paidOut)) {
+      // Superfork: coins for a win, research points either way.
+      this.paidOut = true;
+      queueMicrotask(() => void this.payOut());
+    }
     winUpdates.forEach((wu) => {
       if (wu.winner === undefined) {
         // Match cancelled (e.g. a ranked 2v2 that didn't fill or fully
@@ -808,6 +822,29 @@ export class WinModal extends LitElement implements Controller {
         this.show();
       }
     });
+  }
+
+  /** Superfork: what this game paid out (shown under the title). */
+  @state() private earned: { coins: number; rp: number } | null = null;
+  private paidOut = false;
+
+  private async payOut(): Promise<void> {
+    // Never let a payout problem get in the way of the end-of-game screen.
+    try {
+      const me = this.game.myPlayer();
+      if (me === null || !me.hasSpawned()) return;
+      const config = this.game.config().gameConfig();
+      this.earned = await reportGameEnd({
+        gameID: this.game.gameID(),
+        multiplayer: config.gameType !== GameType.Singleplayer,
+        difficulty: config.difficulty,
+        won: this.isWin,
+        researchPoints: me.researchPoints(),
+        unlockAll: config.unlockAll === true,
+      });
+    } catch (e) {
+      console.warn("progress payout failed", e);
+    }
   }
 
   private playEndOfGameSound(): void {

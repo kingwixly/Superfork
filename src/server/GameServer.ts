@@ -8,6 +8,7 @@ import {
   RankedType,
 } from "@openfront/engine-api/game/GameTypes";
 import { maps } from "@openfront/engine-api/game/Maps.gen";
+import { coinsForWin } from "@openfront/engine-api/game/Progression";
 import {
   AllPlayersStats,
   ClientID,
@@ -64,6 +65,7 @@ import ipAnonymize from "ip-anonymize";
 import { Logger } from "winston";
 import WebSocket from "ws";
 import { z } from "zod";
+import { rewardAccount } from "./accounts/AccountClient";
 import { archive, finalizeGameRecord } from "./Archive";
 import { Client } from "./Client";
 import { applyGameConfigPatch, hostCheatsEnabled } from "./ConfigPatch";
@@ -1218,6 +1220,7 @@ export class GameServer {
         clientID: c.clientID,
         cosmetics: c.cosmetics,
         isLobbyCreator: this.lobbyCreatorID === c.clientID,
+        ...(c.progression !== undefined ? { progression: c.progression } : {}),
         friends: friendsFor(c),
         teamIndex: this.matchmakingTeamIndex(c),
       })),
@@ -2177,6 +2180,41 @@ export class GameServer {
       });
   }
 
+  /**
+   * Superfork: pay coins to the winners and bank every player's research
+   * points, for players with accounts. Guests' clients pay themselves into
+   * their own cookie. Games with everything unlocked pay nothing.
+   */
+  private payOut(
+    winner: { winner?: Winner; allPlayersStats: AllPlayersStats } | null,
+  ): void {
+    if (winner === null || this.gameConfig.unlockAll === true) return;
+    const w = winner.winner;
+    const winners = new Set<string>(
+      w === undefined
+        ? []
+        : w[0] === "player"
+          ? (w.slice(1) as string[])
+          : w[0] === "team"
+            ? (w.slice(2) as string[])
+            : [],
+    );
+    const coins = coinsForWin(this.gameConfig.difficulty, true);
+    for (const player of this.gameStartInfo.players) {
+      const accountId = this.clients.get(player.clientID)?.accountId;
+      if (accountId === null || accountId === undefined) continue;
+      const rp = Number(
+        winner.allPlayersStats[player.clientID]?.researchPoints ?? 0,
+      );
+      rewardAccount(
+        accountId,
+        this.id,
+        winners.has(player.clientID) ? coins : 0,
+        rp,
+      );
+    }
+  }
+
   private archiveGame(
     winner: { winner?: Winner; allPlayersStats: AllPlayersStats } | null,
     // See GameEndInfoSchema.statsAgreed and settleWinner.
@@ -2213,9 +2251,13 @@ export class GameServer {
           teamIndex: player.teamIndex,
           friends: player.friends,
           isLobbyCreator: player.isLobbyCreator,
+          ...(player.progression !== undefined
+            ? { progression: player.progression }
+            : {}),
         } satisfies PlayerRecord;
       },
     );
+    this.payOut(winner);
     this.telemetry.noteArchiveAttempted();
     this.deps.archive(
       createPartialGameRecord(
