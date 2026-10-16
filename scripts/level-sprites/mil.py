@@ -3,7 +3,6 @@ from kit import *
 ROOT = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."))
 from PIL import Image
 B = ROOT + '/resources/images/buildings/'
-silo_base = Image.open(B + 'silo1.png').convert('RGBA')
 sam_base = Image.open(B + 'silo4.png').convert('RGBA')
 
 CON = (hexc('#b8bec2'), hexc('#8e959a'), hexc('#666c71'))
@@ -33,44 +32,6 @@ def hazard_rim(c, n):
         col = YEL if (t // 2) % 2 == 0 else BLK
         x, y = P(-n / 2 + t / 2, n / 2, 1); c.px(x, y, col)
         x, y = P(n / 2, n / 2 - t / 2, 1); c.px(x, y, col)
-
-# ---------------- Missile silo ----------------
-def silo_t2():
-    c = Canvas(16, 24)
-    c.box(-4, -4, 0, 8, 8, 1, *CON)
-    hazard_rim(c, 8)
-    c.box(-2, -2, 1, 4, 4, 0.5, BLK, BLK, BLK)                     # open shaft
-    c.box(-3.5, -1, 1, 1.5, 2, 1, *STEEL)                          # blast door halves
-    c.box(2, -1, 1, 1.5, 2, 1, *STEEL)
-    x, y = c.P(0, 0, 1); missile(c, x, y, 12)
-    return c.im
-
-def silo_t3():
-    c = Canvas(16, 25)
-    c.box(-5, -5, 0, 10, 10, 1, *CON)
-    hazard_rim(c, 10)
-    # service tower (red lattice) beside the missile
-    for k in range(1, 17, 2): c.box(-5, -2, k, 2, 2, 1, hexc('#e85a4a'), hexc('#c43a2c'), hexc('#8a2419'))
-    c.line(c.P(-3, -1, 14), c.P(-0.5, 0, 14), WHITE_DD)            # umbilical arm
-    c.box(-2, -2, 1, 4, 4, 0.5, BLK, BLK, BLK)
-    x, y = c.P(0, 0, 1); missile(c, x, y, 17, band=BLK)
-    for (i, j) in ((4, -4), (-4, 4)):                               # floodlights
-        x, y = c.P(i, j, 1); c.line((x, y), (x, y - 4), WHITE_DD); c.px(x, y - 5, hexc('#ffe28a'))
-    return c.im
-
-def silo_t4():
-    c = Canvas(16, 25)
-    c.box(-5, -5, 0, 10, 10, 1, *DARK)
-    c.line(c.P(-5, 5, 1), c.P(5, 5, 1), CYAN); c.line(c.P(5, 5, 1), c.P(5, -5, 1), CYAN)
-    x, y = c.P(0, 0, 1)
-    c.d.ellipse([x - 7, y - 3, x + 7, y + 3], outline=CYAN)          # launch ring
-    c.d.ellipse([x - 4, y - 2, x + 4, y + 2], outline=MAG)
-    for (i, j) in ((-4, -4), (4, -4), (-4, 4), (4, 4)):              # energy pylons
-        px_, py_ = c.P(i, j, 1)
-        c.line((px_, py_), (px_, py_ - 6), DARK[1]); c.px(px_, py_ - 7, CYAN)
-    missile(c, x, y - 2, 17, body=(hexc('#e8eef5'), hexc('#9fb0c4')), nose=(MAG, hexc('#a23a8a')), band=CYAN, fin=hexc('#5a6578'))
-    for k in (1, 2): c.px(x, y - 2 + k, CYAN if k == 1 else hexc('#a8fbff'))   # engine glow
-    return glow(glow(c.im, CYAN, .3), MAG, .3)
 
 # ---------------- SAM ----------------
 def tube_box(c, x, y, length, cells, pal, cap=BLK, tip=None):

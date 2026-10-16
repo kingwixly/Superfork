@@ -5,7 +5,8 @@ Missile Silo and SAM Launcher.
 Each tier is a different, more advanced building rather than more copies of
 the old one: modern glass city -> high-tech skyline -> neon arcology spire;
 jib crane -> container gantry -> tractor-beam gantry; hardened silo ->
-launch complex -> energy launch pad; tube battery -> phased-array battery ->
+MIRV silo -> alloy silo with glowing seams (always the original's
+star pad, cone and warhead, never a rocket); tube battery -> phased-array battery ->
 rail turret.
 
 Drawn at 32x32 with a small isometric pixel kit (kit.py), then doubled to
@@ -18,7 +19,7 @@ resources/icons/structures_hd/levels/<name>_<tier>.png.
 import os, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from kit import epx, edge_clear, sheet
-import city, port, mil
+import city, port, mil, silo
 
 ROOT = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."))
 OUT = os.path.join(ROOT, "resources/icons/structures_hd/levels")
@@ -26,7 +27,7 @@ OUT = os.path.join(ROOT, "resources/icons/structures_hd/levels")
 TIERS = {
     "city": (city.base, city.t2, city.t3, city.t4),
     "port": (port.base, port.t2, port.t3, port.t4),
-    "missile_silo": (mil.silo_base, mil.silo_t2, mil.silo_t3, mil.silo_t4),
+    "missile_silo": (silo.base, silo.t2, silo.t3, silo.t4),
     "sam_launcher": (mil.sam_base, mil.sam_t2, mil.sam_t3, mil.sam_t4),
 }
 
