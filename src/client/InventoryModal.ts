@@ -39,6 +39,7 @@ import {
   ResolvedCosmetic,
   resolvedToPlayerPattern,
 } from "./Cosmetics";
+import { DEVELOPER_FLAG, isSiteDeveloper } from "./DeveloperStatus";
 import {
   CROWN_KEY,
   EFFECTS_KEY,
@@ -55,15 +56,24 @@ type OwnershipState = "loading" | "guest" | "loaded" | "error";
 /** Stand-in when the cosmetics API is unreachable (always, self-hosted). */
 const EMPTY_CATALOG: Cosmetics = { patterns: {}, flags: {} };
 
-function countryFlag(name: string, code: string): Flag {
+function countryFlag(name: string, code: string, rarity = "common"): Flag {
   return {
     name,
     url: assetUrl(`/flags/${code}.svg`),
     product: null,
-    rarity: "common",
+    rarity,
     affiliateCode: null,
   };
 }
+
+/** Superfork: the developer-only flag, at the top rarity. */
+const DEVELOPER_FLAG_TILE: ResolvedCosmetic = {
+  type: "flag",
+  cosmetic: countryFlag(DEVELOPER_FLAG.name, DEVELOPER_FLAG.code, "legendary"),
+  colorPalette: null,
+  relationship: "owned",
+  key: DEVELOPER_FLAG.ref,
+};
 
 /**
  * The player's owned cosmetics, grouped into equip categories.
@@ -77,6 +87,8 @@ export class InventoryModal extends BaseModal {
   @state() private loadFailed = false;
   @state() private ownershipState: OwnershipState = "loading";
   @state() private previewingCosmetic: ResolvedCosmetic | null = null;
+  /** Superfork: the gate admin also gets the developer-only flag. */
+  @state() private siteDeveloper = false;
 
   private cosmetics: Cosmetics | null = null;
   private userSettings: UserSettings = new UserSettings();
@@ -91,7 +103,12 @@ export class InventoryModal extends BaseModal {
         items: ResolvedCosmetic[];
       }
     | undefined;
-  private readonly countryFlagTiles = Countries.filter(
+  private get countryFlagTiles(): ResolvedCosmetic[] {
+    return this.siteDeveloper
+      ? [DEVELOPER_FLAG_TILE, ...this.baseCountryFlagTiles]
+      : this.baseCountryFlagTiles;
+  }
+  private readonly baseCountryFlagTiles = Countries.filter(
     (country) => country.code !== "xx" && country.restricted !== true,
   ).map<ResolvedCosmetic>((country) => ({
     type: "flag",
@@ -775,6 +792,7 @@ export class InventoryModal extends BaseModal {
   }
 
   protected async onOpen(): Promise<void> {
+    void isSiteDeveloper().then((dev) => (this.siteDeveloper = dev));
     if (
       this.ownershipState === "loading" ||
       (this.cosmetics === null && !this.loadFailed) ||

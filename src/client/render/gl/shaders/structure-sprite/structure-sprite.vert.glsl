@@ -6,7 +6,7 @@ precision highp int;
 
 layout(location = 0) in vec2 aPos;
 layout(location = 1) in vec4 aInst0; // x, y, ownerID, state (0 ok, 1 building, 2 EMP)
-layout(location = 2) in vec2 aInst1; // atlasIdx, markedForDeletion
+layout(location = 2) in vec3 aInst1; // atlasIdx, markedForDeletion, tier
 
 uniform mat3  uCamera;
 uniform int   uMode;          // 0 = footprint, 1 = sprite
@@ -21,6 +21,7 @@ flat out float vOwnerID;
 flat out float vState;
 flat out float vAtlasIdx;
 flat out float vMarked;
+flat out float vTier;
 
 void main() {
   vTile = aInst0.xy;
@@ -28,6 +29,7 @@ void main() {
   vState = aInst0.w;
   vAtlasIdx = aInst1.x;
   vMarked = aInst1.y;
+  vTier = aInst1.z;
 
   vec2 center = aInst0.xy + 0.5;
   vec2 worldPos;

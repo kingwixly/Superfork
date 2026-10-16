@@ -280,11 +280,15 @@ export function createGate(opts: GateOptions): Gate {
       return;
     }
     const token = deviceToken(req);
-    const ok = isAdmin(req) || (token !== undefined && store.isApproved(token));
+    const admin = isAdmin(req);
+    const ok = admin || (token !== undefined && store.isApproved(token));
     if (!ok) {
       res.status(401).end();
       return;
     }
+    // Superfork: nginx forwards this to the game workers (auth_request_set),
+    // which is how the developer-only flag knows it is the admin joining.
+    if (admin) res.setHeader("X-SF-Developer", "1");
     // Keep the device cookie alive past browser lifetime caps: refresh it
     // when the app shell is loaded. nginx copies this header onto the
     // response for "/" (auth_request_set in nginx.conf).

@@ -7,9 +7,11 @@ import {
   BLINDING_DURATION,
   BLINDING_RADIUS,
   CAPITAL_STRIKE_TROOP_LOSS,
+  LARGE_BOMB_FIZZLE_RADIUS,
 } from "@openfront/engine-lib/configuration/SuperforkUnits";
 import { capitalPromotionLockedUntil } from "@openfront/engine/execution/CapitalExecution";
 import { ConstructionExecution } from "@openfront/engine/execution/ConstructionExecution";
+import { fizzle } from "@openfront/engine/execution/StrikeBomberExecution";
 import { Game, Player } from "@openfront/engine/game/Game";
 import { setup } from "./util/Setup";
 
@@ -189,15 +191,36 @@ describe("Strike bombers", () => {
     expect(next).toBe(15_000_000n);
   });
 
-  test("a loaded large bomber that is shot down blows up where it falls", () => {
+  test("a loaded large bomber that is shot down fizzles, it does not nuke", () => {
     buy(UnitType.LargeBomber);
     order(UnitType.BomberHydrogenDrop, foeTile());
     run(40);
     const bomber = me.units(UnitType.LargeBomber)[0];
     const at = bomber.tile();
     expect(me.units(UnitType.LargeBomber).length).toBe(1);
+    const owner = game.owner(at);
+    const troopsBefore = owner.isPlayer() ? (owner as Player).troops() : 0;
     bomber.delete(true, foe);
     run(5);
-    expect(game.owner(at).isPlayer()).toBe(false);
+    // A crash, not a nuke: the ground keeps its owner, nothing is in flight.
+    expect(game.owner(at)).toBe(owner);
+    expect(game.units(UnitType.HydrogenBomb).length).toBe(0);
+    if (owner.isPlayer()) {
+      expect((owner as Player).troops()).toBeLessThan(troopsBefore);
+    }
+  });
+
+  test("the fizzle wrecks structures right at the crash, not capitals", () => {
+    const t = foeTile();
+    const city = foe.buildUnit(UnitType.City, t, {});
+    const far = land.find(
+      (x) =>
+        game.owner(x) === foe &&
+        game.manhattanDist(x, t) > LARGE_BOMB_FIZZLE_RADIUS * 3,
+    )!;
+    const farCity = foe.buildUnit(UnitType.City, far, {});
+    fizzle(game, me, t);
+    expect(city.isActive()).toBe(false);
+    expect(farCity.isActive()).toBe(true);
   });
 });

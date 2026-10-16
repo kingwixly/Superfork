@@ -3,7 +3,12 @@ import {
   PlayerType,
   UnitType,
 } from "@openfront/engine-api/game/GameTypes";
-import { CorvetteExecution } from "@openfront/engine/execution/CorvetteExecution";
+import { CORVETTE_LANDING_RANGE } from "@openfront/engine-lib/configuration/SuperforkUnits";
+import {
+  CorvetteExecution,
+  LaunchCorvetteExecution,
+  LoadCorvetteExecution,
+} from "@openfront/engine/execution/CorvetteExecution";
 import { Game, Player } from "@openfront/engine/game/Game";
 import { setup } from "./util/Setup";
 
@@ -120,5 +125,66 @@ describe("Corvette", () => {
     expect(cv.maxHealth).toBeLessThan(d.maxHealth ?? 0);
     expect(cv.maxHealth).toBeLessThan(w.maxHealth ?? 0);
     expect(cv.cost(game, me)).toBeLessThan(d.cost(game, me));
+  });
+
+  // The orders a player's radial-menu click sends, run through the game the
+  // way a turn does - the static helpers above were tested, this path wasn't.
+  describe("orders (load_corvette / launch_corvette)", () => {
+    function run(exec: LoadCorvetteExecution | LaunchCorvetteExecution) {
+      game.addExecution(exec);
+      game.executeNextTick();
+      game.executeNextTick();
+    }
+
+    /** A water tile next to the shore and the land tile beside it. */
+    function shorePair(): { sea: number; shore: number } {
+      for (const t of land) {
+        if (!game.isShore(t)) continue;
+        for (const n of game.neighbors(t)) {
+          if (game.isWater(n)) return { sea: n, shore: t };
+        }
+      }
+      throw new Error("no shore on the test map");
+    }
+
+    test("loading by order moves troops onto the hull", () => {
+      const { sea } = shorePair();
+      const c = corvetteAt(me, sea);
+      run(new LoadCorvetteExecution(me, c.id(), 400));
+      expect(c.troops()).toBe(400);
+    });
+
+    test("landing by order on enemy land in range starts an attack", () => {
+      const { sea, shore } = shorePair();
+      foe.conquer(shore);
+      const c = corvetteAt(me, sea);
+      run(new LoadCorvetteExecution(me, c.id(), 400));
+      const foeTiles = foe.numTilesOwned();
+      run(new LaunchCorvetteExecution(me, c.id(), shore));
+      expect(c.troops()).toBe(0);
+      expect(c.isActive()).toBe(true);
+      expect(game.owner(shore)).toBe(me);
+      expect(foe.numTilesOwned()).toBeLessThan(foeTiles);
+    });
+
+    test("a landing order beyond the corvette's range is refused", () => {
+      const { sea } = shorePair();
+      const far = land.find(
+        (t) => game.manhattanDist(t, sea) > CORVETTE_LANDING_RANGE + 5,
+      )!;
+      const c = corvetteAt(me, sea);
+      run(new LoadCorvetteExecution(me, c.id(), 400));
+      run(new LaunchCorvetteExecution(me, c.id(), far));
+      expect(c.troops()).toBe(400);
+    });
+
+    test("an enemy's load order does nothing", () => {
+      const { sea } = shorePair();
+      const c = corvetteAt(me, sea);
+      const before = foe.troops();
+      run(new LoadCorvetteExecution(foe, c.id(), 400));
+      expect(c.troops()).toBe(0);
+      expect(foe.troops()).toBeGreaterThanOrEqual(before - 1);
+    });
   });
 });

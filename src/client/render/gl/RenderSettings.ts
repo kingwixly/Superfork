@@ -235,6 +235,13 @@ export interface RenderSettings {
       /** Diamond radius of the inner territory-coloured footprint. */
       territoryRadius: number;
       territoryAlpha: number;
+      /**
+       * Lowest level that reaches sprite tiers 2, 3 and 4, per structure
+       * type ("City", "Capital", …); types without an entry use "default".
+       * E.g. [5, 20, 50]: levels 1-4 tier 1, 5-19 tier 2, 20-49 tier 3,
+       * 50+ tier 4. Tiers without their own art reuse the tier below.
+       */
+      levelTiers: Record<string, number[]>;
     };
   };
   structureLevel: {

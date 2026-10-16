@@ -12,7 +12,9 @@
  *
  * Sprites come from `atlases/structure-sprite-atlas.png`, packed by
  * scripts/generate-sprite-atlases.mjs from resources/icons/structures_hd/ in
- * STRUCTURE_ORDER, the same column contract as the polygon icon atlas.
+ * STRUCTURE_ORDER, the same column contract as the polygon icon atlas. Each
+ * row is a level tier (see `spriteTier`), so a building's sprite can change
+ * as it levels up.
  */
 
 import type { RendererConfig, UnitState } from "../../types";
@@ -29,8 +31,13 @@ import vertSrc from "../shaders/structure-sprite/structure-sprite.vert.glsl?raw"
 const spriteAtlasUrl = assetUrl("atlases/structure-sprite-atlas.png");
 
 const ATLAS_COLS = STRUCTURE_ORDER.length;
-// Per-instance: x, y, ownerID, state, atlasIdx, markedForDeletion
-const FLOATS_PER_INSTANCE = 6;
+/**
+ * Rows in the sprite atlas, one per level tier. MUST match SPRITE_TIERS in
+ * scripts/generate-sprite-atlases.mjs.
+ */
+export const SPRITE_TIERS = 4;
+// Per-instance: x, y, ownerID, state, atlasIdx, markedForDeletion, tier
+const FLOATS_PER_INSTANCE = 7;
 const BYTES_PER_INSTANCE = FLOATS_PER_INSTANCE * 4;
 
 /**
@@ -42,6 +49,24 @@ export function spriteBlend(settings: RenderSettings, zoom: number): number {
   if (!s.enabled) return 0;
   const t = (zoom - s.zoom) / Math.max(s.fadeRange, 1e-3);
   return Math.min(1, Math.max(0, t));
+}
+
+/**
+ * Which atlas row (0-based tier) a structure at `level` uses, from
+ * `structure.sprites.levelTiers`.
+ */
+export function spriteTier(
+  settings: RenderSettings,
+  unitType: string,
+  level: number,
+): number {
+  const tiers = settings.structure.sprites.levelTiers;
+  const thresholds = tiers[unitType] ?? tiers.default ?? [];
+  let tier = 0;
+  for (const min of thresholds) {
+    if (level >= min) tier++;
+  }
+  return Math.min(tier, SPRITE_TIERS - 1);
 }
 
 export class StructureSpritePass {
@@ -93,7 +118,11 @@ export class StructureSpritePass {
     this.program = createProgram(
       gl,
       shaderSrc(vertSrc, {}),
-      shaderSrc(fragSrc, { PALETTE_SIZE: getPaletteSize(), ATLAS_COLS }),
+      shaderSrc(fragSrc, {
+        PALETTE_SIZE: getPaletteSize(),
+        ATLAS_COLS,
+        ATLAS_ROWS: SPRITE_TIERS,
+      }),
       "StructureSpritePass",
     );
     const loc = (n: string) => gl.getUniformLocation(this.program, n)!;
@@ -154,7 +183,7 @@ export class StructureSpritePass {
     gl.vertexAttribPointer(1, 4, gl.FLOAT, false, BYTES_PER_INSTANCE, 0);
     gl.vertexAttribDivisor(1, 1);
     gl.enableVertexAttribArray(2);
-    gl.vertexAttribPointer(2, 2, gl.FLOAT, false, BYTES_PER_INSTANCE, 16);
+    gl.vertexAttribPointer(2, 3, gl.FLOAT, false, BYTES_PER_INSTANCE, 16);
     gl.vertexAttribDivisor(2, 1);
     gl.bindVertexArray(null);
   }
@@ -224,6 +253,7 @@ export class StructureSpritePass {
       f[off + 3] = unit.underConstruction ? 1 : unit.disabled ? 2 : 0;
       f[off + 4] = col;
       f[off + 5] = unit.markedForDeletion !== false ? 1 : 0;
+      f[off + 6] = spriteTier(this.settings, unit.unitType, unit.level);
       count++;
     }
     this.instanceCount = count;

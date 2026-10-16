@@ -1,4 +1,8 @@
 import {
+  DEVELOPER_FLAG_REF,
+  DEVELOPER_FLARE,
+} from "@openfront/shared/DeveloperFlag";
+import {
   FailOpenPrivilegeChecker,
   PrivilegeCheckerImpl,
   resolveVerifiedJoin,
@@ -158,6 +162,22 @@ describe("Flag validation in isAllowed", () => {
   test("rejects invalid country code", () => {
     const result = flagChecker.isAllowed([], { flag: "country:zzzz" });
     expect(result.type).toBe("forbidden");
+  });
+
+  test("superfork: the developer flag needs the developer flare", () => {
+    expect(flagChecker.isAllowed([], { flag: DEVELOPER_FLAG_REF }).type).toBe(
+      "forbidden",
+    );
+    expect(
+      flagChecker.isAllowed(["flag:*"], { flag: DEVELOPER_FLAG_REF }).type,
+    ).toBe("forbidden");
+    const ok = flagChecker.isAllowed([DEVELOPER_FLARE], {
+      flag: DEVELOPER_FLAG_REF,
+    });
+    expect(ok.type).toBe("allowed");
+    if (ok.type === "allowed") {
+      expect(ok.cosmetics.flag).toBe("/flags/SuperFront Developer.svg");
+    }
   });
 
   test("rejects flag with no prefix", () => {

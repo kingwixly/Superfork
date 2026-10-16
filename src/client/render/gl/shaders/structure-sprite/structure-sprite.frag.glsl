@@ -25,6 +25,7 @@ flat in float vOwnerID;
 flat in float vState;
 flat in float vAtlasIdx;
 flat in float vMarked;
+flat in float vTier;
 
 out vec4 fragColor;
 
@@ -67,8 +68,11 @@ void main() {
     return;
   }
 
-  // Sprite: sample this structure's column.
-  vec2 uv = vec2((vAtlasIdx + vUV.x) / float(ATLAS_COLS), vUV.y);
+  // Sprite: this structure's column, this level tier's row. Inset half a
+  // texel so filtering never pulls in the neighbouring cell.
+  vec2 cell = vec2(float(ATLAS_COLS), float(ATLAS_ROWS));
+  vec2 inset = clamp(vUV, vec2(0.5 / 64.0), vec2(1.0 - 0.5 / 64.0));
+  vec2 uv = (vec2(vAtlasIdx, vTier) + inset) / cell;
   vec4 c = texture(uAtlas, uv);
   if (c.a < 0.02) discard;
   vec3 rgb = c.rgb;

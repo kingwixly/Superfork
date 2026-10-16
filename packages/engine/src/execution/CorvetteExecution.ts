@@ -1,5 +1,6 @@
 import { TileRef } from "@openfront/engine-api/game/GameMap";
 import { UnitType } from "@openfront/engine-api/game/GameTypes";
+import { CORVETTE_LANDING_RANGE } from "@openfront/engine-lib/configuration/SuperforkUnits";
 import { Execution, Game, Player, Unit } from "../game/Game";
 import type { ExecRecord } from "../snapshot/SnapshotContext";
 import { unsnapshottable } from "../snapshot/Unsnapshottable";
@@ -81,6 +82,12 @@ export class LaunchCorvetteExecution implements Execution {
     // Troops land on ground. conquer() throws on water and that kills the
     // worker - the same crash transport jets shipped with.
     if (!mg.isLand(this.tile)) return;
+    // Landing is only possible near the hull: the menu offers it within this
+    // range, and an order from farther away (stale click, crafted intent) is
+    // dropped rather than letting troops teleport across the map.
+    if (mg.manhattanDist(corvette.tile(), this.tile) > CORVETTE_LANDING_RANGE) {
+      return;
+    }
     CorvetteExecution.deploy(mg, corvette, this.tile);
   }
 

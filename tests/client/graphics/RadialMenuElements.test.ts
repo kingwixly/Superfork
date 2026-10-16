@@ -97,6 +97,7 @@ describe("RadialMenuElements", () => {
       isPlayer: vi.fn(() => true),
       isTraitor: vi.fn(() => false),
       isDisconnected: vi.fn(() => false),
+      units: vi.fn(() => []),
     } as unknown as PlayerView;
 
     mockGame = {
@@ -354,6 +355,26 @@ describe("RadialMenuElements", () => {
       expect(attackMenu).toBeDefined();
       expect(buildMenu).toBeUndefined();
       expect(boatMenu).toBeDefined();
+    });
+
+    // Superfork: the corvette's work is at sea and on other players' land,
+    // so it must show up off your own territory when one is in range.
+    it("offers the corvette on enemy land when one of yours is in range", () => {
+      const enemyPlayer = {
+        id: () => 2,
+        isPlayer: vi.fn(() => true),
+      } as unknown as PlayerView;
+      mockGame.owner = vi.fn(() => enemyPlayer);
+      (mockGame as any).manhattanDist = vi.fn(() => 3);
+      (mockPlayer as any).units = vi.fn(() => [{ id: () => 7, tile: () => 1 }]);
+
+      const subMenu = rootMenuElement.subMenu!(mockParams);
+      expect(subMenu.find((item) => item.id === Slot.Corvette)).toBeDefined();
+    });
+
+    it("leaves the corvette off the ring when none is in range", () => {
+      const subMenu = rootMenuElement.subMenu!(mockParams);
+      expect(subMenu.find((item) => item.id === Slot.Corvette)).toBeUndefined();
     });
 
     it("should include info menu in both cases", () => {

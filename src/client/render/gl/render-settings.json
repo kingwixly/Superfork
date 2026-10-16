@@ -194,7 +194,10 @@
       "liftY": 4,
       "borderRadius": 8.25,
       "territoryRadius": 6.75,
-      "territoryAlpha": 0.51
+      "territoryAlpha": 0.51,
+      "levelTiers": {
+        "default": [5, 20, 50]
+      }
     }
   },
   "structureLevel": {

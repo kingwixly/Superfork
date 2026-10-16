@@ -1,5 +1,14 @@
 import { TileRef } from "@openfront/engine-api/game/GameMap";
-import { MessageType, UnitType } from "@openfront/engine-api/game/GameTypes";
+import {
+  MessageType,
+  Structures,
+  UnitType,
+} from "@openfront/engine-api/game/GameTypes";
+import {
+  LARGE_BOMB_FIZZLE_RADIUS,
+  LARGE_BOMB_FIZZLE_STRUCTURE_RADIUS,
+  LARGE_BOMB_FIZZLE_TROOP_KILL,
+} from "@openfront/engine-lib/configuration/SuperforkUnits";
 import { Game, Player, Unit } from "../game/Game";
 import {
   bomberFor,
@@ -34,8 +43,8 @@ export const LARGE_BOMBER_WARNING_DISTANCE = 60;
  * buster. No warning: being unseen is the point.
  *
  * **Large bomber**: drops ordinary atom or hydrogen bombs. Visible to every
- * form of air defence, and volatile: shot down while still loaded, its bomb
- * goes off where it falls.
+ * form of air defence. Shot down while still loaded, its bomb fizzles where
+ * it falls (see `fizzle`): a crash, not a nuke.
  */
 export class StrikeBomberExecution
   extends AircraftExecution
@@ -137,7 +146,12 @@ export class StrikeBomberExecution
     );
   }
 
-  /** A loaded large bomber that goes down takes its bomb with it. */
+  /**
+   * A loaded large bomber that goes down: the bomb fizzles where the plane
+   * falls. It used to detonate at full yield, which turned a shoot-down into
+   * a free nuke on whatever was underneath - usually the defender. Now it is
+   * a crash: local troop losses, nearby structures wrecked, no fallout.
+   */
   private onLost(): void {
     const payload = this.payload;
     this.payload = null;
@@ -148,9 +162,7 @@ export class StrikeBomberExecution
     }
     const tile = this.lastTile;
     if (this.mg.isImpassable(tile)) return;
-    this.mg.addExecution(
-      new NukeExecution(payload, this.owner(), tile, tile, -1, 0, true, true),
-    );
+    fizzle(this.mg, this.owner(), tile);
   }
 
   private warn(target: TileRef): void {
@@ -242,4 +254,64 @@ export function buyStrikeBomber(
   const unit = player.buildUnit(type, spawn, { homeBase: base });
   mg.addExecution(new StrikeBomberExecution(unit, base));
   return true;
+}
+
+/** Fixed impact pattern for the fizzle's explosions (deterministic). */
+const FIZZLE_IMPACTS: [number, number][] = [
+  [0, 0],
+  [2, -1],
+  [-2, 1],
+  [1, 2],
+  [-1, -2],
+];
+
+/**
+ * A large bomb that fizzles at `center` (its bomber was shot down): troop
+ * losses for everyone with ground in the radius, structures right at the
+ * crash destroyed (capitals excepted), a few explosions for the FX layer.
+ */
+export function fizzle(mg: Game, owner: Player, center: TileRef): void {
+  const cx = mg.x(center);
+  const cy = mg.y(center);
+  const r = LARGE_BOMB_FIZZLE_RADIUS;
+
+  // Ground in the radius, per player.
+  const ground = new Map<Player, number>();
+  for (let dy = -r; dy <= r; dy++) {
+    for (let dx = -r; dx <= r; dx++) {
+      if (dx * dx + dy * dy > r * r) continue;
+      const x = cx + dx;
+      const y = cy + dy;
+      if (!mg.isValidCoord(x, y)) continue;
+      const o = mg.owner(mg.ref(x, y));
+      if (!o.isPlayer()) continue;
+      const p = o as Player;
+      ground.set(p, (ground.get(p) ?? 0) + 1);
+    }
+  }
+  for (const [p, tiles] of ground) {
+    const share = Math.min(1, tiles / Math.max(1, p.numTilesOwned()));
+    const killed = Math.floor(
+      p.troops() * share * LARGE_BOMB_FIZZLE_TROOP_KILL,
+    );
+    if (killed > 0) p.removeTroops(killed);
+  }
+
+  for (const { unit } of mg.nearbyUnits(
+    center,
+    LARGE_BOMB_FIZZLE_STRUCTURE_RADIUS,
+    [...Structures.types],
+  )) {
+    if (unit.type() === UnitType.Capital) continue;
+    unit.delete(true, owner);
+  }
+
+  for (const [ox, oy] of FIZZLE_IMPACTS) {
+    const x = cx + ox;
+    const y = cy + oy;
+    if (!mg.isValidCoord(x, y)) continue;
+    const shell = owner.buildUnit(UnitType.Shell, mg.ref(x, y), {});
+    shell.setReachedTarget();
+    shell.delete(false);
+  }
 }

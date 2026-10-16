@@ -199,6 +199,16 @@ export class UserSettingModal extends BaseModal {
     );
   };
 
+  private toggleStructureSprites = () => {
+    const current = this.userSettings.graphicsOverrides();
+    const on = current.structure?.sprites ?? true;
+    this.userSettings.setGraphicsOverrides({
+      ...current,
+      structure: { ...current.structure, sprites: !on },
+    });
+    this.requestUpdate();
+  };
+
   private loadKeybindsFromStorage() {
     const parsed = this.userSettings.parsedUserKeybinds();
     if (Object.keys(parsed).length === 0) {
@@ -1762,6 +1772,20 @@ export class UserSettingModal extends BaseModal {
       <!-- 💾 Save / share the whole configuration. Top level, not inside
            Advanced: a player who never expands the fold should still find it. -->
       <graphics-preset-tools></graphics-preset-tools>
+
+      <!-- 🏙️ Building sprites (superfork). Top level, not under Advanced:
+           it's the switch people ask for, so it shouldn't be hidden. Off =
+           the shape icons at every zoom. -->
+      <setting-toggle
+        label="${translateText("graphics_setting.structure_sprites_label")}"
+        description="${translateText(
+          "graphics_setting.structure_sprites_desc",
+        )}"
+        id="structure-sprites-toggle"
+        .checked=${this.userSettings.graphicsOverrides().structure?.sprites ??
+        true}
+        @change=${this.toggleStructureSprites}
+      ></setting-toggle>
 
       <!-- 😊 Emojis -->
       <setting-toggle
