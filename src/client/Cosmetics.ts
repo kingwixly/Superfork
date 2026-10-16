@@ -5,6 +5,10 @@ import {
 } from "@openfront/shared/ApiSchemas";
 import { assetUrl } from "@openfront/shared/AssetUrls";
 import {
+  BUNDLED_FREE_FLARES,
+  bundledCosmetics,
+} from "@openfront/shared/BundledCosmetics";
+import {
   ColorPalette,
   CosmeticPack,
   CosmeticPackItem,
@@ -62,6 +66,23 @@ export const COSMETICS_FETCH_TIMEOUT_MS = 10_000;
 let __cosmetics: Promise<Cosmetics | null> | null = null;
 let __cosmeticsHash: string | null = null;
 let __cosmeticsCache: Cosmetics | null = null;
+/** Superfork: whether the catalog in use is SuperFront's bundled free one. */
+let __cosmeticsBundled = false;
+
+/** Superfork: true when the free bundled catalog is in use. */
+export function usingBundledCosmetics(): boolean {
+  return __cosmeticsBundled;
+}
+
+/**
+ * The player's flares. Superfork: with the bundled catalog, every item in it is
+ * free, so everyone holds its wildcards.
+ */
+export function playerFlares(userMeResponse: UserMeResponse | false): string[] {
+  const own =
+    userMeResponse === false ? [] : (userMeResponse.player.flares ?? []);
+  return __cosmeticsBundled ? [...own, ...BUNDLED_FREE_FLARES] : own;
+}
 
 /**
  * Synchronous accessor for the most recently resolved cosmetics. Returns null
@@ -870,6 +891,18 @@ export function cosmeticsJsonUrl(): string {
   return `${getApiBase()}/cosmetics.json?rail=${tierListingRail()}`;
 }
 
+/**
+ * Superfork: no catalog server, so use SuperFront's bundled free catalog (the
+ * game server falls back to the same one, see PrivilegeRefresher).
+ */
+function useBundledCosmetics(): Cosmetics {
+  const data = bundledCosmetics();
+  __cosmeticsBundled = true;
+  __cosmeticsHash = simpleHash(Object.keys(data.patterns).sort().join(","));
+  __cosmeticsCache = data;
+  return data;
+}
+
 export async function fetchCosmetics(): Promise<Cosmetics | null> {
   if (__cosmetics !== null) {
     return __cosmetics;
@@ -881,13 +914,14 @@ export async function fetchCosmetics(): Promise<Cosmetics | null> {
       });
       if (!response.ok) {
         console.warn(`HTTP error! status: ${response.status}`);
-        return null;
+        return useBundledCosmetics();
       }
       const result = CosmeticsSchema.safeParse(await response.json());
       if (!result.success) {
         console.error(`Invalid cosmetics: ${result.error.message}`);
-        return null;
+        return useBundledCosmetics();
       }
+      __cosmeticsBundled = false;
       const patternKeys = Object.keys(result.data.patterns).sort();
       const hashInput = patternKeys.join(",");
       __cosmeticsHash = simpleHash(hashInput);
@@ -895,7 +929,7 @@ export async function fetchCosmetics(): Promise<Cosmetics | null> {
       return result.data;
     } catch (error) {
       console.warn("Error getting cosmetics:", error);
-      return null;
+      return useBundledCosmetics();
     }
   })();
   __cosmetics = request;
@@ -968,8 +1002,7 @@ export function cosmeticRelationship(
   },
   userMeResponse: UserMeResponse | false,
 ): "owned" | "purchasable" | "blocked" {
-  const flares =
-    userMeResponse === false ? [] : (userMeResponse.player.flares ?? []);
+  const flares = playerFlares(userMeResponse);
 
   if (flares.includes(opts.wildcardFlare)) {
     return "owned";
@@ -999,8 +1032,7 @@ export function patternRelationship(
 ): "owned" | "purchasable" | "blocked" {
   if (colorPalette === null) {
     // For backwards compatibility only show non-colored patterns if they are owned.
-    const flares =
-      userMeResponse === false ? [] : (userMeResponse.player.flares ?? []);
+    const flares = playerFlares(userMeResponse);
     if (
       flares.includes("pattern:*") ||
       flares.includes(`pattern:${pattern.name}`)
@@ -1012,8 +1044,7 @@ export function patternRelationship(
 
   if (colorPalette.isArchived) {
     // Check ownership first — if owned, show it even if archived.
-    const flares =
-      userMeResponse === false ? [] : (userMeResponse.player.flares ?? []);
+    const flares = playerFlares(userMeResponse);
     if (
       flares.includes("pattern:*") ||
       flares.includes(`pattern:${pattern.name}:${colorPalette.name}`)
@@ -1142,8 +1173,7 @@ export function ownedPackItems(
   pack: CosmeticPack,
   userMeResponse: UserMeResponse | false,
 ): CosmeticPackItem[] {
-  const flares =
-    userMeResponse === false ? [] : (userMeResponse.player.flares ?? []);
+  const flares = playerFlares(userMeResponse);
   return pack.items.filter(
     (item) =>
       flares.includes(packItemFlare(item)) || flares.includes(`${item.type}:*`),
@@ -1338,8 +1368,7 @@ export function resolveCosmetics(
   }
 
   // Subscriptions
-  const flares =
-    userMeResponse === false ? [] : (userMeResponse.player.flares ?? []);
+  const flares = playerFlares(userMeResponse);
   const currentSub =
     userMeResponse === false
       ? null
@@ -1453,7 +1482,7 @@ export async function getPlayerCosmeticsRefs(
         pattern.colorPalette?.name === undefined
           ? `pattern:${pattern.name}`
           : `pattern:${pattern.name}:${pattern.colorPalette.name}`;
-      const flares = userMe.player.flares ?? [];
+      const flares = playerFlares(userMe);
       const hasWildcard = flares.includes("pattern:*");
       if (!hasWildcard && !flares.includes(flareName)) {
         pattern = null;
@@ -1485,7 +1514,7 @@ export async function getPlayerCosmeticsRefs(
     } else {
       const userMe = await getUserMe();
       if (userMe) {
-        const flares = userMe.player.flares ?? [];
+        const flares = playerFlares(userMe);
         const hasWildcard = flares.includes("flag:*");
         if (!hasWildcard && !flares.includes(`flag:${flagData.name}`)) {
           flag = null;
@@ -1517,7 +1546,7 @@ export async function getPlayerCosmeticsRefs(
     } else if (skin) {
       const userMe = await getUserMe();
       if (userMe) {
-        const flares = userMe.player.flares ?? [];
+        const flares = playerFlares(userMe);
         const hasWildcard = flares.includes("skin:*");
         if (!hasWildcard && !flares.includes(`skin:${skin.name}`)) {
           skinName = undefined;
@@ -1538,7 +1567,7 @@ export async function getPlayerCosmeticsRefs(
     } else if (crown) {
       const userMe = await getUserMe();
       if (userMe) {
-        const flares = userMe.player.flares ?? [];
+        const flares = playerFlares(userMe);
         const hasWildcard = flares.includes("crown:*");
         if (!hasWildcard && !flares.includes(`crown:${crown.name}`)) {
           crownName = undefined;
@@ -1566,7 +1595,7 @@ export async function getPlayerCosmeticsRefs(
     if (effect) {
       const userMe = await getUserMe();
       if (userMe) {
-        const flares = userMe.player.flares ?? [];
+        const flares = playerFlares(userMe);
         const hasWildcard = flares.includes("effect:*");
         if (!hasWildcard && !flares.includes(`effect:${effect.name}`)) {
           userSettings.setSelectedEffectName(slot, undefined);

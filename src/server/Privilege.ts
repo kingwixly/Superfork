@@ -1,6 +1,7 @@
 import countries from "resources/countries.json";
 
 import { isTemporaryUsername } from "@openfront/shared/ApiSchemas";
+import { BUNDLED_FREE_FLARES } from "@openfront/shared/BundledCosmetics";
 import {
   Cosmetics,
   findEffectForSlot,
@@ -263,6 +264,64 @@ export class PrivilegeCheckerImpl implements PrivilegeChecker {
       throw new Error(`Color ${color} not allowed`);
     }
     return { color };
+  }
+}
+
+/**
+ * Superfork: the checker used while the official catalog server is out of
+ * reach (on SuperFront, always). Checks cosmetics against SuperFront's bundled
+ * catalog, where everything is free, instead of FailOpen's "drop every
+ * cosmetic". A ref that doesn't check out (a stale selection, say) is dropped
+ * on its own rather than refusing the whole join.
+ */
+export class BundledPrivilegeChecker implements PrivilegeChecker {
+  private readonly inner: PrivilegeCheckerImpl;
+
+  constructor(
+    cosmetics: Cosmetics,
+    b64urlDecode: (base64: string) => Uint8Array,
+  ) {
+    this.inner = new PrivilegeCheckerImpl(cosmetics, b64urlDecode);
+  }
+
+  isAllowed(flares: string[], refs: PlayerCosmeticRefs): CosmeticResult {
+    const all = [...flares, ...BUNDLED_FREE_FLARES];
+    const whole = this.inner.isAllowed(all, refs);
+    if (whole.type === "allowed") return whole;
+    // Split the refs and keep whichever parts are fine.
+    const { effects, ...rest } = refs;
+    const parts: PlayerCosmeticRefs[] = [];
+    if (rest.patternName) {
+      parts.push({
+        patternName: rest.patternName,
+        patternColorPaletteName: rest.patternColorPaletteName,
+      });
+    }
+    if (rest.color) parts.push({ color: rest.color });
+    if (rest.flag) parts.push({ flag: rest.flag });
+    if (rest.skinName) parts.push({ skinName: rest.skinName });
+    if (rest.crownName) parts.push({ crownName: rest.crownName });
+    for (const [slot, name] of Object.entries(effects ?? {})) {
+      parts.push({ effects: { [slot]: name } });
+    }
+    const cosmetics: PlayerCosmetics = {};
+    for (const part of parts) {
+      const r = this.inner.isAllowed(all, part);
+      if (r.type !== "allowed") continue;
+      const { effects: fx, ...other } = r.cosmetics;
+      Object.assign(cosmetics, other);
+      if (fx) cosmetics.effects = { ...cosmetics.effects, ...fx };
+    }
+    if (refs.verified === true) cosmetics.verified = true;
+    return { type: "allowed", cosmetics };
+  }
+
+  // No reserved-tag list without the API: fail open, like FailOpen below.
+  resolveClanTag(
+    censoredTag: string | null,
+    _ownedClanTags: string[],
+  ): ClanTagResolution {
+    return { tag: censoredTag, dropped: false };
   }
 }
 

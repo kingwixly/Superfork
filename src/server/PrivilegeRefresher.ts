@@ -1,20 +1,22 @@
+import { bundledCosmetics } from "@openfront/shared/BundledCosmetics";
 import { ReservedClanTagsResponseSchema } from "@openfront/shared/ClanApiSchemas";
 import { CosmeticsSchema } from "@openfront/shared/CosmeticSchemas";
 import { base64url } from "jose";
 import { Logger } from "winston";
 import { startPolling } from "./PollingLoop";
 import {
-  FailOpenPrivilegeChecker,
+  BundledPrivilegeChecker,
   PrivilegeChecker,
   PrivilegeCheckerImpl,
 } from "./Privilege";
 
 // Refreshes the privilege checker every 3 minutes.
-// WARNING: This fails open if cosmetics.json is not available.
+// Superfork: while cosmetics.json is not available (on SuperFront, always),
+// cosmetics are checked against SuperFront's free bundled catalog.
 export class PrivilegeRefresher {
   private privilegeChecker: PrivilegeChecker | null = null;
   private failOpenPrivilegeChecker: PrivilegeChecker =
-    new FailOpenPrivilegeChecker();
+    new BundledPrivilegeChecker(bundledCosmetics(), base64url.decode);
 
   private log: Logger;
 
