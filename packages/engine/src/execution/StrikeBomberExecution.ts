@@ -52,6 +52,8 @@ export class StrikeBomberExecution
 {
   private payload: StrikePayload | null = null;
   private target: TileRef | null = null;
+  /** What the current strike order cost, refunded if it is aborted. */
+  private paid = 0n;
   private warned = false;
   private lastTile: TileRef;
 
@@ -70,11 +72,26 @@ export class StrikeBomberExecution
     return this.payload !== null;
   }
 
-  assign(payload: StrikePayload, target: TileRef): void {
+  assign(payload: StrikePayload, target: TileRef, paid = 0n): void {
     this.payload = payload;
     this.target = target;
+    this.paid = paid;
     this.warned = false;
     this.destination = target;
+    // Published so the client lists the bomber as tasked (attacks bar).
+    this.unit.setTargetTile(target);
+  }
+
+  /** Abort the strike: the payload is refunded and the bomber flies home. */
+  recall(): void {
+    if (this.payload !== null && this.paid > 0n) {
+      this.owner().addGold(this.paid);
+    }
+    this.payload = null;
+    this.target = null;
+    this.paid = 0n;
+    this.unit.setTargetTile(undefined);
+    this.goHome();
   }
 
   tick(ticks: number): void {
@@ -112,6 +129,8 @@ export class StrikeBomberExecution
       this.release(this.payload, target);
       this.payload = null;
       this.target = null;
+      this.paid = 0n;
+      this.unit.setTargetTile(undefined);
       this.goHome();
     }
   }
@@ -233,8 +252,9 @@ export function orderAirStrike(
   if (player.canBuild(order, target) === false) return false;
   const bomber = idleStrikeBomber(mg, player, bomberFor(order), target);
   if (bomber === null) return false;
-  player.removeGold(mg.unitInfo(order).cost(mg, player));
-  bomber.assign(payloadFor(order), target);
+  const cost = mg.unitInfo(order).cost(mg, player);
+  player.removeGold(cost);
+  bomber.assign(payloadFor(order), target, cost);
   return true;
 }
 

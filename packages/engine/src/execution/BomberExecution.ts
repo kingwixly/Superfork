@@ -77,6 +77,13 @@ export class BomberExecution extends AircraftExecution {
     this.aimAt(tile);
   }
 
+  /** Abort the bomb run: home to re-arm, then wait for orders. */
+  recall(): void {
+    super.recall();
+    this.bombs = 0;
+    this.targetOwner = null;
+  }
+
   /** Only the nation that owns the ordered tile is bombed - never anyone else. */
   private aimAt(tile: TileRef): void {
     const owner = this.mg.owner(tile);
@@ -91,6 +98,7 @@ export class BomberExecution extends AircraftExecution {
         this.bombs = BOMBS_PER_SORTIE;
         this.destination = undefined;
         this.idle = true;
+        this.unit.setTargetTile(undefined); // no longer tasked
         return;
       }
       this.destination = homeTile;

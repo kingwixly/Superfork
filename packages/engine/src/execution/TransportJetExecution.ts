@@ -36,6 +36,8 @@ export const AIRHEAD_GRACE_TICKS = 45 * 10;
 
 export class TransportJetExecution extends AircraftExecution {
   private landed = false;
+  /** Recalled: flying home, where the troops rejoin the army. */
+  private returning = false;
 
   constructor(
     unit: Unit,
@@ -48,11 +50,43 @@ export class TransportJetExecution extends AircraftExecution {
 
   protected decide(ticks: number): void {
     if (this.landed) return;
+    if (this.returning) return;
     this.destination ??= this.target;
+  }
+
+  /**
+   * Turn round. Like a recalled boat: the troops are not lost, they rejoin
+   * the army when the jet lands at its base (at once, with no base left).
+   */
+  recall(): void {
+    if (this.landed || this.returning) return;
+    this.returning = true;
+    const homeTile =
+      this.home !== undefined && this.home.isActive()
+        ? this.home.tile()
+        : undefined;
+    if (homeTile === undefined) {
+      this.disembarkHome();
+      return;
+    }
+    // Shown as "returning" on the bar: the target becomes the home base.
+    this.unit.setTargetTile(homeTile);
+    this.destination = homeTile;
+  }
+
+  private disembarkHome(): void {
+    this.landed = true;
+    this.attacker.addTroops(this.unit.troops());
+    this.unit.delete(false);
+    this.active = false;
   }
 
   protected onArrived(): void {
     if (this.landed) return;
+    if (this.returning) {
+      this.disembarkHome();
+      return;
+    }
     this.landed = true;
 
     // Second guard, independent of canBuild. conquer() throws on water and
