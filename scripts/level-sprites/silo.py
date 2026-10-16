@@ -30,15 +30,24 @@ def star_pad(c, cx, cy, R, p, k=0.36):
 def square_pad(c, n, p):
     c.box(-n, -n, 0, 2 * n, 2 * n, 1, p['top'], p['mid'], p['dark'])
 
+def disc(c, cx, cy, w, h, col):
+    """Filled ellipse from the exact equation at pixel centres, so it is
+    symmetric (PIL's ellipse rasterises lopsided at this size)."""
+    for y in range(int(cy - h) - 1, int(cy + h) + 2):
+        for x in range(int(cx - w) - 1, int(cx + w) + 2):
+            if ((x - cx) / w) ** 2 + ((y - cy) / h) ** 2 <= 1.0:
+                c.px(x, y, col)
+
 def lid(c, cx, cy, w, h, pal, bolts=True):
-    """Round blast lid swung open, standing behind the shaft (like the photo)."""
-    # Face-on, like the photo: no side edge, just the rim ring and the face.
-    c.d.ellipse([cx - w, cy - h, cx + w, cy + h], fill=pal['rim'])
-    c.d.ellipse([cx - w + 2, cy - h + 2, cx + w - 2, cy + h - 2], fill=pal['face'])
+    """Round blast lid swung open, standing behind the shaft, seen face-on
+    like the photo: a rim ring, the face, bolts set inside the rim."""
+    disc(c, cx, cy, w + 0.5, h + 0.5, pal['rim'])
+    disc(c, cx, cy, w - 1.5, h - 1.5, pal['face'])
     if bolts:
-        for a in range(0, 360, 45):
-            r = math.radians(a)
-            c.px(cx + (w - 1) * math.cos(r), cy + (h - 1) * math.sin(r), pal['bolt'])
+        # Four bolts, one rim-pixel in from the edge. (On the diagonals the
+        # rim is a single pixel wide, so bolts there sit on the outline.)
+        for dx, dy in ((0, -(h - 1)), (0, h - 1), (-(w - 1), 0), (w - 1, 0)):
+            c.px(round(cx + dx), round(cy + dy), pal['bolt'])
     c.px(cx, cy, pal['edge']); c.px(cx, cy - 1, pal['bolt'])
 
 def shaft(c, cx, cy, rw, rh, ring, inner=BLK):
@@ -140,7 +149,9 @@ def t4():
     # hydraulic rams holding the steel lid
     c.line((cx + 3, cy - 2), (cx + 2, cy - 8), STEEL['bolt']); c.line((cx + 7, cy - 2), (cx + 9, cy - 7), STEEL['bolt'])
     lid(c, cx + 5, cy - 12, 7, 6, STEEL)
-    c.d.ellipse([cx + 1, cy - 15, cx + 9, cy - 9], outline=hexc('#f2c14e'))     # lid marking ring
+    for a in range(0, 360, 12):                                                # lid marking ring
+        r = math.radians(a)
+        c.px(round(cx + 5 + 3.5 * math.cos(r)), round(cy - 12 + 3 * math.sin(r)), hexc('#f2c14e'))
     shaft(c, cx, cy - 1, 7, 3, dict(hi=hexc('#c9d1d8'), mid=hexc('#6b7686')))
     hazard_ring(c, cx, cy - 1, 7, 3)
     # modern re-entry vehicle: dark body, red nose
