@@ -12,7 +12,11 @@ import { PlayerLike } from "@openfront/engine-api/game/ReadViews";
 import { TeamCountConfig } from "@openfront/engine-api/Schemas";
 import { NukeType } from "@openfront/engine-api/StatsSchemas";
 import { Config } from "@openfront/engine-lib/configuration/Config";
-import { superforkUnitSpec } from "@openfront/engine-lib/configuration/SuperforkUnits";
+import {
+  PROVINCE_GOLD_BONUS,
+  PROVINCE_GOLD_CAP,
+  superforkUnitSpec,
+} from "@openfront/engine-lib/configuration/SuperforkUnits";
 import { exp, log, pow2 } from "@openfront/engine-lib/DetMath";
 import {
   assertNever,
@@ -712,7 +716,16 @@ export class EngineConfig extends Config {
     } else {
       baseRate = 100n;
     }
-    return BigInt(Math.floor(Number(baseRate) * multiplier));
+    // Superfork: +5% per province held, counting at most three.
+    const provinces = Math.min(
+      PROVINCE_GOLD_CAP,
+      player.provinceCount?.() ?? 0,
+    );
+    return BigInt(
+      Math.floor(
+        Number(baseRate) * multiplier * (1 + PROVINCE_GOLD_BONUS * provinces),
+      ),
+    );
   }
 
   nukeSpeed(unitType: UnitType): number {

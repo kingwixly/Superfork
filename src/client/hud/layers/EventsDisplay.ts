@@ -299,7 +299,8 @@ export class EventsDisplay extends LitElement implements Controller {
       event.focusPlayerID !== undefined &&
       (event.message === "events_display.ceasefire_received" ||
         event.message === "events_display.embassy_requested" ||
-        event.message === "events_display.aid_asked_of_you")
+        event.message === "events_display.aid_asked_of_you" ||
+        event.message === "events_display.puppet_offer_received")
     ) {
       return;
     }

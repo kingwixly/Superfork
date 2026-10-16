@@ -7,6 +7,7 @@ import {
   NUKE_BULK_STEPS,
   PlayerActions,
   PlayerBuildableUnitType,
+  PlayerType,
   STRUCTURE_BULK_STEPS,
   Structures,
   UnitType,
@@ -17,6 +18,7 @@ import { CORVETTE_LANDING_RANGE } from "@openfront/engine-lib/configuration/Supe
 import { renderNumber } from "@openfront/engine-lib/Format";
 import { findClosestBy } from "@openfront/engine-lib/Util";
 import { assetUrl } from "@openfront/shared/AssetUrls";
+import { OpenProvincePanelEvent } from "../../controllers/ProvinceController";
 import { BeginTerritorySelectionEvent } from "../../controllers/TerritorySelectionController";
 import { UIState } from "../../UIState";
 import { translateText } from "../../Utils";
@@ -32,6 +34,8 @@ import { TooltipItem } from "./RadialMenu";
 import { EventBus } from "@openfront/shared/EventBus";
 import {
   BuildUnitIntentEvent,
+  SendProvinceIntentEvent,
+  SendPuppetOfferIntentEvent,
   SendUpgradeStructureIntentEvent,
 } from "../../Transport";
 const allianceIcon = assetUrl("images/AllianceIconWhite.svg");
@@ -54,6 +58,7 @@ const corvetteIcon = assetUrl("images/CorvetteIconWhite.svg");
 const ceasefireIcon = assetUrl("images/AllianceIconFaded.svg");
 const sanctionIcon = assetUrl("images/DisabledIcon.svg");
 const treatyIcon = assetUrl("images/AllianceIconWhite.svg");
+const puppetIcon = assetUrl("images/CrownIcon.svg");
 const liberateIcon = assetUrl("images/ClaimIcon.svg");
 const cedeIcon = assetUrl("images/ClaimIcon.svg");
 const embassyIcon = assetUrl("images/EmbassyIconWhite.svg");
@@ -616,7 +621,41 @@ export const attackMenuElement: MenuElement = {
 
   subMenu: (params: MenuElementParams) => {
     if (params === undefined) return [];
-    return createMenuElements(params, "attack", "attack");
+    const items = createMenuElements(params, "attack", "attack");
+    // Superfork: an attack that stays inside the enemy province under the
+    // cursor (Shift+click does the same).
+    const here = params.game.config().provincesEnabled()
+      ? params.game.provinceStore().at(params.tile)
+      : undefined;
+    if (here !== undefined && here.ownerID !== params.myPlayer.smallID()) {
+      items.unshift({
+        id: "attack_province",
+        name: "attack_province",
+        icon: swordIcon,
+        color: COLORS.attack,
+        tooltipKeys: [
+          {
+            key: "provinces.attack_named",
+            className: "title",
+            params: { name: here.name },
+          },
+          { key: "provinces.attack_desc", className: "description" },
+        ],
+        disabled: () => false,
+        action: () => {
+          params.eventBus.emit(
+            new SendProvinceIntentEvent({
+              action: "attack",
+              provinceId: here.id,
+              troops:
+                params.myPlayer.troops() * (params.uiState?.attackRatio ?? 0.2),
+            }),
+          );
+          params.closeMenu();
+        },
+      });
+    }
+    return items;
   },
 };
 
@@ -1108,6 +1147,95 @@ export const diplomacyMenuElement: MenuElement = {
         params.closeMenu();
       },
     });
+
+    // Superfork: puppets. Offer to make them answer to you; they must
+    // accept. Tribes and your own puppets are left out.
+    const store = params.game.provinceStore();
+    items.push({
+      id: "dip_puppet",
+      name: "puppet",
+      icon: puppetIcon,
+      color: COLORS.embargo,
+      tooltipKeys: [
+        { key: "diplomacy.puppet", className: "title" },
+        { key: "diplomacy.puppet_desc", className: "description" },
+      ],
+      disabled: () =>
+        target.type() === PlayerType.Bot ||
+        store.masterOf(target.smallID()) !== 0,
+      action: () => {
+        params.eventBus.emit(new SendPuppetOfferIntentEvent(target.id()));
+        params.closeMenu();
+      },
+    });
+
+    // Someone else's puppet: set it free.
+    const masterOfTarget = store.masterOf(target.smallID());
+    if (masterOfTarget !== 0 && masterOfTarget !== me.smallID()) {
+      items.push({
+        id: "dip_free_puppet",
+        name: "free_puppet",
+        icon: liberateIcon,
+        color: COLORS.ally,
+        tooltipKeys: [
+          { key: "diplomacy.free_puppet", className: "title" },
+          { key: "diplomacy.free_puppet_desc", className: "description" },
+        ],
+        disabled: () => false,
+        action: () => {
+          params.playerActionHandler.handlePuppetLiberate(target);
+          params.closeMenu();
+        },
+      });
+    }
+
+    if (params.game.config().provincesEnabled()) {
+      // A tribe can be asked to join as a province.
+      if (target.type() === PlayerType.Bot) {
+        items.push({
+          id: "dip_integrate",
+          name: "integrate",
+          icon: allianceIcon,
+          color: COLORS.ally,
+          tooltipKeys: [
+            { key: "provinces.integrate", className: "title" },
+            { key: "provinces.integrate_desc", className: "description" },
+          ],
+          disabled: () => false,
+          action: () => {
+            params.eventBus.emit(
+              new SendProvinceIntentEvent({
+                action: "integrate",
+                targetID: target.id(),
+              }),
+            );
+            params.closeMenu();
+          },
+        });
+      }
+      // The province under the cursor.
+      const here = store.at(params.tile);
+      if (here !== undefined) {
+        items.push({
+          id: "dip_province",
+          name: "province",
+          icon: infoIcon,
+          color: COLORS.info,
+          tooltipKeys: [
+            {
+              key: "provinces.province_panel",
+              className: "title",
+              params: { name: here.name },
+            },
+          ],
+          disabled: () => false,
+          action: () => {
+            params.eventBus.emit(new OpenProvincePanelEvent(here.id));
+            params.closeMenu();
+          },
+        });
+      }
+    }
 
     return items;
   },

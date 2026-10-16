@@ -52,6 +52,7 @@ import {
   type PlannedUnits,
 } from "./MotionPlanResolver";
 import { PlayerView } from "./PlayerView";
+import { ProvinceStore } from "./ProvinceStore";
 import { UnitView } from "./UnitView";
 
 function readCosmeticVisibility(): CosmeticVisibility {
@@ -398,6 +399,12 @@ export class GameView implements GameLike {
         unit.lastPos = unit.lastPos.slice(-1);
       }
     }
+    for (const pu of gu.updates[GameUpdateType.Province] ?? []) {
+      this.provinceStore().apply(pu);
+    }
+    for (const pu of gu.updates[GameUpdateType.Puppet] ?? []) {
+      this.provinceStore().applyPuppet(pu);
+    }
     gu.updates[GameUpdateType.Unit].forEach((update) => {
       let unit = this._units.get(update.id);
       const isStructure = STRUCTURE_TYPES.has(update.unitType);
@@ -712,6 +719,13 @@ export class GameView implements GameLike {
 
   myClientID(): ClientID | undefined {
     return this._myClientID;
+  }
+
+  /** Superfork: provinces and puppets as last reported by the simulation. */
+  private _provinces: ProvinceStore | undefined;
+  provinceStore(): ProvinceStore {
+    this._provinces ??= new ProvinceStore(this.width() * this.height());
+    return this._provinces;
   }
 
   myPlayer(): PlayerView | null {

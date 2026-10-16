@@ -161,7 +161,7 @@ export class StrikeBomberExecution
         LARGE_BOMB_FALL_TICKS,
         true,
         true,
-      ),
+      ).spare(this.unit),
     );
   }
 

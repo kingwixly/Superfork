@@ -71,7 +71,10 @@ export type Intent =
   | LoadCorvetteIntent
   | LaunchCorvetteIntent
   | UciIntent
-  | RecallAircraftIntent;
+  | RecallAircraftIntent
+  | ProvinceIntent
+  | PuppetOfferIntent
+  | PuppetResponseIntent;
 
 export type AttackIntent = z.infer<typeof AttackIntentSchema>;
 
@@ -89,6 +92,10 @@ export type CeasefireResponseIntent = z.infer<
 export type SanctionIntent = z.infer<typeof SanctionIntentSchema>;
 export type CedeLandIntent = z.infer<typeof CedeLandIntentSchema>;
 export type UciIntent = z.infer<typeof UciIntentSchema>;
+export type ProvinceIntent = z.infer<typeof ProvinceIntentSchema>;
+export type ProvinceAction = z.infer<typeof ProvinceActionSchema>;
+export type PuppetOfferIntent = z.infer<typeof PuppetOfferIntentSchema>;
+export type PuppetResponseIntent = z.infer<typeof PuppetResponseIntentSchema>;
 export type UciAction = z.infer<typeof UciActionSchema>;
 export type TreatyCreateIntent = z.infer<typeof TreatyCreateIntentSchema>;
 export type TreatyInviteIntent = z.infer<typeof TreatyInviteIntentSchema>;
@@ -356,6 +363,8 @@ export const GameConfigSchema = z.object({
   // that only know publicIds at create_game); resolved to clientID at lookup.
   nameRevealPublicIds: z.string().array().max(200).optional(),
   waterNukes: z.boolean().nullable().optional(),
+  // Superfork: player-drawn provinces. Off by default.
+  provinces: z.boolean().nullable().optional(),
   randomSpawn: z.boolean(),
   maxPlayers: zb.uint().optional(),
   // OFM: allowlist of publicIds allowed to join (admin-only, see create_game).
@@ -826,6 +835,8 @@ export const UciActionSchema = z.enum([
   "pause",
   "end_game",
   "transfer_host",
+  // Appended: enum order is the wire tag.
+  "create_country",
 ]);
 export const MAX_UCI_ANNOUNCEMENT = 200;
 export const UciIntentSchema = z.object({
@@ -839,8 +850,67 @@ export const UciIntentSchema = z.object({
   enabled: z.boolean().optional(),
   aiAnswer: z.enum(["yes", "no", "normal"]).optional(),
   text: SafeString.max(MAX_UCI_ANNOUNCEMENT).optional(),
-  /** transfer_host: the new host's clientID. */
+  /**
+   * transfer_host: the new host's clientID. create_country: the spectator or
+   * dead player who takes the new country (absent: an AI nation does).
+   */
   targetClientID: MappedID.optional(),
+  /** create_country: the painted border strokes (see ProvinceIntentSchema). */
+  points: z.array(zb.uint()).max(6000).optional(),
+  breaks: z.array(zb.uint()).max(200).optional(),
+});
+
+/** Most stroke points one province drawing may carry. */
+export const MAX_PROVINCE_POINTS = 6000;
+export const MAX_STROKE_BREAKS = 200;
+
+export const ProvinceActionSchema = z.enum([
+  "draw",
+  "rename",
+  "admin",
+  "disband",
+  "merge",
+  "trim",
+  /** Release a province as an independent nation. */
+  "liberate",
+  /** Ask a neighbouring tribe to join as a province (1 in 6 accept). */
+  "integrate",
+  /** Attack confined to one enemy province. */
+  "attack",
+]);
+
+/**
+ * Superfork provinces. One intent with an action rather than nine: they all
+ * act on provinces and share validation.
+ *
+ * A drawing is a set of polylines flattened into `points`; `breaks` holds
+ * the index where each stroke after the first begins (zbin has no nested
+ * arrays).
+ */
+export const ProvinceIntentSchema = z.object({
+  type: z.literal("province"),
+  action: ProvinceActionSchema,
+  provinceId: zb.uint().optional(),
+  otherId: zb.uint().optional(),
+  name: SafeString.max(64).optional(),
+  points: z.array(zb.uint()).max(MAX_PROVINCE_POINTS).optional(),
+  breaks: z.array(zb.uint()).max(MAX_STROKE_BREAKS).optional(),
+  /** integrate: the tribe asked. */
+  targetID: MappedID.optional(),
+  /** attack: troops sent. */
+  troops: zb.float({ min: 0 }).optional(),
+});
+
+/** Offer to take another nation as a puppet; it must accept. */
+export const PuppetOfferIntentSchema = z.object({
+  type: z.literal("puppet_offer"),
+  target: MappedID,
+});
+
+export const PuppetResponseIntentSchema = z.object({
+  type: z.literal("puppet_response"),
+  requestor: MappedID,
+  accept: z.boolean(),
 });
 
 export const IntentSchema = z.discriminatedUnion("type", [
@@ -895,6 +965,10 @@ export const IntentSchema = z.discriminatedUnion("type", [
   LaunchCorvetteIntentSchema,
   UciIntentSchema,
   RecallAircraftIntentSchema,
+  // Appended, never inserted: variant order is the wire tag.
+  ProvinceIntentSchema,
+  PuppetOfferIntentSchema,
+  PuppetResponseIntentSchema,
 ]);
 
 // StampedIntent = Intent with server-stamped clientID (used in turns and execution)

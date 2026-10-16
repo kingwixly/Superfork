@@ -8,10 +8,15 @@ import { customElement, state } from "lit/decorators.js";
 import { createNextLobby, verifyUciPassword } from "../../Api";
 import { ClientEnv } from "../../ClientEnv";
 import { Controller } from "../../Controller";
+import { BeginStrokePaintEvent } from "../../controllers/StrokePaintController";
 import { BeginTerritorySelectionEvent } from "../../controllers/TerritorySelectionController";
 import { showInGameConfirm } from "../../InGameModal";
 import { SendKickPlayerIntentEvent } from "../../LobbyEvents";
-import { SendUciAuthEvent, SendUciIntentEvent } from "../../Transport";
+import {
+  SendUciAuthEvent,
+  SendUciIntentEvent,
+  UciSpectatorsEvent,
+} from "../../Transport";
 import { translateText } from "../../Utils";
 import { GameView, PlayerView } from "../../view";
 
@@ -40,6 +45,10 @@ export class UciMenu extends LitElement implements Controller {
   @state() private targetID = "";
   @state() private recipientID = "";
   @state() private announcement = "";
+  /** Country creator: the new country's name and who takes it. */
+  @state() private newCountryName = "";
+  @state() private newCountryOwner = "";
+  @state() private spectators: { clientID: string; username: string }[] = [];
 
   private progress = -1;
   private lastKeyAt = 0;
@@ -55,6 +64,9 @@ export class UciMenu extends LitElement implements Controller {
       this.token = null;
     }
     window.addEventListener("keydown", this.onKey, true);
+    this.eventBus.on(UciSpectatorsEvent, (e) => {
+      this.spectators = e.spectators;
+    });
   }
 
   disconnectedCallback() {
@@ -124,6 +136,10 @@ export class UciMenu extends LitElement implements Controller {
     const me = this.game?.myPlayer();
     if (this.targetID === "" && me) this.targetID = me.id();
     if (this.recipientID === "" && me) this.recipientID = me.id();
+    // Re-authing makes the server send a fresh spectator list.
+    if (this.token !== null && !this.isSingleplayer()) {
+      this.eventBus.emit(new SendUciAuthEvent(this.token));
+    }
   }
 
   private close() {
@@ -215,6 +231,104 @@ export class UciMenu extends LitElement implements Controller {
         targetID: this.recipientID,
         uciToken: this.token,
       }),
+    );
+  }
+
+  /** Spectators and dead players who could be given the new country. */
+  private joiners(): { clientID: string; label: string }[] {
+    const out: { clientID: string; label: string }[] = [];
+    const seen = new Set<string>();
+    for (const s of this.spectators) {
+      if (seen.has(s.clientID)) continue;
+      seen.add(s.clientID);
+      out.push({
+        clientID: s.clientID,
+        label: translateText("uci.spectator_option", { name: s.username }),
+      });
+    }
+    for (const p of this.game.players()) {
+      const id = p.clientID();
+      if (p.isAlive() || p.type() !== PlayerType.Human || !id) continue;
+      if (seen.has(id)) continue;
+      seen.add(id);
+      out.push({
+        clientID: id,
+        label: translateText("uci.dead_option", { name: p.displayName() }),
+      });
+    }
+    return out;
+  }
+
+  private createCountry() {
+    if (this.token === null) return;
+    const token = this.token;
+    const name = this.newCountryName.trim();
+    const owner = this.newCountryOwner;
+    this.close();
+    this.eventBus.emit(
+      new BeginStrokePaintEvent({
+        title: translateText("uci.create_title"),
+        hint: (count) => translateText("uci.create_hint", { count }),
+        confirmLabel: translateText("uci.create_confirm"),
+        color: "rgba(250,204,21,0.95)",
+        onConfirm: (points, breaks) =>
+          this.eventBus.emit(
+            new SendUciIntentEvent(token, {
+              action: "create_country",
+              points,
+              breaks,
+              ...(name !== "" ? { text: name } : {}),
+              ...(owner !== "" ? { targetClientID: owner } : {}),
+            }),
+          ),
+      }),
+    );
+  }
+
+  private renderCreator(): TemplateResult {
+    const t = (k: string) => translateText(k);
+    return this.section(
+      t("uci.create_country"),
+      html`<div class="grid grid-cols-2 gap-3">
+          <label class="flex flex-col gap-1 text-xs text-slate-400">
+            ${t("uci.country_name")}
+            <input
+              class="bg-slate-800 text-white text-sm rounded-md px-2 py-1.5 border border-slate-600"
+              maxlength="32"
+              placeholder=${t("uci.country_name_placeholder")}
+              .value=${this.newCountryName}
+              @input=${(e: Event) =>
+                (this.newCountryName = (e.target as HTMLInputElement).value)}
+              @keydown=${(e: KeyboardEvent) => e.stopPropagation()}
+            />
+          </label>
+          <label class="flex flex-col gap-1 text-xs text-slate-400">
+            ${t("uci.controlled_by")}
+            <select
+              class="bg-slate-800 text-white text-sm rounded-md px-2 py-1.5 border border-slate-600"
+              .value=${this.newCountryOwner}
+              @change=${(e: Event) =>
+                (this.newCountryOwner = (e.target as HTMLSelectElement).value)}
+            >
+              <option value="" ?selected=${this.newCountryOwner === ""}>
+                ${t("uci.ai_nation")}
+              </option>
+              ${this.joiners().map(
+                (j) =>
+                  html`<option
+                    value=${j.clientID}
+                    ?selected=${j.clientID === this.newCountryOwner}
+                  >
+                    ${j.label}
+                  </option>`,
+              )}
+            </select>
+          </label>
+        </div>
+        ${this.row(
+          t("uci.create_help"),
+          this.btn(t("uci.paint_borders"), () => this.createCountry(), "good"),
+        )}`,
     );
   }
 
@@ -442,6 +556,7 @@ export class UciMenu extends LitElement implements Controller {
           )}
         `,
       )}
+      ${this.renderCreator()}
       ${this.isSingleplayer()
         ? this.section(
             t("uci.singleplayer"),

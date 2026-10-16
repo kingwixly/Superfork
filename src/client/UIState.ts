@@ -16,6 +16,8 @@ export interface UIState {
    * belong to the selection, not to attacks or unit selection.
    */
   territorySelection?: boolean;
+  /** Superfork: a border-painting tool is open; drags paint, not pan. */
+  strokePainting?: boolean;
   /**
    * When an aircraft click (select or move order) last happened, in
    * performance.now() ms. The same map click must not also launch a ground

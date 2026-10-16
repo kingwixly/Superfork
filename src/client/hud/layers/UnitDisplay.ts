@@ -207,7 +207,8 @@ export class UnitDisplay extends LitElement implements Controller {
               // already "unit_type.city" - produced "unit_type.unit_type.city"
               // and every tooltip in the bar broke.
               (item.key ?? "").replace(/^unit_type\./, ""),
-              idx < 9 ? String(idx + 1) : "",
+              // 1-9, then 0 for the tenth slot (the key row's order).
+              idx < 9 ? String(idx + 1) : idx === 9 ? "0" : "",
             ),
           )}
         </div>

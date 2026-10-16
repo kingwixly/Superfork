@@ -11,6 +11,7 @@ import {
   AllPlayersStats,
   ClientID,
   Intent,
+  ProvinceIntent,
   UciIntent,
   Winner,
 } from "@openfront/engine-api/Schemas";
@@ -371,6 +372,31 @@ export class SendUciIntentEvent implements GameEvent {
   ) {}
 }
 
+/** Superfork: any province action (see ProvinceIntentSchema). */
+export class SendProvinceIntentEvent implements GameEvent {
+  constructor(public readonly intent: Omit<ProvinceIntent, "type">) {}
+}
+
+/** Superfork: offer to take a nation as a puppet. */
+export class SendPuppetOfferIntentEvent implements GameEvent {
+  constructor(public readonly target: PlayerID) {}
+}
+
+/** Superfork: answer a puppet offer. */
+export class SendPuppetResponseIntentEvent implements GameEvent {
+  constructor(
+    public readonly requestor: PlayerID,
+    public readonly accept: boolean,
+  ) {}
+}
+
+/** Superfork UCI: the server's list of spectators (admin only). */
+export class UciSpectatorsEvent implements GameEvent {
+  constructor(
+    public readonly spectators: { clientID: ClientID; username: string }[],
+  ) {}
+}
+
 /** Prove the UCI password on this connection without sending an action. */
 export class SendUciAuthEvent implements GameEvent {
   constructor(public readonly token: string) {}
@@ -612,6 +638,20 @@ export class Transport {
       } satisfies ClientUciAuthMessage);
       this.sendIntent({ type: "uci", ...e.intent });
     });
+
+    this.subscribe(SendProvinceIntentEvent, (e) =>
+      this.sendIntent({ type: "province", ...e.intent }),
+    );
+    this.subscribe(SendPuppetOfferIntentEvent, (e) =>
+      this.sendIntent({ type: "puppet_offer", target: e.target }),
+    );
+    this.subscribe(SendPuppetResponseIntentEvent, (e) =>
+      this.sendIntent({
+        type: "puppet_response",
+        requestor: e.requestor,
+        accept: e.accept,
+      }),
+    );
 
     this.subscribe(SendDeleteUnitIntentEvent, (e) =>
       this.onSendDeleteUnitIntent(e),

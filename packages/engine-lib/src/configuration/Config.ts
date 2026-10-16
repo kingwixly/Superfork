@@ -17,6 +17,7 @@ import {
   CAPITAL_TROOP_CAP_BONUS,
   EMP_RADIUS,
   NEUTRON_RADIUS,
+  PROVINCE_TROOP_BONUS,
   superforkUnitSpec,
 } from "./SuperforkUnits";
 
@@ -103,6 +104,11 @@ export class Config {
 
   isReplay(): boolean {
     return this._isReplay;
+  }
+
+  /** Superfork: whether players may draw provinces this game. */
+  provincesEnabled(): boolean {
+    return this._gameConfig.provinces ?? false;
   }
 
   /** True when the player joined the lobby as a spectator (watch-only). */
@@ -380,7 +386,13 @@ export class Config {
     const hasCapital = player
       .units(UnitType.Capital)
       .some((u) => !u.isUnderConstruction());
-    const maxTroops = hasCapital ? base * (1 + CAPITAL_TROOP_CAP_BONUS) : base;
+    const withCapital = hasCapital
+      ? base * (1 + CAPITAL_TROOP_CAP_BONUS)
+      : base;
+    // Superfork: +5% per province held (puppets count), uncapped.
+    const maxTroops =
+      withCapital *
+      (1 + PROVINCE_TROOP_BONUS * (player.provinceCount?.() ?? 0));
 
     if (player.type() === PlayerType.Bot) {
       return maxTroops / 3;

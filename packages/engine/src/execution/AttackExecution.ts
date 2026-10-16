@@ -31,10 +31,14 @@ import type {
   SnapshotReader,
   SnapshotWriter,
 } from "../snapshot/SnapshotContext";
+import { noteProvinceAttacked } from "./ProvinceRulesExecution";
 import { followMasterIntoWar } from "./PuppetExecution";
 import { FlatBinaryHeap } from "./utils/FlatBinaryHeap"; // adjust path if needed
 
 const malusForRetreat = 25;
+/** Attacks confined to one province (see restrictToProvince). */
+const provinceAttacks = new WeakSet<Attack>();
+
 export class AttackExecution implements Execution {
   private active: boolean = true;
   private toConquer = new FlatBinaryHeap();
@@ -74,6 +78,14 @@ export class AttackExecution implements Execution {
 
   /** Set once this attack has already pulled in its owner's puppets. */
   private puppetsFollowing = false;
+
+  /** Superfork: when set, the attack only takes tiles of this province. */
+  private provinceID: number | null = null;
+
+  /** Keep this attack inside one province (right-click → Attack province). */
+  restrictToProvince(id: number): void {
+    this.provinceID = id;
+  }
 
   init(mg: Game, ticks: number) {
     if (!this.active) {
@@ -187,10 +199,15 @@ export class AttackExecution implements Execution {
         }
       }
     }
+    if (this.provinceID !== null) provinceAttacks.add(this.attack);
     for (const outgoing of this._owner.outgoingAttacks()) {
       if (
         outgoing !== this.attack &&
         outgoing.target() === this.attack.target() &&
+        // Superfork: a province attack keeps its own limits, so it neither
+        // swallows nor joins a general attack on the same nation.
+        this.provinceID === null &&
+        !provinceAttacks.has(outgoing) &&
         // Boat attacks (sourceTile is not null) are not combined with other attacks
         this.attack.sourceTile() === null
       ) {
@@ -207,6 +224,11 @@ export class AttackExecution implements Execution {
     if (this.toConquer.size() === 0) {
       this.retreat();
       return;
+    }
+
+    // Superfork provinces: a fresh attack on a nation may set off breakaways.
+    if (this.target.isPlayer()) {
+      noteProvinceAttacked(this.mg, this.target as Player);
     }
 
     // Only now is it known how large the attack the defender actually faces
@@ -448,7 +470,9 @@ export class AttackExecution implements Execution {
       if (
         this.map.isWater(neighbor) ||
         this.map.isImpassable(neighbor) ||
-        this.map.ownerID(neighbor) !== this.targetSmallID
+        this.map.ownerID(neighbor) !== this.targetSmallID ||
+        (this.provinceID !== null &&
+          this.mg.provinces().idAt(neighbor) !== this.provinceID)
       ) {
         continue;
       }

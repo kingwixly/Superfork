@@ -61,6 +61,19 @@ export class NukeExecution implements Execution {
     private airDrop: boolean = false,
   ) {}
 
+  /** Superfork: the large bomber that dropped this bomb, which it spares. */
+  private dropper: Unit | null = null;
+
+  /**
+   * Spare the bomber that dropped this bomb. It is still over the blast when
+   * the bomb lands, and a blast deletes every unit in its radius, so without
+   * this a large bomber blew itself up on every run.
+   */
+  spare(bomber: Unit): this {
+    this.dropper = bomber;
+    return this;
+  }
+
   init(mg: Game, ticks: number): void {
     this.mg = mg;
     if (this.speed === -1) {
@@ -499,7 +512,8 @@ export class NukeExecution implements Execution {
         type === UnitType.HydrogenBomb ||
         type === UnitType.MIRVWarhead ||
         type === UnitType.MIRV ||
-        type === UnitType.SAMMissile
+        type === UnitType.SAMMissile ||
+        unit === this.dropper
       ) {
         continue;
       }
