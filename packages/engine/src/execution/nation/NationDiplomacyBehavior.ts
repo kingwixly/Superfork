@@ -80,7 +80,10 @@ export class NationDiplomacyBehavior {
     for (const other of this.game.players()) {
       if (other.id() === this.player.id()) continue;
       const offer = pendingCeasefireBetween(other, this.player);
-      if (offer === undefined) continue;
+      // Only offers made to us; our own wait for the other side's answer.
+      if (offer === undefined || offer.recipient.id() !== this.player.id()) {
+        continue;
+      }
 
       // Accept if we are losing to them, decline if we are winning. A bot
       // that accepts while ahead throws away a won war.

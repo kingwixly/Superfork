@@ -117,6 +117,20 @@ describe("Ceasefire", () => {
     expect(a.allianceWith(b)).toBeNull();
   });
 
+  test("the proposer cannot answer its own offer", () => {
+    // A nation proposing to a human used to pick up its own offer and accept
+    // it, so the ceasefire held whatever the human clicked.
+    propose();
+    new CeasefireResponseExecution(a, b.id(), true).init(game, game.ticks());
+    expect(a.hasCeasefireWith(b)).toBe(false);
+    expect(pendingCeasefireBetween(a, b)).toBeDefined();
+    // The recipient's decline still lands, and no truce follows.
+    respond(false);
+    expect(pendingCeasefireBetween(a, b)).toBeUndefined();
+    expect(a.hasCeasefireWith(b)).toBe(false);
+    expect(a.canAttackPlayer(b)).toBe(true);
+  });
+
   test("responding with no outstanding offer does nothing", () => {
     respond(true);
     expect(a.canAttackPlayer(b)).toBe(true);

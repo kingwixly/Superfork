@@ -105,6 +105,11 @@ export class CeasefireResponseExecution implements Execution {
     const k = key(proposer, this.recipient);
     const offer = pendingCeasefires.get(k);
     if (offer === undefined) return;
+    // Offers are keyed by the unordered pair, so the proposer can find its
+    // own offer too. Only the recipient may answer: a nation used to "accept"
+    // the ceasefire it had just proposed to you, so it was already in force
+    // whatever you clicked.
+    if (offer.recipient.id() !== this.recipient.id()) return;
     pendingCeasefires.delete(k);
     if (!this.accept) {
       mg.displayMessage(
