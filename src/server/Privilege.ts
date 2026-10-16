@@ -6,8 +6,8 @@ import {
   findEffectForSlot,
 } from "@openfront/shared/CosmeticSchemas";
 import {
-  DEVELOPER_FLAG_CODE,
   DEVELOPER_FLARE,
+  isDeveloperFlagCode,
 } from "@openfront/shared/DeveloperFlag";
 import { decodePatternData } from "@openfront/shared/PatternDecoder";
 import {
@@ -240,7 +240,7 @@ export class PrivilegeCheckerImpl implements PrivilegeChecker {
       throw new Error(`No flares for flag ${key}`);
     } else if (flagRef.startsWith("country:")) {
       const code = flagRef.slice("country:".length);
-      if (code === DEVELOPER_FLAG_CODE) {
+      if (isDeveloperFlagCode(code)) {
         if (!flares.includes(DEVELOPER_FLARE)) {
           throw new Error(`developer flag requires the developer flare`);
         }

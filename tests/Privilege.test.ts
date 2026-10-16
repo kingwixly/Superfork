@@ -178,6 +178,9 @@ describe("Flag validation in isAllowed", () => {
     if (ok.type === "allowed") {
       expect(ok.cosmetics.flag).toBe("/flags/SuperFront Developer.svg");
     }
+    const mj = { flag: "country:Michael Jackson" };
+    expect(flagChecker.isAllowed([], mj).type).toBe("forbidden");
+    expect(flagChecker.isAllowed([DEVELOPER_FLARE], mj).type).toBe("allowed");
   });
 
   test("rejects flag with no prefix", () => {

@@ -13,6 +13,17 @@
  */
 export const DEVELOPER_FLAG_CODE = "SuperFront Developer";
 export const DEVELOPER_FLAG_REF = `country:${DEVELOPER_FLAG_CODE}`;
+/** Every admin-only flag (all are files in resources/flags, none in countries.json). */
+export const DEVELOPER_FLAG_CODES: readonly string[] = [
+  DEVELOPER_FLAG_CODE,
+  "Michael Jackson",
+];
+export const isDeveloperFlagCode = (code: string) =>
+  DEVELOPER_FLAG_CODES.includes(code);
+export const isDeveloperFlagRef = (ref: string | undefined) =>
+  ref !== undefined &&
+  ref.startsWith("country:") &&
+  isDeveloperFlagCode(ref.slice("country:".length));
 export const DEVELOPER_FLARE = "superfront:developer";
 /** Header nginx sets on proxied worker requests ("1" for the admin). */
 export const DEVELOPER_HEADER = "x-sf-developer";
