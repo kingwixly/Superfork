@@ -73,16 +73,15 @@ def t3():
     return c.im
 
 def t4():
+    # Major container terminal: a red post-panamax crane with a white boom
+    # working a yard stacked three high.
     c = Canvas(16, 24)
-    c.box(-5, -5, 0, 10, 10, 1, *DARKQ)
-    c.line(c.P(-5, 5, 1), c.P(5, 5, 1), CYAN); c.line(c.P(5, 5, 1), c.P(5, -5, 1), CYAN)
-    PODS = [(hexc('#bffaff'), hexc('#4fc9e0'), hexc('#2b8aa3')),
-            (hexc('#ffc6f1'), hexc('#e05ac0'), hexc('#9a3a85'))]
-    for L_ in range(2):
+    c.box(-5, -5, 0, 10, 10, 1, *QUAY)
+    for L in range(3):
         for m in range(6):
-            c.box(2, -4.5 + m * 1.5, 1.6 + L_ * 1.7, 3, 1.4, 1.2, *PODS[0 if L_ == 0 else (m % 2)])
-    sts_crane(c, hexc('#5a6578'), hexc('#2b323e'), hexc('#e8eef5'), CYAN,
-              (hexc('#3e4756'), hexc('#1c222b')), MAG, CYAN)
-    c.box(-6, 4, 2.5, 3, 1.4, 1.2, *PODS[0])  # pod riding the tractor beam
-    return glow(glow(c.im, CYAN, .3), MAG, .3)
+            container(c, 2, -4.5 + m * 1.5, 1 + L * 1.5, m + L)
+    sts_crane(c, RED[1], RED[2], WHITE[0], WHITE[2], BLUE, hexc('#ffe28a'))
+    c.line((4, 11), (4, 17), hexc('#3b3b3a'))
+    c.box(-6, 4, 2, 3, 1.5, 1.5, *CONT[1])
+    return c.im
 

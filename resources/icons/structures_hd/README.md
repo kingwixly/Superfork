@@ -31,8 +31,9 @@ Any structure can show different art as it levels up. Put 64×64 PNGs in
 base sprite's (`city`, `defense_post`, `international_airport`, …).
 
 - **Which level is which tier:** `structure.sprites.levelTiers` in
-  `src/client/render/gl/render-settings.json`. `"default": [3, 6, 10]` means
-  levels 1–2 use the base sprite, 3–5 tier 2, 6–9 tier 3 and 10+ tier 4.
+  `src/client/render/gl/render-settings.json`. `"default": [5, 20, 50]` means
+  levels 1–4 use the base sprite, 5–19 tier 2, 20–49 tier 3 and 50+ tier 4
+  (mid-to-late game stacks run 10–100).
   Add an entry keyed by structure type (`"City": [2, 4, 8]`) to give one
   building its own thresholds.
 - **Missing tiers** reuse the tier below, so you can add art one building and

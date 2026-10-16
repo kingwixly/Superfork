@@ -158,6 +158,6 @@ def t4():
     warhead(c, cx, cy, 6, 13, cols=(hexc('#8c97a8'), hexc('#4a5361'), hexc('#323946'), hexc('#20252e')))
     warhead(c, cx, cy - 8, 3, 5)
     shaft_front(c, cx, cy - 1, 7, 3, dict(hi=hexc('#c9d1d8'), mid=hexc('#6b7686')))
-    for (x, y) in ((cx - 12, cy), (cx + 12, cy), (cx, cy + 6)): c.px(x, y, hexc('#4ff0ff'))
+    for (x, y) in ((cx - 12, cy), (cx + 12, cy), (cx, cy + 6)): c.px(x, y, RED)
     return c.im
 

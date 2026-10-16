@@ -62,11 +62,12 @@ def sam_t3():
     c = Canvas(16, 25)
     c.box(-5, -5, 0, 10, 10, 1, *CON)
     hazard_rim(c, 10)
-    # phased-array radar panel on the back
-    c.poly([(16, 4), (23, 7), (23, 15), (16, 12)], hexc('#5d6469'))
-    c.poly([(17, 6), (22, 8), (22, 13), (17, 11)], hexc('#2b3a4a'))
-    for (x, y) in ((18, 8), (20, 9), (18, 10), (20, 11)): c.px(x, y, hexc('#7fd0ff'))
-    c.line((20, 15), (20, 19), WHITE_DD)
+    # tracking radar dish on a pedestal, at the back
+    x, y = 20, 17
+    c.d.rectangle([x - 1, y - 3, x + 1, y], fill=hexc('#6b7686'))
+    c.d.ellipse([x - 4, y - 10, x + 3, y - 3], fill=hexc('#d2d7dc'))
+    c.d.ellipse([x - 3, y - 9, x + 2, y - 4], fill=hexc('#a3aab1'))
+    c.line((x - 1, y - 6), (x - 3, y - 8), hexc('#323946')); c.px(x - 3, y - 8, RED)
     # two 4-cell launch boxes on a long chassis
     c.box(-4, -1, 1, 8, 5, 2, *OLIVE)
     for n, (i, j) in enumerate(((-2, 2), (1, 2))):
@@ -74,22 +75,26 @@ def sam_t3():
     return c.im
 
 def sam_t4():
+    # Long-range battery: four big canisters raised to vertical on a heavy
+    # launcher, a radar dome and a command shelter. Real hardware, no glow.
     c = Canvas(16, 25)
-    c.box(-5, -5, 0, 10, 10, 1, *DARK)
-    c.line(c.P(-5, 5, 1), c.P(5, 5, 1), CYAN); c.line(c.P(5, 5, 1), c.P(5, -5, 1), CYAN)
-    x, y = c.P(0, 0, 1)
-    # shield dome: just the upper arc, dotted, so the turret shows through
-    import math
-    for a in range(200, 341, 10):
-        r = math.radians(a)
-        c.px(x + 10 * math.cos(r), y - 2 + 11 * math.sin(r), hexc('#7fe9ff'))
-    c.d.ellipse([x - 5, y - 6, x + 5, y + 1], fill=DARK[0])             # turret base
-    c.d.ellipse([x - 5, y - 7, x + 5, y - 3], fill=hexc('#5a6578'))
-    c.px(x, y - 4, MAG); c.px(x + 1, y - 4, MAG)                         # energy core
-    # twin rails angled up-left with a glowing channel between them
-    c.line((x - 1, y - 5), (x - 9, y - 16), hexc('#c9d1d8'))
-    c.line((x + 1, y - 5), (x - 7, y - 16), hexc('#7f8b99'))
-    c.line((x, y - 5), (x - 8, y - 16), CYAN)
-    c.px(x - 8, y - 17, hexc('#a8fbff'))
-    return glow(glow(c.im, CYAN, .3), MAG, .3)
+    c.box(-5, -5, 0, 10, 10, 1, *CON)
+    hazard_rim(c, 10)
+    c.box(2, -5, 1, 3, 3, 2, *CON)                                        # command shelter
+    x, y = c.P(3.5, -3.5, 3); c.line((x, y), (x, y - 5), WHITE_DD); c.px(x, y - 6, RED)
+    x, y = c.P(-4, -3, 1)                                                 # radar dome
+    c.d.ellipse([x - 3, y - 7, x + 3, y - 1], fill=hexc('#e8ecef'))
+    c.d.ellipse([x, y - 6, x + 3, y - 1], fill=hexc('#b9c0c6'))
+    c.box(-3, -1, 1, 7, 5, 2, *OLIVE)                                     # heavy chassis
+    c.box(3, -1, 3, 1.5, 3, 2, OLIVE[0], OLIVE[2], OLIVE[2])              # cab
+    # four canisters standing upright in a row, gaps between them, back first
+    for n, j in enumerate((0, 1.6, 3.2, 4.8)):
+        i = -2.5
+        x, y = c.P(i, j, 3)
+        top = y - 11
+        c.d.rectangle([x - 1, top, x, y], fill=OLIVE[0])                  # lit side
+        c.d.rectangle([x + 1, top + 1, x + 1, y], fill=OLIVE[2])          # shade side
+        c.px(x - 1, top, BLK); c.px(x, top, BLK)                          # open end
+        c.line((x - 1, top + 3), (x, top + 3), OLIVE[1])                  # band
+    return c.im
 
