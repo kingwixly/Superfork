@@ -103,6 +103,15 @@ export const BANK_ACCRUAL_DENOMINATOR = 1_000_000n;
  * a landing order beyond it, so the two can't disagree.
  */
 export const CORVETTE_LANDING_RANGE = 8;
+/**
+ * A loaded large bomber that is shot down: its bomb fizzles where the plane
+ * falls instead of going off at full yield. Players with ground in the
+ * radius lose this share of the troops standing on it, and structures close
+ * to the crash (except capitals) are destroyed. No fallout, no terrain.
+ */
+export const LARGE_BOMB_FIZZLE_RADIUS = 6;
+export const LARGE_BOMB_FIZZLE_TROOP_KILL = 0.5;
+export const LARGE_BOMB_FIZZLE_STRUCTURE_RADIUS = 2;
 export const BLINDING_RADIUS = 30;
 export const BUNKER_BUSTER_RADIUS = 8;
 /** How long a blinding bomb keeps SAMs and silos offline. */
