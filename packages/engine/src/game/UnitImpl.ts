@@ -725,7 +725,12 @@ export class UnitImpl implements Unit {
   }
 
   setTargetTile(targetTile: TileRef | undefined) {
+    if (this._targetTile === targetTile) return;
     this._targetTile = targetTile;
+    // Superfork: the client reads an aircraft's target tile as "on a
+    // mission" (the attacks bar). A bomber parked at base sends no movement
+    // updates, so without this its cleared mission never reached the client.
+    if (this.isActive()) this.mg.addUpdate(this.toUpdate());
   }
 
   targetTile(): TileRef | undefined {

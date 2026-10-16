@@ -1,7 +1,4 @@
-import {
-  DEVELOPER_FLAG_CODE,
-  DEVELOPER_FLAG_REF,
-} from "@openfront/shared/DeveloperFlag";
+import { DEVELOPER_FLAG_CODES } from "@openfront/shared/DeveloperFlag";
 
 /**
  * Superfork: whether this browser holds the join gate's admin session, i.e.
@@ -24,8 +21,9 @@ export function isSiteDeveloper(): Promise<boolean> {
   return developer;
 }
 
-export const DEVELOPER_FLAG = {
-  ref: DEVELOPER_FLAG_REF,
-  code: DEVELOPER_FLAG_CODE,
-  name: DEVELOPER_FLAG_CODE,
-} as const;
+/** The admin-only flags, offered only to the site developer. */
+export const DEVELOPER_FLAGS = DEVELOPER_FLAG_CODES.map((code) => ({
+  ref: `country:${code}`,
+  code,
+  name: code,
+}));

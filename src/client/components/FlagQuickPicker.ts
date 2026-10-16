@@ -2,7 +2,7 @@ import { assetUrl } from "@openfront/shared/AssetUrls";
 import { html, LitElement, nothing } from "lit";
 import { customElement, state } from "lit/decorators.js";
 import Countries from "resources/countries.json" with { type: "json" };
-import { DEVELOPER_FLAG, isSiteDeveloper } from "../DeveloperStatus";
+import { DEVELOPER_FLAGS, isSiteDeveloper } from "../DeveloperStatus";
 import {
   FLAG_KEY,
   USER_SETTINGS_CHANGED_EVENT,
@@ -71,7 +71,10 @@ export class FlagQuickPicker extends LitElement {
 
   private choices(): FlagChoice[] {
     const all = this.developer
-      ? [{ ...DEVELOPER_FLAG, dev: true }, ...COUNTRY_CHOICES]
+      ? [
+          ...DEVELOPER_FLAGS.map((f) => ({ ...f, dev: true })),
+          ...COUNTRY_CHOICES,
+        ]
       : COUNTRY_CHOICES;
     const q = this.search.trim().toLowerCase();
     if (!q) return all;

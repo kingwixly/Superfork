@@ -44,7 +44,10 @@ import {
 } from "./EmbassyExecution";
 import { EmojiExecution } from "./EmojiExecution";
 import { MarkDisconnectedExecution } from "./MarkDisconnectedExecution";
-import { MoveAircraftExecution } from "./MoveAircraftExecution";
+import {
+  MoveAircraftExecution,
+  RecallAircraftExecution,
+} from "./MoveAircraftExecution";
 import { MoveWarshipExecution } from "./MoveWarshipExecution";
 import { NationExecution } from "./NationExecution";
 import { NoOpExecution } from "./NoOpExecution";
@@ -116,6 +119,8 @@ export class Executor {
         return new BoatRetreatExecution(player, intent.unitID);
       case "move_aircraft":
         return new MoveAircraftExecution(player, intent.unitIds, intent.tile);
+      case "recall_aircraft":
+        return new RecallAircraftExecution(player, intent.unitIds);
       case "move_warship":
         return new MoveWarshipExecution(player, intent.unitIds, intent.tile);
       case "spawn":

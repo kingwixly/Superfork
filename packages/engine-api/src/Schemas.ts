@@ -70,7 +70,8 @@ export type Intent =
   | WithdrawBankIntent
   | LoadCorvetteIntent
   | LaunchCorvetteIntent
-  | UciIntent;
+  | UciIntent
+  | RecallAircraftIntent;
 
 export type AttackIntent = z.infer<typeof AttackIntentSchema>;
 
@@ -103,6 +104,7 @@ export type PuppetCommandIntent = z.infer<typeof PuppetCommandIntentSchema>;
 export type PuppetLiberateIntent = z.infer<typeof PuppetLiberateIntentSchema>;
 export type SetBorderPolicyIntent = z.infer<typeof SetBorderPolicyIntentSchema>;
 export type MoveAircraftIntent = z.infer<typeof MoveAircraftIntentSchema>;
+export type RecallAircraftIntent = z.infer<typeof RecallAircraftIntentSchema>;
 export type RenameCapitalIntent = z.infer<typeof RenameCapitalIntentSchema>;
 export type WithdrawBankIntent = z.infer<typeof WithdrawBankIntentSchema>;
 export type LoadCorvetteIntent = z.infer<typeof LoadCorvetteIntentSchema>;
@@ -795,6 +797,17 @@ export const MoveAircraftIntentSchema = z.object({
 });
 
 /**
+ * Call aircraft off their mission: the X on the attacks bar. Fighters and
+ * interceptors go back to patrolling their base, bombers abort and fly home,
+ * transport jets turn round (their troops rejoin at base), and a strategic
+ * bomber's strike is aborted with the payload refunded.
+ */
+export const RecallAircraftIntentSchema = z.object({
+  type: z.literal("recall_aircraft"),
+  unitIds: z.array(zb.int()).nonempty(),
+});
+
+/**
  * UCI developer tools. The server only relays one from a client that has
  * proven the UCI password (see src/server/UciAuth.ts); in singleplayer the
  * client checks the password over HTTP before showing the menu at all.
@@ -881,6 +894,7 @@ export const IntentSchema = z.discriminatedUnion("type", [
   LoadCorvetteIntentSchema,
   LaunchCorvetteIntentSchema,
   UciIntentSchema,
+  RecallAircraftIntentSchema,
 ]);
 
 // StampedIntent = Intent with server-stamped clientID (used in turns and execution)

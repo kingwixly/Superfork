@@ -29,7 +29,7 @@ export interface StrikeBomberControl {
   bomber(): Unit;
   /** Carrying a payload toward a target. */
   busy(): boolean;
-  assign(payload: StrikePayload, target: TileRef): void;
+  assign(payload: StrikePayload, target: TileRef, paid?: bigint): void;
 }
 
 const flying = new WeakMap<Unit, StrikeBomberControl>();

@@ -72,6 +72,17 @@ export class InterceptorExecution extends AircraftExecution {
   constructor(unit: Unit, home: Unit | undefined, patrolTile: TileRef) {
     super(unit, home);
     this.patrolTile = patrolTile;
+    // The patrol point is the mission; published as the target tile so the
+    // client can list the aircraft as tasked (the attacks bar).
+    unit.setTargetTile(patrolTile);
+  }
+
+  /** Back to circling the home base. */
+  recall(): void {
+    super.recall();
+    const homeTile = this.home?.tile();
+    if (homeTile !== undefined) this.patrolTile = homeTile;
+    this.patrolLeg = 0;
   }
 
   protected onOrdered(tile: TileRef): void {

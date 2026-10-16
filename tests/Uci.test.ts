@@ -7,6 +7,7 @@ import {
 import { GameUpdateType } from "@openfront/engine-api/game/GameUpdates";
 import { PseudoRandom } from "@openfront/engine-lib/PseudoRandom";
 import { AttackExecution } from "@openfront/engine/execution/AttackExecution";
+import { PlayerExecution } from "@openfront/engine/execution/PlayerExecution";
 import {
   UCI_GOLD_FLOOR,
   UciExecution,
@@ -133,6 +134,60 @@ describe("UCI", () => {
     expect(foe.numTilesOwned()).toBe(myTiles);
     expect(game.owner(game.ref(150, 100))).toBe(me);
     expect(me.troops()).toBeGreaterThanOrEqual(5678);
+  });
+
+  test("switch moves every unit to the right side, losing none", () => {
+    me.buildUnit(UnitType.City, game.ref(30, 100), {});
+    me.buildUnit(UnitType.DefensePost, game.ref(40, 100), {});
+    foe.buildUnit(UnitType.City, game.ref(150, 100), {});
+    foe.buildUnit(UnitType.City, game.ref(150, 60), {});
+    foe.buildUnit(UnitType.DefensePost, game.ref(160, 100), {});
+    foe.buildUnit(UnitType.DefensePost, game.ref(160, 120), {});
+    uci({ action: "switch", targetID: "foe_id" });
+    // Right after the swap, and still after the per-tick capture has run.
+    for (let i = 0; i < 2; i++) {
+      expect(me.units(UnitType.City).length).toBe(2);
+      expect(me.units(UnitType.DefensePost).length).toBe(2);
+      expect(foe.units(UnitType.City).length).toBe(1);
+      expect(foe.units(UnitType.DefensePost).length).toBe(1);
+      for (const u of [...me.units(), ...foe.units()]) {
+        expect(game.owner(u.tile())).toBe(u.owner());
+      }
+      game.executeNextTick();
+    }
+  });
+
+  test("after switching with a nation, both sides' troops keep growing", () => {
+    // A human army near the human ceiling is above a nation's lower cap.
+    me.setTroops(game.config().maxTroops(me) * 0.9);
+    ai.setTroops(10_000);
+    uci({ action: "switch", targetID: "ai_id" });
+    for (const p of [me, ai]) {
+      expect(p.troops()).toBeLessThanOrEqual(game.config().maxTroops(p));
+    }
+    // This file's setup never starts troop growth; start it here.
+    game.addExecution(new PlayerExecution(me));
+    game.addExecution(new PlayerExecution(ai));
+    game.executeNextTick();
+    const before = [me.troops(), ai.troops()];
+    for (let i = 0; i < 30; i++) game.executeNextTick();
+    expect(me.troops()).toBeGreaterThan(before[0]);
+    expect(ai.troops()).toBeGreaterThan(before[1]);
+  });
+
+  test("cede_country and disappear handle every unit, not every other one", () => {
+    for (const y of [40, 60, 80, 100, 120]) {
+      foe.buildUnit(UnitType.City, game.ref(150, y), {});
+    }
+    uci({ action: "cede_country", targetID: "foe_id", recipientID: "me_id" });
+    expect(foe.units().length).toBe(0);
+    expect(me.units(UnitType.City).length).toBe(5);
+
+    for (const y of [40, 60, 80, 100, 120]) {
+      ai.buildUnit(UnitType.City, game.ref(90, y), {});
+    }
+    uci({ action: "disappear", targetID: "ai_id" });
+    expect(ai.units().length).toBe(0);
   });
 
   test("disappear returns a country's land to the wilderness", () => {

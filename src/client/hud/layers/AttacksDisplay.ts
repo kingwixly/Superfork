@@ -24,6 +24,7 @@ import {
   CancelAttackIntentEvent,
   CancelBoatIntentEvent,
   counterAttackTroops,
+  RecallAircraftIntentEvent,
   SendAttackIntentEvent,
 } from "../../Transport";
 import { UIState } from "../../UIState";
@@ -32,6 +33,46 @@ import { GameView, PlayerView, UnitView } from "../../view";
 import { getColoredSprite } from "../SpriteLoader";
 const soldierIcon = assetUrl("images/SoldierIcon.svg");
 const swordIcon = assetUrl("images/SwordIcon.svg");
+
+/** Superfork: aircraft on the attacks bar. */
+const AIRCRAFT_ICONS: Partial<Record<UnitType, string>> = {
+  [UnitType.FighterJet]: assetUrl("images/FighterIconWhite.svg"),
+  [UnitType.Interceptor]: assetUrl("images/InterceptorIconWhite.svg"),
+  [UnitType.TransportJet]: assetUrl("images/TransportJetIconWhite.svg"),
+  [UnitType.Bomber]: assetUrl("images/BomberIconWhite.svg"),
+  [UnitType.StealthBomber]: assetUrl("images/StealthBomberIconWhite.svg"),
+  [UnitType.LargeBomber]: assetUrl("images/LargeBomberIconWhite.svg"),
+};
+/** Aircraft that fly one mission at a time: one row each. */
+const MISSION_AIRCRAFT = [
+  UnitType.TransportJet,
+  UnitType.Bomber,
+  UnitType.StealthBomber,
+  UnitType.LargeBomber,
+];
+/** Aircraft that patrol: one row per type, only when sent away from base. */
+const PATROL_AIRCRAFT = [UnitType.FighterJet, UnitType.Interceptor];
+/** Hostile aircraft listed when over your land. Stealth bombers are not. */
+const THREAT_AIRCRAFT = [
+  UnitType.Bomber,
+  UnitType.LargeBomber,
+  UnitType.TransportJet,
+  UnitType.FighterJet,
+];
+const AIR_BASES = [
+  UnitType.Airstrip,
+  UnitType.Airfield,
+  UnitType.InternationalAirport,
+  UnitType.Carrier,
+];
+/**
+ * A patrol point farther than this from every one of your bases counts as a
+ * mission. Fighters circle 12 tiles out and interceptors 16, so a point near
+ * a base is home patrol and stays off the bar.
+ */
+const HOME_PATROL_DISTANCE = 20;
+
+type AirGroup = { type: UnitType; units: UnitView[] };
 
 @customElement("attacks-display")
 export class AttacksDisplay extends LitElement implements Controller {
@@ -48,6 +89,10 @@ export class AttacksDisplay extends LitElement implements Controller {
   @state() private outgoingLandAttacks: AttackUpdate[] = [];
   @state() private outgoingBoats: UnitView[] = [];
   @state() private incomingBoats: UnitView[] = [];
+  @state() private outgoingAircraft: UnitView[] = [];
+  @state() private outgoingPatrols: AirGroup[] = [];
+  @state() private incomingAircraft: AirGroup[] = [];
+  private baseTiles: number[] = [];
 
   createRenderRoot() {
     return this;
@@ -114,7 +159,184 @@ export class AttacksDisplay extends LitElement implements Controller {
       .units()
       .filter((u) => u.type() === UnitType.TransportShip);
 
+    this.updateAircraft(myPlayer);
+
     this.requestUpdate();
+  }
+
+  /**
+   * Superfork. Your aircraft on a mission (the engine publishes the mission
+   * as the unit's target tile and clears it on recall or when done), and
+   * hostile aircraft over your land.
+   */
+  private updateAircraft(myPlayer: PlayerView) {
+    this.baseTiles = myPlayer
+      .units(...AIR_BASES)
+      .filter((b) => b.isActive())
+      .map((b) => b.tile());
+
+    this.outgoingAircraft = myPlayer
+      .units(...MISSION_AIRCRAFT)
+      .filter((u) => u.isActive() && u.targetTile() !== undefined);
+
+    this.outgoingPatrols = PATROL_AIRCRAFT.map((type) => ({
+      type,
+      units: myPlayer.units(type).filter((u) => {
+        const t = u.targetTile();
+        return u.isActive() && t !== undefined && !this.nearBase(t);
+      }),
+    })).filter((g) => g.units.length > 0);
+
+    const threats = new Map<string, AirGroup>();
+    for (const u of this.game.units(...THREAT_AIRCRAFT)) {
+      if (!u.isActive()) continue;
+      const owner = u.owner();
+      if (owner === myPlayer || owner.isFriendly(myPlayer)) continue;
+      const over = this.game.owner(u.tile()) === myPlayer;
+      const t = u.targetTile();
+      const heading = t !== undefined && this.game.owner(t) === myPlayer;
+      if (!over && !heading) continue;
+      // Fighters grouped per owner; everything else one row each.
+      const key =
+        u.type() === UnitType.FighterJet ? `f-${owner.id()}` : `u-${u.id()}`;
+      const g = threats.get(key) ?? { type: u.type(), units: [] };
+      g.units.push(u);
+      threats.set(key, g);
+    }
+    this.incomingAircraft = [...threats.values()];
+  }
+
+  private nearBase(tile: number): boolean {
+    return this.baseTiles.some(
+      (b) => this.game.manhattanDist(b, tile) <= HOME_PATROL_DISTANCE,
+    );
+  }
+
+  private aircraftName(type: UnitType): string {
+    const key = type.toLowerCase().replace(/ /g, "_");
+    return translateText(`unit_type.${key}`);
+  }
+
+  private renderAircraftIcon(type: UnitType) {
+    const src = AIRCRAFT_ICONS[type];
+    if (src === undefined) return html``;
+    return html`<img src="${src}" class="h-4 w-4 inline-block" />`;
+  }
+
+  private recall(units: UnitView[]) {
+    this.eventBus.emit(new RecallAircraftIntentEvent(units.map((u) => u.id())));
+  }
+
+  private renderOutgoingAircraft() {
+    return this.outgoingAircraft.map((u) => {
+      const target = u.targetTile();
+      // A recalled transport jet flies to its base: shown as returning.
+      const returning =
+        u.type() === UnitType.TransportJet &&
+        target !== undefined &&
+        this.baseTiles.includes(target);
+      return html`
+        <div
+          class="flex items-center gap-0.5 w-full bg-gray-800/92 backdrop-blur-sm sm:rounded-lg px-1.5 py-0.5 overflow-hidden"
+        >
+          ${this.renderButton({
+            content: html`${this.renderAircraftIcon(u.type())}
+              ${u.type() === UnitType.TransportJet
+                ? html`<span class="inline-block min-w-[3rem] text-right"
+                    >${renderTroops(u.troops())}</span
+                  >`
+                : html`<span class="truncate text-xs ml-1"
+                    >${this.aircraftName(u.type())}</span
+                  >`}
+              <span class="truncate text-xs ml-1"
+                >${returning ? "" : this.getTileOwnerName(target)}</span
+              >`,
+            onClick: () => this.eventBus.emit(new GoToUnitEvent(u)),
+            className:
+              "text-left text-aquarius inline-flex items-center gap-0.5 lg:gap-1 min-w-0",
+            translate: false,
+          })}
+          ${returning
+            ? html`<span class="ml-auto truncate text-aquarius"
+                >(${translateText("events_display.aircraft_returning")})</span
+              >`
+            : this.renderButton({
+                content: "\u274C",
+                onClick: () => this.recall([u]),
+                className: "ml-auto text-left shrink-0",
+              })}
+        </div>
+      `;
+    });
+  }
+
+  private renderOutgoingPatrols() {
+    return this.outgoingPatrols.map(
+      (g) => html`
+        <div
+          class="flex items-center gap-0.5 w-full bg-gray-800/92 backdrop-blur-sm sm:rounded-lg px-1.5 py-0.5 overflow-hidden"
+        >
+          ${this.renderButton({
+            content: html`${this.renderAircraftIcon(g.type)}
+              <span class="inline-block min-w-[1.5rem] text-right"
+                >${g.units.length}×</span
+              >
+              <span class="truncate text-xs ml-1"
+                >${this.aircraftName(g.type)}</span
+              >
+              <span class="truncate text-xs ml-1 text-slate-300"
+                >${translateText("events_display.aircraft_patrolling")}</span
+              >`,
+            onClick: () => this.eventBus.emit(new GoToUnitEvent(g.units[0])),
+            className:
+              "text-left text-aquarius inline-flex items-center gap-0.5 lg:gap-1 min-w-0",
+            translate: false,
+          })}
+          ${this.renderButton({
+            content: "\u274C",
+            onClick: () => this.recall(g.units),
+            className: "ml-auto text-left shrink-0",
+          })}
+        </div>
+      `,
+    );
+  }
+
+  private renderIncomingAircraft() {
+    return this.incomingAircraft.map((g) => {
+      const u = g.units[0];
+      return html`
+        <div
+          class="flex items-center gap-0.5 w-full bg-gray-800/92 backdrop-blur-sm sm:rounded-lg px-1.5 py-0.5 overflow-hidden"
+        >
+          ${this.renderButton({
+            content: html`${this.renderAircraftIcon(g.type)}
+              ${g.type === UnitType.TransportJet
+                ? html`<span class="inline-block min-w-[3rem] text-right"
+                    >${renderTroops(u.troops())}</span
+                  >`
+                : html`<span class="inline-block min-w-[1.5rem] text-right"
+                    >${g.units.length > 1 ? `${g.units.length}×` : ""}</span
+                  >`}
+              <span class="truncate text-xs ml-1"
+                >${u.owner()?.displayName()}</span
+              >`,
+            onClick: () => this.eventBus.emit(new GoToUnitEvent(u)),
+            className:
+              "text-left text-red-400 inline-flex items-center gap-0.5 lg:gap-1 min-w-0",
+            translate: false,
+          })}
+        </div>
+      `;
+    });
+  }
+
+  private getTileOwnerName(tile: number | undefined): string {
+    if (tile === undefined) return "";
+    const ownerID = this.game.ownerID(tile);
+    if (ownerID === 0) return translateText("help_modal.ui_wilderness");
+    const player = this.game.playerBySmallID(ownerID) as PlayerView;
+    return player?.displayName() ?? "";
   }
 
   private renderButton(options: {
@@ -454,7 +676,10 @@ export class AttacksDisplay extends LitElement implements Controller {
       this.outgoingLandAttacks.length > 0 ||
       this.outgoingBoats.length > 0 ||
       this.incomingAttacks.length > 0 ||
-      this.incomingBoats.length > 0;
+      this.incomingBoats.length > 0 ||
+      this.outgoingAircraft.length > 0 ||
+      this.outgoingPatrols.length > 0 ||
+      this.incomingAircraft.length > 0;
 
     if (!hasAnything) {
       return html``;
@@ -465,8 +690,9 @@ export class AttacksDisplay extends LitElement implements Controller {
         class="w-full mb-1 mt-1 sm:mt-0 pointer-events-auto grid grid-cols-2 gap-1 text-white text-sm lg:text-base max-h-[7rem] overflow-y-auto"
       >
         ${this.renderOutgoingAttacks()} ${this.renderOutgoingLandAttacks()}
-        ${this.renderBoats()} ${this.renderIncomingAttacks()}
-        ${this.renderIncomingBoats()}
+        ${this.renderBoats()} ${this.renderOutgoingAircraft()}
+        ${this.renderOutgoingPatrols()} ${this.renderIncomingAttacks()}
+        ${this.renderIncomingBoats()} ${this.renderIncomingAircraft()}
       </div>
     `;
   }

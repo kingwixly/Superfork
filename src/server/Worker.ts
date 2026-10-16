@@ -2,9 +2,9 @@ import { ID, isValidGameID } from "@openfront/engine-api/Schemas";
 import { CloseCode, CloseReason } from "@openfront/shared/CloseCodes";
 import { GameEnv } from "@openfront/shared/configuration/Env";
 import {
-  DEVELOPER_FLAG_REF,
   DEVELOPER_FLARE,
   DEVELOPER_HEADER,
+  isDeveloperFlagRef,
 } from "@openfront/shared/DeveloperFlag";
 import { GAME_ROUTE, rewriteLegacyGameApi } from "@openfront/shared/GameRoute";
 import { generateID, replacer } from "@openfront/shared/SharedUtil";
@@ -852,7 +852,7 @@ export async function startWorker() {
         // dropped instead of being refused entry.
         const isDeveloper = req.headers[DEVELOPER_HEADER] === "1";
         const cosmeticRefs = { ...(clientMsg.cosmetics ?? {}) };
-        if (cosmeticRefs.flag === DEVELOPER_FLAG_REF && !isDeveloper) {
+        if (isDeveloperFlagRef(cosmeticRefs.flag) && !isDeveloper) {
           log.warn("Dropped developer flag from a non-developer", {
             persistentID: persistentId,
             gameID: clientMsg.gameID,

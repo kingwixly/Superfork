@@ -21,6 +21,20 @@ import {
  * avoids widening the unit update payload on the wire for every aircraft,
  * every tick, for precision nobody downstream reads.
  */
+/** Live aircraft executions by unit, so a recall order can reach one. */
+const live = new WeakMap<Unit, AircraftExecution>();
+
+/**
+ * Call an aircraft off its mission (the attacks bar's X). Returns false when
+ * the unit has no live aircraft execution.
+ */
+export function recallAircraft(unit: Unit): boolean {
+  const exec = live.get(unit);
+  if (exec === undefined || !unit.isActive()) return false;
+  exec.recall();
+  return true;
+}
+
 export abstract class AircraftExecution implements Execution {
   snapshot(): ExecRecord {
     return unsnapshottable("AircraftExecution");
@@ -37,7 +51,9 @@ export abstract class AircraftExecution implements Execution {
   constructor(
     protected unit: Unit,
     protected home: Unit | undefined,
-  ) {}
+  ) {
+    live.set(unit, this);
+  }
 
   init(mg: Game, ticks: number): void {
     this.mg = mg;
@@ -131,6 +147,18 @@ export abstract class AircraftExecution implements Execution {
     if (homeTile === undefined) return true;
     const range = this.mg.config().unitInfo(this.home.type()).range ?? 0;
     return range <= 0 || this.distanceTo(homeTile) <= range;
+  }
+
+  /**
+   * Called off the mission. The unit's target tile is what the client reads
+   * as "tasked", so it is cleared here (and the consumed-order memory with
+   * it, so the next move order is honoured whatever its tile). Subclasses
+   * add their own clean-up and call this.
+   */
+  recall(): void {
+    this.unit.setTargetTile(undefined);
+    this.lastOrder = undefined;
+    this.returnToBase();
   }
 
   /** Send the aircraft back toward its base. */

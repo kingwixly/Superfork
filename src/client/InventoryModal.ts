@@ -39,7 +39,7 @@ import {
   ResolvedCosmetic,
   resolvedToPlayerPattern,
 } from "./Cosmetics";
-import { DEVELOPER_FLAG, isSiteDeveloper } from "./DeveloperStatus";
+import { DEVELOPER_FLAGS, isSiteDeveloper } from "./DeveloperStatus";
 import {
   CROWN_KEY,
   EFFECTS_KEY,
@@ -66,14 +66,14 @@ function countryFlag(name: string, code: string, rarity = "common"): Flag {
   };
 }
 
-/** Superfork: the developer-only flag, at the top rarity. */
-const DEVELOPER_FLAG_TILE: ResolvedCosmetic = {
+/** Superfork: the developer-only flags, at the top rarity. */
+const DEVELOPER_FLAG_TILES: ResolvedCosmetic[] = DEVELOPER_FLAGS.map((f) => ({
   type: "flag",
-  cosmetic: countryFlag(DEVELOPER_FLAG.name, DEVELOPER_FLAG.code, "legendary"),
+  cosmetic: countryFlag(f.name, f.code, "legendary"),
   colorPalette: null,
   relationship: "owned",
-  key: DEVELOPER_FLAG.ref,
-};
+  key: f.ref,
+}));
 
 /**
  * The player's owned cosmetics, grouped into equip categories.
@@ -105,7 +105,7 @@ export class InventoryModal extends BaseModal {
     | undefined;
   private get countryFlagTiles(): ResolvedCosmetic[] {
     return this.siteDeveloper
-      ? [DEVELOPER_FLAG_TILE, ...this.baseCountryFlagTiles]
+      ? [...DEVELOPER_FLAG_TILES, ...this.baseCountryFlagTiles]
       : this.baseCountryFlagTiles;
   }
   private readonly baseCountryFlagTiles = Countries.filter(

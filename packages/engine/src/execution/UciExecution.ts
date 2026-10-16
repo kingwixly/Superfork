@@ -204,36 +204,55 @@ export class UciExecution implements Execution {
   /** All of `from`'s land and units become `to`'s; `from` is gone. */
   private giveCountry(from: Player, to: Player): void {
     const tiles: TileRef[] = [...from.tiles()];
-    const units: Unit[] = from.units();
+    // A copy: units() is the live list, and moving each unit shrinks it, so
+    // walking it directly skipped every other unit.
+    const units: Unit[] = [...from.units()];
     for (const t of tiles) to.conquer(t);
     for (const u of units) if (u.isActive()) u.setOwner(to);
   }
 
   /** Swap everything two countries own: land, units, gold and troops. */
   private swap(a: Player, b: Player): void {
+    const config = this.mg.config();
+    // Copies, not views: Player.units() returns the live list, so moving b's
+    // units to a used to grow "a's units" mid-swap and the second loop sent
+    // everything to b. The per-tick capture then dragged buildings back one
+    // by one - destroying defense posts on the way - and ships and aircraft
+    // (not structures, so never recaptured) stayed with the wrong country.
     const aTiles: TileRef[] = [...a.tiles()];
     const bTiles: TileRef[] = [...b.tiles()];
-    const aUnits = a.units();
-    const bUnits = b.units();
+    const aUnits = [...a.units()];
+    const bUnits = [...b.units()];
     const aGold = a.gold();
     const bGold = b.gold();
     const aTroops = a.troops();
     const bTroops = b.troops();
+    const aMaxBefore = config.maxTroops(a);
+    const bMaxBefore = config.maxTroops(b);
+
     for (const t of bTiles) a.conquer(t);
     for (const t of aTiles) b.conquer(t);
-    for (const u of bUnits) if (u.isActive()) u.setOwner(a);
-    for (const u of aUnits) if (u.isActive()) u.setOwner(b);
+    for (const u of bUnits) if (u.isActive() && u.owner() !== a) u.setOwner(a);
+    for (const u of aUnits) if (u.isActive() && u.owner() !== b) u.setOwner(b);
     a.removeGold(aGold);
     b.removeGold(bGold);
     a.addGold(bGold);
     b.addGold(aGold);
-    a.setTroops(bTroops);
-    b.setTroops(aTroops);
+
+    // Troops move as a share of the ceiling, not a raw count. The ceiling
+    // depends on the player kind (nations are scaled by difficulty, bots to
+    // a third), so a human's army handed to a nation could sit above the
+    // nation's cap - and above the cap troops shrink instead of growing,
+    // which is the "troops stopped regenerating" after a swap.
+    a.setTroops(carryTroops(bTroops, bMaxBefore, config.maxTroops(a)));
+    b.setTroops(carryTroops(aTroops, aMaxBefore, config.maxTroops(b)));
   }
 
   /** Remove a country: its land goes back to the wilderness. */
   private wipe(p: Player): void {
-    for (const u of p.units()) if (u.isActive()) u.delete(false);
+    // A copy, for the same reason as giveCountry: deleting shrinks the live
+    // list, which left every other unit standing.
+    for (const u of [...p.units()]) if (u.isActive()) u.delete(false);
     for (const t of [...p.tiles()]) p.relinquish(t);
     p.setTroops(0);
   }
@@ -309,4 +328,11 @@ export class UciCheatExecution implements Execution {
   activeDuringSpawnPhase(): boolean {
     return false;
   }
+}
+
+/** `troops` out of `oldMax`, rescaled to the same share of `newMax`. */
+function carryTroops(troops: number, oldMax: number, newMax: number): number {
+  if (oldMax <= 0) return Math.min(troops, newMax);
+  const share = Math.min(1, troops / oldMax);
+  return Math.floor(share * newMax);
 }

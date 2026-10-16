@@ -335,6 +335,11 @@ export class NewLobbyEvent implements GameEvent {
   constructor(public readonly gameID: string) {}
 }
 
+/** Superfork: call aircraft off their missions (the attacks bar's X). */
+export class RecallAircraftIntentEvent implements GameEvent {
+  constructor(public readonly unitIds: number[]) {}
+}
+
 /** Superfork: order aircraft to a new patrol point. */
 export class MoveAircraftIntentEvent implements GameEvent {
   constructor(
@@ -483,6 +488,14 @@ export class Transport {
 
     this.subscribe(MoveWarshipIntentEvent, (e) => {
       this.onMoveWarshipEvent(e);
+    });
+
+    this.subscribe(RecallAircraftIntentEvent, (e) => {
+      if (e.unitIds.length === 0) return;
+      this.sendIntent({
+        type: "recall_aircraft",
+        unitIds: e.unitIds as [number, ...number[]],
+      });
     });
 
     this.subscribe(MoveAircraftIntentEvent, (e) => {
