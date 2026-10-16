@@ -50,6 +50,7 @@ import {
   ServerRedirectMessage,
   ServerStartGameMessage,
   ServerTurnMessage,
+  ServerUciSpectatorsMessage,
   WireGameStartInfo,
   WireGameStartInfoSchema,
 } from "@openfront/shared/WireSchemas";
@@ -496,6 +497,21 @@ export class GameServer {
           this.broadcastLobbyInfo();
         }
         if (!this.hasStarted()) return finish({ status: 200 });
+        if (
+          stamped.action === "create_country" &&
+          stamped.targetClientID !== undefined
+        ) {
+          // A spectator (or a dead player) is taking the new country: from
+          // now on their intents speak for it, so lift the spectator block.
+          const joining = this.clients.get(stamped.targetClientID);
+          if (joining === undefined) {
+            return finish({ status: 404, error: "no such player" });
+          }
+          joining.spectator = false;
+          if ((stamped.text ?? "").trim() === "") {
+            stamped.text = joining.username;
+          }
+        }
         if (stamped.action === "pause") {
           // Same ordering as toggle_pause: flush the pause into a turn
           // before stopping, clear the flag before resuming.
@@ -877,6 +893,7 @@ export class GameServer {
       case "uci_auth": {
         const auth = uciAuth();
         client.uciAdmin = auth !== null && auth.verifyToken(clientMsg.token);
+        if (client.uciAdmin) this.sendUciSpectators(client);
         this.log.info("uci auth", {
           clientID: client.clientID,
           gameID: this.id,
@@ -1412,6 +1429,27 @@ export class GameServer {
   // allowlist can gain entries AFTER people are in the lobby
   // (update_game_config replaces it), so someone admitted before it was set is
   // not proof they may hold a seat now.
+  /**
+   * Superfork UCI: who is watching, so the admin's country creator can put
+   * one of them into the game. Sent on every UCI auth (the menu re-auths
+   * when it opens).
+   */
+  private sendUciSpectators(client: Client): void {
+    const spectators = this.clients
+      .active()
+      .filter((c) => c.spectator && c !== client)
+      .map((c) => ({ clientID: c.clientID, username: c.username }));
+    client.ws.send(
+      encodeServerMessage(
+        {
+          type: "uci_spectators",
+          spectators,
+        } satisfies ServerUciSpectatorsMessage,
+        this.zbinCtx,
+      ),
+    );
+  }
+
   private setSpectator(client: Client, spectator: boolean): void {
     if (client.spectator === spectator) return;
     if (!spectator) {

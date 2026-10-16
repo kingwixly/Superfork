@@ -111,6 +111,7 @@ describe("RadialMenuElements", () => {
           }),
         }),
         isUnitDisabled: vi.fn(() => false),
+        provincesEnabled: vi.fn(() => false),
       })),
     } as unknown as GameView;
 

@@ -20,6 +20,7 @@ import {
   SendAssistanceResponseIntentEvent,
   SendCeasefireResponseIntentEvent,
   SendEmbassyResponseIntentEvent,
+  SendPuppetResponseIntentEvent,
 } from "../../Transport";
 import { UIState } from "../../UIState";
 import { getMessageTypeClasses, translateText } from "../../Utils";
@@ -244,6 +245,15 @@ export class ActionableEvents extends LitElement implements Controller {
         respond = (accept) =>
           this.eventBus.emit(
             new SendEmbassyResponseIntentEvent(requestor.id(), accept),
+          );
+        break;
+      case "events_display.puppet_offer_received":
+        description = translateText("events_display.puppet_offer_received", {
+          player: name,
+        });
+        respond = (accept) =>
+          this.eventBus.emit(
+            new SendPuppetResponseIntentEvent(requestor.id(), accept),
           );
         break;
       case "events_display.aid_asked_of_you":

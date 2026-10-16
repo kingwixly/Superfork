@@ -1333,7 +1333,23 @@ export class PlayerImpl implements Player {
   }
 
   setMaster(master: Player | null): void {
+    if (this._master === master) return;
     this._master = master;
+    // Superfork: clients draw a puppet's land as a province of its master.
+    this.mg.addUpdate({
+      type: GameUpdateType.Puppet,
+      puppetID: this.smallID(),
+      masterID: master?.smallID() ?? 0,
+    });
+  }
+
+  provinceCount(): number {
+    if (!this.mg.config().provincesEnabled()) return 0;
+    let puppets = 0;
+    for (const p of this.mg.players()) {
+      if (p.master() === this) puppets++;
+    }
+    return this.mg.provinces().countOwnedBy(this) + puppets;
   }
 
   puppets(): Player[] {

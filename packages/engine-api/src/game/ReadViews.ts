@@ -27,6 +27,11 @@ export interface PlayerLike {
   troops(): number;
   gold(): Gold;
   units(type: UnitType): readonly UnitLike[];
+  /**
+   * Superfork: provinces this nation holds, puppets included. Optional so
+   * read views that know nothing of provinces still fit; absent means 0.
+   */
+  provinceCount?(): number;
 }
 
 export interface UnitLike {

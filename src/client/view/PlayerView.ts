@@ -442,6 +442,11 @@ export class PlayerView implements PlayerLike {
   numTilesOwned(): number {
     return this.state.tilesOwned;
   }
+  /** Superfork: provinces plus puppets (feeds the troop and gold bonuses). */
+  provinceCount(): number {
+    if (!this.game.config().provincesEnabled()) return 0;
+    return this.game.provinceStore().count(this.smallID());
+  }
   allies(): PlayerView[] {
     return this.state.allies.map(
       (a) => this.game.playerBySmallID(a) as PlayerView,

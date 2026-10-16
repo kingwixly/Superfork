@@ -165,10 +165,22 @@ describe("Nation AI diplomacy is conservative", () => {
     for (const mod of [
       "TreatyExecution",
       "CedeLandExecution",
-      "PuppetExecution",
       "LiberationExecution",
     ]) {
       expect(imported.some((i) => i.includes(mod))).toBe(false);
+    }
+    // Nations never START puppetry (offer, command, liberate); they only
+    // answer an offer made to them, which needs no read of the board beyond
+    // "am I hopelessly outmatched".
+    const names = [...dip.matchAll(/import \{([^}]+)\}/g)]
+      .flatMap((m) => m[1].split(","))
+      .map((n) => n.trim());
+    for (const verb of [
+      "PuppetOfferExecution",
+      "PuppetCommandExecution",
+      "PuppetLiberateExecution",
+    ]) {
+      expect(names).not.toContain(verb);
     }
   });
 });

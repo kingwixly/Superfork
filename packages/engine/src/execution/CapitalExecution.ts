@@ -1,4 +1,4 @@
-import { UnitType } from "@openfront/engine-api/game/GameTypes";
+import { MessageType, UnitType } from "@openfront/engine-api/game/GameTypes";
 import {
   RENDERABLE_NAME_CHARS,
   UsernameSchema,
@@ -8,6 +8,7 @@ import {
   STACK_RADIUS,
 } from "@openfront/engine-lib/configuration/SuperforkUnits";
 import { Execution, Game, Player, Unit } from "../game/Game";
+import { capitalSiteAllowed } from "../game/Provinces";
 import type { ExecRecord } from "../snapshot/SnapshotContext";
 import { unsnapshottable } from "../snapshot/Unsnapshottable";
 import { TrainStationExecution } from "./TrainStationExecution";
@@ -141,6 +142,19 @@ export class PromoteCapitalExecution implements Execution {
 
     const tile = city.tile();
     if (tile === undefined) return;
+    // Superfork provinces: the capital sits in the administrative province
+    // (or on federal land when none is marked).
+    if (
+      this.mg.config().provincesEnabled() &&
+      !capitalSiteAllowed(this.mg.provinces(), this.player, tile)
+    ) {
+      this.mg.displayMessage(
+        "events_display.capital_needs_admin_province",
+        MessageType.ALLIANCE_REJECTED,
+        this.player.id(),
+      );
+      return;
+    }
 
     // Promotion replaces the city rather than adding alongside it, so the
     // site does not end up counted as both. The city's level carries over —

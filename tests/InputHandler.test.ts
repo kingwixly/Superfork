@@ -1123,6 +1123,33 @@ describe("InputHandler AutoUpgrade", () => {
       expect(uiState.ghostStructure).toBe(UnitType.MissileSilo);
     });
 
+    test("0 builds the tenth slot", () => {
+      uiState.buildBarItems = [
+        UnitType.City,
+        UnitType.Factory,
+        UnitType.Port,
+        UnitType.DefensePost,
+        UnitType.MissileSilo,
+        UnitType.SAMLauncher,
+        UnitType.Warship,
+        UnitType.AtomBomb,
+        UnitType.HydrogenBomb,
+        // Not MIRV, which 0 also builds through its fixed binding.
+        UnitType.Airfield,
+      ];
+      window.dispatchEvent(
+        new KeyboardEvent("keyup", { code: "Digit0", key: "0" }),
+      );
+      expect(uiState.ghostStructure).toBe(UnitType.Airfield);
+    });
+
+    test("0 does nothing on a tab with fewer than ten items", () => {
+      window.dispatchEvent(
+        new KeyboardEvent("keyup", { code: "Digit0", key: "0" }),
+      );
+      expect(uiState.ghostStructure).toBeNull();
+    });
+
     test("a digit past the end of the tab does nothing", () => {
       window.dispatchEvent(
         new KeyboardEvent("keyup", { code: "Digit5", key: "5" }),

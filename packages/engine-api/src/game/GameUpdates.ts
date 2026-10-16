@@ -115,6 +115,9 @@ export enum GameUpdateType {
   SpawnPhaseEnd,
   GamePaused,
   DonateEvent,
+  // Superfork (appended)
+  Province,
+  Puppet,
 }
 
 export type GameUpdate =
@@ -140,7 +143,41 @@ export type GameUpdate =
   | EmbargoUpdate
   | SpawnPhaseEndUpdate
   | GamePausedUpdate
-  | DonateEventUpdate;
+  | DonateEventUpdate
+  | ProvinceUpdate
+  | PuppetUpdate;
+
+/**
+ * Superfork: a province as the simulation last saw it. Sent when a province
+ * is drawn, changes hands, is edited, or is removed.
+ */
+export interface ProvinceSnapshot {
+  id: number;
+  name: string;
+  /** smallID of the nation holding the province. */
+  ownerID: number;
+  /** smallID of the nation that drew it (liberation needs to know). */
+  founderID: number;
+  administrative: boolean;
+  size: number;
+  /** Tiles of it the owner holds; below size means contested. */
+  held: number;
+  /** Present only when membership changed (draw, merge, trim). */
+  tiles?: TileRef[];
+  removed?: boolean;
+}
+
+export interface ProvinceUpdate extends ProvinceSnapshot {
+  type: GameUpdateType.Province;
+}
+
+/** Superfork: a nation became, or stopped being, another's puppet. */
+export interface PuppetUpdate {
+  type: GameUpdateType.Puppet;
+  puppetID: number;
+  /** smallID of the master, 0 when freed. */
+  masterID: number;
+}
 
 export interface BonusEventUpdate {
   type: GameUpdateType.BonusEvent;

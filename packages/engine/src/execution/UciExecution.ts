@@ -2,6 +2,7 @@ import { UciIntent } from "@openfront/engine-api/Schemas";
 import { TileRef } from "@openfront/engine-api/game/GameMap";
 import { MessageType, PlayerType } from "@openfront/engine-api/game/GameTypes";
 import { Execution, Game, Player, Unit } from "../game/Game";
+import { ProvinceManager, splitStrokes } from "../game/Provinces";
 import {
   hasUciInfiniteGold,
   hasUciInfiniteTroops,
@@ -13,6 +14,7 @@ import {
 import type { ExecRecord } from "../snapshot/SnapshotContext";
 import { unsnapshottable } from "../snapshot/Unsnapshottable";
 import { AttackExecution } from "./AttackExecution";
+import { foundNation } from "./FoundNation";
 
 /** Gold an infinite-gold player is topped back up to every tick. */
 export const UCI_GOLD_FLOOR = 1_000_000_000_000n;
@@ -177,6 +179,30 @@ export class UciExecution implements Execution {
         if (mg.getWinner() !== null) return;
         this.notice("uci.notice_end_game", {});
         mg.setWinner(null, mg.stats().stats());
+        return;
+      }
+      case "create_country": {
+        // Countries are founded into a running game, not the spawn phase.
+        if (mg.inSpawnPhase()) return;
+        // Painted borders: the strokes plus every area they close off.
+        const strokes = splitStrokes(i.points ?? [], i.breaks ?? []);
+        const tiles = new ProvinceManager(mg.map(), () => null).enclosedLand(
+          strokes,
+        );
+        if (tiles.length === 0) return;
+        const created = foundNation(
+          mg,
+          i.text ?? "",
+          tiles,
+          i.targetClientID !== undefined
+            ? { kind: "human", clientID: i.targetClientID }
+            : { kind: "nation" },
+        );
+        if (created === null) return;
+        this.notice("uci.notice_create_country", {
+          target: name(created),
+          count: tiles.length,
+        });
         return;
       }
       case "transfer_host": {

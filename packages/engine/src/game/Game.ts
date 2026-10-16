@@ -47,6 +47,7 @@ import { AbstractGraph } from "../pathfinding/algorithms/AbstractGraph";
 import { PathFinder } from "../pathfinding/types";
 import type { ExecRecord, SnapshotWriter } from "../snapshot/SnapshotContext";
 import { ConquestLedger } from "./ConquestLedger";
+import type { ProvinceManager } from "./Provinces";
 import { RailNetwork } from "./RailNetwork";
 import { Stats } from "./Stats";
 
@@ -682,6 +683,8 @@ export interface Player extends PlayerLike {
   setMaster(master: Player | null): void;
   /** Nations that answer to this one. */
   puppets(): Player[];
+  /** Superfork: provinces held plus puppets; 0 when provinces are off. */
+  provinceCount(): number;
 
   /** Owner of an enemy hull near a tile, for ASBM targeting (superfork). */
   asbmTargetNear(tile: TileRef): Player | null;
@@ -764,6 +767,8 @@ export interface Game extends GameLike {
   hasPlayer(id: PlayerID): boolean;
   /** Superfork: journal of player-to-player tile transfers. Drives Liberation. */
   conquestLedger(): ConquestLedger;
+  /** Superfork: player-drawn provinces (empty unless the lobby enabled them). */
+  provinces(): ProvinceManager;
   addPlayer(playerInfo: PlayerInfo): Player;
   terraNullius(): TerraNullius;
   owner(ref: TileRef): Player | TerraNullius;
