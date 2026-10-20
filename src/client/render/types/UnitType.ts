@@ -189,6 +189,8 @@ export const ALL_UNIT_TYPES = [
   UT_BLINDING_BOMB,
   UT_BUNKER_BUSTER,
   UT_AA_MISSILE,
+  // Progression. Missing here, labs drew only their level badge.
+  UT_LAB,
 ] as const;
 import {
   BLINDING_RADIUS,
