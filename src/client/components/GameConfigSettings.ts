@@ -122,6 +122,7 @@ const unitOptions: { type: UnitType; translationKey: string }[] = [
   // Superfork. Missing from this list meant hosts could not switch any of
   // them off.
   { type: UnitType.Bank, translationKey: "unit_type.bank" },
+  { type: UnitType.Lab, translationKey: "unit_type.lab" },
   { type: UnitType.Capital, translationKey: "unit_type.capital" },
   { type: UnitType.Embassy, translationKey: "unit_type.embassy" },
   { type: UnitType.Airstrip, translationKey: "unit_type.airstrip" },

@@ -37,3 +37,6 @@ map-generator/map-generator.exe
 # src/core package split (#1701): tick-trace inputs and baselines
 .tick-records/
 .tick-baseline/
+
+# Python bytecode (sprite/cosmetic generators)
+__pycache__/

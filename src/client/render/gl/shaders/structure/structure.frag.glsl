@@ -148,7 +148,10 @@ float shapeSDF(vec2 p, float R) {
     return sdPolygon(p, R, 6.0, 0.0);              // Intl Airport → hexagon
   // Embassy → pentagon rotated point-down, so it reads as related to the Port
   // pentagon but never mistaken for it.
-  return sdPolygon(p, R, 5.0, -PI * 0.5);          // Embassy
+  if (vAtlasIdx < 11.5)
+    return sdPolygon(p, R, 5.0, -PI * 0.5);        // Embassy
+  // Lab → triangle point-down, the flask's shape (the silo's points up).
+  return sdPolygon(p, R, 3.0, -PI * 0.5);          // Lab
 }
 
 void main() {

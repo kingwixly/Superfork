@@ -83,6 +83,8 @@ export const UPDATE_TYPE_ROUTING: Record<
   DonateEvent: "misc",
   Province: "misc",
   Puppet: "misc",
+  Government: "misc",
+  Research: "misc",
 };
 
 /**

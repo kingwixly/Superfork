@@ -1,3 +1,4 @@
+import type { Effects } from "./Progression";
 import { GameMap, TileRef } from "./GameMap";
 import {
   Gold,
@@ -32,6 +33,11 @@ export interface PlayerLike {
    * read views that know nothing of provinces still fit; absent means 0.
    */
   provinceCount?(): number;
+  /**
+   * Superfork: the multipliers from government and research buffs. Optional
+   * like provinceCount; absent means no change.
+   */
+  effects?(): Effects;
 }
 
 export interface UnitLike {

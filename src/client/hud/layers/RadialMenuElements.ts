@@ -449,6 +449,8 @@ function createMenuElements(
     .filter(
       (item) =>
         unitTypes.has(item.unitType) &&
+        // Superfork: gear the research tree hasn't unlocked stays hidden.
+        params.myPlayer.hasUnlocked?.(item.unitType) !== false &&
         (filterType === "attack"
           ? BuildableAttacks.has(item.unitType)
           : !BuildableAttacks.has(item.unitType)),
@@ -612,6 +614,96 @@ function createMenuElements(
     });
 }
 
+/**
+ * Superfork: the attack list outgrew one ring, so it opens on categories.
+ * Empty categories (nothing unlocked or enabled) are left out, and a
+ * category holding a single item shows that item directly.
+ */
+const ATTACK_CATEGORIES: ReadonlyArray<{
+  id: string;
+  labelKey: string;
+  icon: string;
+  types: readonly UnitType[];
+}> = [
+  {
+    id: "nukes",
+    labelKey: "radial_menu.attack_cat_nukes",
+    icon: assetUrl("images/NukeIconWhite.svg"),
+    types: [
+      UnitType.AtomBomb,
+      UnitType.HydrogenBomb,
+      UnitType.MIRV,
+      UnitType.EMPBomb,
+      UnitType.NeutronBomb,
+    ],
+  },
+  {
+    id: "naval",
+    labelKey: "radial_menu.attack_cat_naval",
+    icon: assetUrl("images/BattleshipIconWhite.svg"),
+    types: [
+      UnitType.Warship,
+      UnitType.Destroyer,
+      UnitType.Corvette,
+      UnitType.Carrier,
+      UnitType.ASBM,
+    ],
+  },
+  {
+    id: "aircraft",
+    labelKey: "radial_menu.attack_cat_aircraft",
+    icon: assetUrl("images/FighterIconWhite.svg"),
+    types: [
+      UnitType.FighterJet,
+      UnitType.Interceptor,
+      UnitType.TransportJet,
+      UnitType.Bomber,
+      UnitType.StealthBomber,
+      UnitType.LargeBomber,
+    ],
+  },
+  {
+    id: "air_strikes",
+    labelKey: "radial_menu.attack_cat_air_strikes",
+    icon: assetUrl("images/BomberIconWhite.svg"),
+    types: [
+      UnitType.BlindingBomb,
+      UnitType.BunkerBuster,
+      UnitType.BomberAtomDrop,
+      UnitType.BomberHydrogenDrop,
+    ],
+  },
+];
+
+export function groupAttacks(items: MenuElement[]): MenuElement[] {
+  const byId = new Map(items.map((i) => [i.id, i]));
+  const used = new Set<string>();
+  const out: MenuElement[] = [];
+  for (const cat of ATTACK_CATEGORIES) {
+    const members = cat.types
+      .map((t) => byId.get(`attack_${t}`))
+      .filter((i): i is MenuElement => i !== undefined);
+    members.forEach((m) => used.add(m.id));
+    if (members.length === 0) continue;
+    if (members.length === 1) {
+      out.push(members[0]);
+      continue;
+    }
+    out.push({
+      id: `attack_cat_${cat.id}`,
+      name: cat.id,
+      icon: cat.icon,
+      color: COLORS.attack,
+      tooltipKeys: [{ key: cat.labelKey, className: "title" }],
+      disabled: (p: MenuElementParams) => members.every((m) => m.disabled(p)),
+      subMenu: () => members,
+    });
+  }
+  // Anything not in a category still shows, so nothing new goes missing.
+  for (const i of items) if (!used.has(i.id)) out.push(i);
+  return out;
+}
+
 export const attackMenuElement: MenuElement = {
   id: Slot.Attack,
   name: "radial_attack",
@@ -621,7 +713,7 @@ export const attackMenuElement: MenuElement = {
 
   subMenu: (params: MenuElementParams) => {
     if (params === undefined) return [];
-    const items = createMenuElements(params, "attack", "attack");
+    const items = groupAttacks(createMenuElements(params, "attack", "attack"));
     // Superfork: an attack that stays inside the enemy province under the
     // cursor (Shift+click does the same).
     const here = params.game.config().provincesEnabled()

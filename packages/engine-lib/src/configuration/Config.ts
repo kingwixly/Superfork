@@ -106,6 +106,14 @@ export class Config {
     return this._isReplay;
   }
 
+  /**
+   * Superfork: whether the research tree, buffs and payouts apply. A lobby
+   * can turn it off ("unlock everything"); then nothing is paid out either.
+   */
+  progressionActive(): boolean {
+    return this._gameConfig.unlockAll !== true;
+  }
+
   /** Superfork: whether players may draw provinces this game. */
   provincesEnabled(): boolean {
     return this._gameConfig.provinces ?? false;
@@ -392,7 +400,9 @@ export class Config {
     // Superfork: +5% per province held (puppets count), uncapped.
     const maxTroops =
       withCapital *
-      (1 + PROVINCE_TROOP_BONUS * (player.provinceCount?.() ?? 0));
+      (1 + PROVINCE_TROOP_BONUS * (player.provinceCount?.() ?? 0)) *
+      // Superfork: government and research buffs.
+      (player.effects?.().maxTroops ?? 1);
 
     if (player.type() === PlayerType.Bot) {
       return maxTroops / 3;
@@ -423,6 +433,8 @@ export class Config {
 
     const ratio = 1 - player.troops() / max;
     toAdd *= ratio;
+    // Superfork: government and research buffs.
+    toAdd *= player.effects?.().troopGrowth ?? 1;
 
     if (player.type() === PlayerType.Bot) {
       toAdd *= 0.5;

@@ -7,6 +7,7 @@ import {
   Tick,
   UnitType,
 } from "@openfront/engine-api/game/GameTypes";
+import type { GovernmentId } from "@openfront/engine-api/game/Progression";
 import {
   AllPlayersStats,
   ClientID,
@@ -377,6 +378,11 @@ export class SendProvinceIntentEvent implements GameEvent {
   constructor(public readonly intent: Omit<ProvinceIntent, "type">) {}
 }
 
+/** Superfork: change government. */
+export class SendSetGovernmentIntentEvent implements GameEvent {
+  constructor(public readonly government: GovernmentId) {}
+}
+
 /** Superfork: offer to take a nation as a puppet. */
 export class SendPuppetOfferIntentEvent implements GameEvent {
   constructor(public readonly target: PlayerID) {}
@@ -641,6 +647,9 @@ export class Transport {
 
     this.subscribe(SendProvinceIntentEvent, (e) =>
       this.sendIntent({ type: "province", ...e.intent }),
+    );
+    this.subscribe(SendSetGovernmentIntentEvent, (e) =>
+      this.sendIntent({ type: "set_government", government: e.government }),
     );
     this.subscribe(SendPuppetOfferIntentEvent, (e) =>
       this.sendIntent({ type: "puppet_offer", target: e.target }),

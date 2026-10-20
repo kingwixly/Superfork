@@ -405,6 +405,12 @@ export class StatsImpl implements Stats {
     p.finalTiles = _bigint(tiles);
   }
 
+  recordResearch(player: Player, points: number): void {
+    const p = this._makePlayerStats(player);
+    if (p === undefined) return;
+    p.researchPoints = Math.floor(points);
+  }
+
   recordSpawnTile(player: Player, tile: TileRef): void {
     const p = this._makePlayerStats(player);
     if (p === undefined) return;

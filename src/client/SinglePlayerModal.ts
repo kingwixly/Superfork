@@ -30,6 +30,7 @@ import { GameStartingModal } from "./GameStartingModal";
 import { showInGameAlert } from "./InGameModal";
 import { JoinLobbyEvent } from "./Main";
 import { fallbackPlayerName, ResolvedPlayerName } from "./PlayerName";
+import { myProgression } from "./Progress";
 import { lastUserMeResponse } from "./UserMeBroadcast";
 import { UsernameInput } from "./UsernameInput";
 import { UserSettings } from "./UserSettings";
@@ -118,6 +119,7 @@ const DEFAULT_OPTIONS = {
   customAllianceMinutes: undefined as number | undefined,
   waterNukes: false,
   provinces: false,
+  unlockAll: false,
   doomsdayClock: false,
   doomsdayClockSpeed: "normal" as DoomsdayClockSpeed,
   overtime: false,
@@ -208,6 +210,7 @@ export class SinglePlayerModal extends BaseModal {
     DEFAULT_OPTIONS.customAllianceMinutes;
   @state() private waterNukes: boolean = DEFAULT_OPTIONS.waterNukes;
   @state() private provinces: boolean = DEFAULT_OPTIONS.provinces;
+  @state() private unlockAll: boolean = DEFAULT_OPTIONS.unlockAll;
   @state() private doomsdayClock: boolean = DEFAULT_OPTIONS.doomsdayClock;
   @state() private doomsdayClockSpeed: DoomsdayClockSpeed =
     DEFAULT_OPTIONS.doomsdayClockSpeed;
@@ -557,6 +560,10 @@ export class SinglePlayerModal extends BaseModal {
                     checked: this.provinces,
                   },
                   {
+                    labelKey: "game_settings.unlock_all",
+                    checked: this.unlockAll,
+                  },
+                  {
                     labelKey: "game_settings.doomsday_clock",
                     checked: this.doomsdayClock,
                     doomsdayClockSpeed: this.doomsdayClockSpeed,
@@ -626,6 +633,7 @@ export class SinglePlayerModal extends BaseModal {
       this.customAllianceMinutes !== DEFAULT_OPTIONS.customAllianceMinutes ||
       this.waterNukes !== DEFAULT_OPTIONS.waterNukes ||
       this.provinces !== DEFAULT_OPTIONS.provinces ||
+      this.unlockAll !== DEFAULT_OPTIONS.unlockAll ||
       this.doomsdayClock !== DEFAULT_OPTIONS.doomsdayClock ||
       // Pace only matters when the mode is on (startGame drops it when off).
       (this.doomsdayClock &&
@@ -703,6 +711,7 @@ export class SinglePlayerModal extends BaseModal {
     this.customAllianceMinutes = DEFAULT_OPTIONS.customAllianceMinutes;
     this.waterNukes = DEFAULT_OPTIONS.waterNukes;
     this.provinces = DEFAULT_OPTIONS.provinces;
+    this.unlockAll = DEFAULT_OPTIONS.unlockAll;
     this.doomsdayClock = DEFAULT_OPTIONS.doomsdayClock;
     this.doomsdayClockSpeed = DEFAULT_OPTIONS.doomsdayClockSpeed;
     this.overtime = DEFAULT_OPTIONS.overtime;
@@ -803,6 +812,9 @@ export class SinglePlayerModal extends BaseModal {
         break;
       case "game_settings.provinces":
         this.provinces = checked;
+        break;
+      case "game_settings.unlock_all":
+        this.unlockAll = checked;
         break;
       case "game_settings.doomsday_clock":
         this.doomsdayClock = checked;
@@ -1148,6 +1160,7 @@ export class SinglePlayerModal extends BaseModal {
                   username: resolvedName.name,
                   clanTag: usernameInput?.getClanTag() ?? null,
                   cosmetics,
+                  progression: myProgression(),
                 },
               ],
               config: {
@@ -1190,6 +1203,7 @@ export class SinglePlayerModal extends BaseModal {
                   : {}),
                 ...(this.waterNukes ? { waterNukes: true } : {}),
                 ...(this.provinces ? { provinces: true } : {}),
+                ...(this.unlockAll ? { unlockAll: true } : {}),
                 ...(this.doomsdayClock
                   ? {
                       doomsdayClock: {

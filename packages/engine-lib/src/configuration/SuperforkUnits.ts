@@ -218,6 +218,15 @@ export const SUPERFORK_UNITS: Record<string, SuperforkUnitSpec> = {
     upgradable: true,
   },
 
+  [UnitType.Lab]: {
+    domain: UnitDomain.Structure,
+    // Research is a long game: labs are cheap to start with but climb the
+    // same pow2 ladder as factories, so a lab farm costs real money.
+    cost: (n) => Math.min(800_000, pow2(n) * 100_000),
+    constructionDuration: s(5),
+    upgradable: true,
+  },
+
   [UnitType.Capital]: {
     domain: UnitDomain.Structure,
     // FREE by design. A capital is promoted from a city you already paid for,

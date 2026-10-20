@@ -1,3 +1,4 @@
+import type { Progression } from "./Progression";
 import { AllPlayersStats, ClientID } from "../Schemas";
 
 import { TileRef } from "./GameMap";
@@ -268,6 +269,9 @@ export enum UnitType {
   BunkerBuster = "Bunker Buster",
   BomberAtomDrop = "Bomber Atom Drop",
   BomberHydrogenDrop = "Bomber Hydrogen Drop",
+
+  // Progression: makes research points for the tree.
+  Lab = "Lab",
 }
 
 export enum TrainType {
@@ -324,6 +328,7 @@ export const Structures = unitTypeGroup([
   UnitType.Airfield, // Phase 3
   UnitType.InternationalAirport, // Phase 3
   UnitType.Embassy, // Phase 5
+  UnitType.Lab, // Progression
 ] as const);
 
 export const BuildMenus = unitTypeGroup([
@@ -355,6 +360,7 @@ export const SuperforkStructures = unitTypeGroup([
   UnitType.Airstrip,
   UnitType.Airfield,
   UnitType.InternationalAirport,
+  UnitType.Lab,
 ] as const);
 
 /** Bases that can launch aircraft. Carrier is here despite being a ship. */
@@ -503,6 +509,9 @@ export class PlayerInfo {
     // the correct flag even when multiple nations on a map share a display
     // name (e.g. India's and Pakistan's "Punjab").
     public readonly nationFlag: string | null = null,
+    // Superfork: the research tree, buffs and starting government this
+    // player brings in (humans only; null = everything unlocked).
+    public readonly progression: Progression | null = null,
   ) {
     this.displayName = formatPlayerDisplayName(this.name, this.clanTag);
   }

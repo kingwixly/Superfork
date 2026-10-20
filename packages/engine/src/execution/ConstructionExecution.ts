@@ -23,6 +23,7 @@ import { CityExecution } from "./CityExecution";
 import { CorvetteExecution } from "./CorvetteExecution";
 import { DefensePostExecution } from "./DefensePostExecution";
 import { FactoryExecution } from "./FactoryExecution";
+import { LabExecution } from "./LabExecution";
 import { FighterJetExecution } from "./FighterJetExecution";
 import { InterceptorExecution } from "./InterceptorExecution";
 import { MirvExecution } from "./MIRVExecution";
@@ -92,7 +93,10 @@ export class ConstructionExecution implements Execution {
         spawnTile,
         {},
       );
-      const duration = info.constructionDuration ?? 0;
+      // Superfork: government and research buffs speed construction up.
+      const duration = Math.ceil(
+        (info.constructionDuration ?? 0) / this.player.effects().buildSpeed,
+      );
       if (duration > 0) {
         this.structure.setUnderConstruction(true);
         this.ticksUntilComplete = duration;
@@ -325,6 +329,9 @@ export class ConstructionExecution implements Execution {
       case UnitType.Factory:
         this.mg.addExecution(new FactoryExecution(this.structure!));
         break;
+      case UnitType.Lab:
+        this.mg.addExecution(new LabExecution(this.structure!));
+        break;
       case UnitType.Bank:
         this.mg.addExecution(new BankExecution(this.structure!));
         break;
@@ -349,6 +356,7 @@ export class ConstructionExecution implements Execution {
       case UnitType.SAMLauncher:
       case UnitType.City:
       case UnitType.Factory:
+      case UnitType.Lab:
       case UnitType.Bank:
       case UnitType.Airstrip:
       case UnitType.Airfield:

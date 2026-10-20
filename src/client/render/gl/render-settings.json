@@ -175,6 +175,10 @@
       "Embassy": {
         "scale": 1.05,
         "iconFill": 0.85
+      },
+      "Lab": {
+        "scale": 1.05,
+        "iconFill": 0.85
       }
     },
     "highlightOutlineWidth": 0.04,
