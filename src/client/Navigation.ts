@@ -1,4 +1,5 @@
 import { loadModal } from "./LazyModals";
+import { openAccount } from "./Progress";
 
 export function closeMobileSidebar() {
   const sidebar = document.getElementById("sidebar-menu");
@@ -16,6 +17,14 @@ export function closeMobileSidebar() {
 
 export function initNavigation() {
   const showPage = (pageId: string) => {
+    // Superfork: accounts are ours. The old account page (OpenFront's
+    // Discord / Google / Steam / email login) is never shown; its links open
+    // the SuperFront account panel over whatever page is up.
+    if (pageId === "page-account") {
+      closeMobileSidebar();
+      openAccount();
+      return;
+    }
     window.currentPageId = pageId;
 
     // Close mobile sidebar if a nav item was clicked

@@ -1,5 +1,6 @@
 import { UserMeResponse } from "@openfront/shared/ApiSchemas";
 import { responseHasLinkedIdentity } from "./AccountIdentity";
+import { signedIn } from "./Progress";
 import { getDiscordAvatarUrl, translateText } from "./Utils";
 
 // Every account trigger rendered by <nav-account-menu> (the desktop nav pill
@@ -192,7 +193,9 @@ function updateInstance(
   // account whose avatar URL didn't resolve, or a missing avatar element): the
   // user is still authenticated, so show the logged-in person icon. Only a
   // session with no linked identity at all gets the sign-in prompt.
-  if (responseHasLinkedIdentity(userMeResponse)) {
+  // Superfork: signed in to a SuperFront account (the trigger shows the
+  // username beside the icon).
+  if (responseHasLinkedIdentity(userMeResponse) || signedIn()) {
     showLoggedInPlain();
     return;
   }

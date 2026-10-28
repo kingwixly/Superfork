@@ -30,6 +30,7 @@ import {
   login,
   logout,
   myProgression,
+  OPEN_ACCOUNT,
   ownsFlare,
   PROGRESS_CHANGED,
   progressState,
@@ -125,14 +126,22 @@ export class SuperfrontHub extends LitElement {
 
   private onChanged = () => this.tick++;
 
+  private onOpenAccount = () => {
+    this.tab = "account";
+    this.open = true;
+    void loadProgress(true);
+  };
+
   connectedCallback() {
     super.connectedCallback();
     window.addEventListener(PROGRESS_CHANGED, this.onChanged);
+    window.addEventListener(OPEN_ACCOUNT, this.onOpenAccount);
     void loadProgress();
   }
 
   disconnectedCallback() {
     window.removeEventListener(PROGRESS_CHANGED, this.onChanged);
+    window.removeEventListener(OPEN_ACCOUNT, this.onOpenAccount);
     this.portal?.remove();
     this.portal = null;
     super.disconnectedCallback();
