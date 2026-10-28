@@ -1,3 +1,5 @@
+## Disclaimer
+SuperFront's codebase is written entirely by Claude; like the original OpenFront. I do not want to deal with their spaghetti code and simply review outputs from my Claude instance.
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="proprietary/images/OpenFrontLogoDark.svg">
