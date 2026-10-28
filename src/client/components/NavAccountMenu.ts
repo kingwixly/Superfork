@@ -18,6 +18,12 @@ import {
   updateAccountNavButton,
 } from "../NavAccountButton";
 import { closeMobileSidebar } from "../Navigation";
+import {
+  openAccount,
+  PROGRESS_CHANGED,
+  progressState,
+  signedIn,
+} from "../Progress";
 import { levelFraction } from "../Progression";
 import { steamSDK } from "../SteamSDK";
 import { playerProfileUrl } from "../utilities/PlayerProfileUrl";
@@ -130,6 +136,7 @@ export class NavAccountMenu extends LitElement {
     // The panel is positioned from the trigger's box, so a resize would leave
     // it stranded — close instead of tracking.
     window.addEventListener("resize", this.closeMenu);
+    window.addEventListener(PROGRESS_CHANGED, this.onProgressChanged);
 
     // Auth resolves once, early. A menu created after that (a re-rendered play
     // page, a reconnected element) would otherwise sit on its initial
@@ -154,6 +161,7 @@ export class NavAccountMenu extends LitElement {
     window.removeEventListener("keydown", this.handleKeyDown);
     window.removeEventListener("showPage", this.closeMenu);
     window.removeEventListener("resize", this.closeMenu);
+    window.removeEventListener(PROGRESS_CHANGED, this.onProgressChanged);
     this.removePanel();
     this.stopCatchUp();
     super.disconnectedCallback();
@@ -330,12 +338,21 @@ export class NavAccountMenu extends LitElement {
   };
 
   private handleTriggerClick = (e: MouseEvent) => {
-    // The menu is the account affordance in every state, so the delegated nav
-    // router never gets this click — the "View account" / "Sign in" items open
-    // the modal instead.
+    // Superfork: the trigger opens the SuperFront account panel. The old
+    // dropdown (OpenFront profile, settings, subscription, log out) belongs to
+    // openfront.io's accounts, which this server doesn't use.
     e.preventDefault();
     e.stopPropagation();
-    this.menuOpen = !this.menuOpen;
+    this.menuOpen = false;
+    closeMobileSidebar();
+    openAccount();
+  };
+
+  private onProgressChanged = () => {
+    this.requestUpdate();
+    void this.updateComplete.then(() =>
+      updateAccountNavButton(latestUserMeResponse() ?? false),
+    );
   };
 
   private items(): MenuItem[] {
@@ -751,6 +768,11 @@ export class NavAccountMenu extends LitElement {
           data-i18n="main.sign_in"
         >
         </span>
+        ${signedIn()
+          ? html`<span class="text-xs font-bold tracking-wide"
+              >${progressState().profile?.username}</span
+            >`
+          : nothing}
         ${this.renderChevron()}
       </button>
     `;

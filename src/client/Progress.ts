@@ -49,6 +49,20 @@ export interface ProgressState {
 /** Fired on window whenever coins, RP or unlocks change. */
 export const PROGRESS_CHANGED = "superfront-progress-changed";
 
+/** Fired on window to open the SuperFront account panel. */
+export const OPEN_ACCOUNT = "superfront-open-account";
+
+/**
+ * Open the SuperFront account panel. Every "sign in" / "view account" link
+ * lands here: the original OpenFront login (Discord, Google, Steam, email)
+ * talks to openfront.io's closed API, which this server has no part in.
+ */
+export function openAccount(): void {
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent(OPEN_ACCOUNT));
+  }
+}
+
 let state: ProgressState = {
   profile: null,
   guest: readGuest(),
